@@ -5,6 +5,12 @@ source "http://rubygems.org"
 
 gem "tengine_core", "~> 0.1.2"
 
+# http://rightaws.rubyforge.org/
+# http://github.com/rightscale/right_aws
+gem "right_aws", "~> 2.1.0"
+
+gem "net-ssh", "~> 2.2.1"
+
 # Add dependencies to develop your gem here.
 # Include everything needed to run rake, tests, features, etc.
 group :development do
