@@ -17,8 +17,8 @@ Jeweler::Tasks.new do |gem|
   gem.name = "tengine_resource"
   gem.homepage = "http://github.com/akm/tengine_resource"
   gem.license = "MIT"
-  gem.summary = %Q{TODO: one-line summary of your gem}
-  gem.description = %Q{TODO: longer description of your gem}
+  gem.summary = %Q{tengine_resource provides physical/virtual server management}
+  gem.description = %Q{tengine_resource provides physical/virtual server management}
   gem.email = "akima@nautilus-technologies.com"
   gem.authors = ["akima"]
   # dependencies defined in Gemfile
