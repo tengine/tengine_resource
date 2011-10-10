@@ -17,4 +17,6 @@ class Tengine::Resource::Server
   map_yaml_accessor :properties
 
   has_many :guest, :class_name => "Tengine::Resource::VirtualServer", :inverse_of => :host
+
+  validates :name, :presence => true, :uniqueness => true
 end
