@@ -30,8 +30,8 @@ class Tengine::Resource::Credential
     # entry "04", :ec2_x509_cert, "EC2 X.509認証"
   end
 
-  validates_presence_of :name, :auth_type_cd
-  validates_uniqueness_of :name
+  validates :name, :presence => true, :uniqueness => true
+  validates :auth_type_cd, :presence => true
 
   before_validation :prepare_auth_values_default # auth_valuesの各値がnilならデフォルト値を設定します
   validate{|c| c.validate_auth_values}
