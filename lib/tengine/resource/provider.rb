@@ -54,4 +54,13 @@ class Tengine::Resource::Provider
     end
     self.virtual_servers.not_in(:_id => found_ids).destroy_all
   end
+
+
+  class << self
+    def find_or_create_by_name!(attrs)
+      result = self.first(:conditions => {:name => attrs[:name]})
+      result ||= self.create!(attrs)
+      result
+    end
+  end
 end

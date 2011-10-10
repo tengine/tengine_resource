@@ -11,4 +11,12 @@ class Tengine::Resource::VirtualServerImage
     :class_name => "Tengine::Resource::Provider"
 
   validates :name, :presence => true, :uniqueness => true, :format => BASE_NAME.options
+
+  class << self
+    def find_or_create_by_name!(attrs = {}, &block)
+      result = self.first(:conditions => {:name => attrs[:name]})
+      result ||= self.create!(attrs)
+      result
+    end
+  end
 end

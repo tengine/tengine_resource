@@ -58,6 +58,7 @@ describe Tengine::Resource::Credential do
     end
   end
 
+
   it "name で検索できるか" do
     Tengine::Resource::Credential.delete_all
     credential = Tengine::Resource::Credential.create!(valid_attributes1)

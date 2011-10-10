@@ -242,5 +242,12 @@ class Tengine::Resource::Credential
     yield(pk_filenames) if block_given?
   end
 
+  class << self
+    def find_or_create_by_name!(attrs = {}, &block)
+      result = self.first(:conditions => {:name => attrs[:name]})
+      result ||= self.create!(attrs)
+      result
+    end
+  end
 
 end
