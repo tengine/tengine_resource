@@ -31,6 +31,8 @@ class Tengine::Resource::Credential
   end
 
   validates_presence_of :name, :auth_type_cd
+  validates_uniqueness_of :name
+
   before_validation :prepare_auth_values_default # auth_valuesの各値がnilならデフォルト値を設定します
   validate{|c| c.validate_auth_values}
 

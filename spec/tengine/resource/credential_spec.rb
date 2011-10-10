@@ -15,6 +15,7 @@ describe Tengine::Resource::Credential do
 
   context "name、auth_type_cd、auth_values は必須" do
     it "正常系" do
+      Tengine::Resource::Credential.delete_all
       credential1 = Tengine::Resource::Credential.new(valid_attributes1)
       credential1.valid?.should == true
     end
@@ -29,6 +30,20 @@ describe Tengine::Resource::Credential do
     end
 
   end
+
+  context "nameはユニーク" do
+    before do
+      Tengine::Resource::Credential.delete_all
+      @credential1 = Tengine::Resource::Credential.create!(valid_attributes1)
+    end
+
+    it "同じ名前で登録されているものが存在する場合エラー" do
+      expect{
+        @credential1 = Tengine::Resource::Credential.create!(valid_attributes1)
+      }.to raise_error(Mongoid::Errors::Validations, "Validation failed - Name is already taken.")
+    end
+  end
+
 
   it "name で検索できるか" do
     Tengine::Resource::Credential.delete_all
@@ -95,6 +110,10 @@ describe Tengine::Resource::Credential do
       end
 
       describe :ec2_access_key do
+        before do
+          Tengine::Resource::Credential.delete_all
+        end
+
         it "キーがSymbol" do
           Tengine::Resource::Credential.new(:name => "ec2-access-key1",
             :auth_type_key => :ec2_access_key,
