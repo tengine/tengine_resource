@@ -11,6 +11,7 @@ class Tengine::Resource::Credential
   include Mongoid::Document
   include SelectableAttr::Base
   include Tengine::Core::CollectionAccessible
+  include Tengine::Core::Validation
 
   field :name, :type => String
   field :description, :type => String
@@ -30,7 +31,7 @@ class Tengine::Resource::Credential
     # entry "04", :ec2_x509_cert, "EC2 X.509認証"
   end
 
-  validates :name, :presence => true, :uniqueness => true
+  validates :name, :presence => true, :uniqueness => true, :format => BASE_NAME.options
   validates :auth_type_cd, :presence => true
 
   before_validation :prepare_auth_values_default # auth_valuesの各値がnilならデフォルト値を設定します

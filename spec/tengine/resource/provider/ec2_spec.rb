@@ -10,6 +10,7 @@ describe Tengine::Resource::Provider::Ec2 do
   end
 
   before do
+    Tengine::Resource::Provider::Ec2.delete_all
     @valid_attributes1 = {
       :name => "my_west-1",
       :credential => @credential
@@ -30,7 +31,7 @@ describe Tengine::Resource::Provider::Ec2 do
 
   describe 'update resources' do
     subject do
-      Tengine::Resource::Provider::Ec2.create!(:name => "ec2 us-west-1", :credential => @credential)
+      Tengine::Resource::Provider::Ec2.create!(:name => "ec2-us-west-1", :credential => @credential)
     end
 
     context "物理サーバ" do

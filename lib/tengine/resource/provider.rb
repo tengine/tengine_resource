@@ -4,16 +4,18 @@ class Tengine::Resource::Provider
   autoload :Ec2, 'tengine/resource/provider/ec2'
 
   include Mongoid::Document
+  include Tengine::Core::Validation
+
   field :name, :type => String
   field :description, :type => String
+
+  validates :name, :presence => true, :uniqueness => true, :format => BASE_NAME.options
 
   with_options(:inverse_of => :provider, :dependent => :destroy) do |c|
     c.has_many :physical_servers       , :class_name => "Tengine::Resource::PhysicalServer"
     c.has_many :virtual_servers        , :class_name => "Tengine::Resource::VirtualServer"
     c.has_many :virtual_server_images  , :class_name => "Tengine::Resource::VirtualServerImage"
   end
-
-  validates_presence_of :name
 
   def update_physical_servers      ; raise NotImplementedError end
   def update_virtual_servers       ; raise NotImplementedError end

@@ -27,6 +27,20 @@ describe Tengine::Resource::Server do
     end
   end
 
+  context "nameはベース名として定義される文字列です" do
+    it "スラッシュ'/’はリソース識別子で使われるのでnameには使用できません" do
+      server1 = Tengine::Resource::Server.new(:name => "foo/bar")
+      server1.valid?.should == false
+      server1.errors[:name].should == [Tengine::Core::Validation::BASE_NAME.message]
+    end
+
+    it "コロン':'はリソース識別子で使われるのでnameには使用できません" do
+      server1 = Tengine::Resource::Server.new(:name => "foo:bar")
+      server1.valid?.should == false
+      server1.errors[:name].should == [Tengine::Core::Validation::BASE_NAME.message]
+    end
+  end
+
   context "nameはユニーク" do
     [Tengine::Resource::Server, Tengine::Resource::PhysicalServer, Tengine::Resource::VirtualServer].each do |klass|
       context "#{klass.name}#name はユニーク" do

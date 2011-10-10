@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 def setup_ec2_images
   klass = Tengine::Resource::VirtualServerImage
+  Tengine::Resource::VirtualServerImage.delete_all
   result = [
     # us-west-1
     klass.create!(:name => "ami-10101010mysql", :provided_name => "ami-10101000", :description => "MySQL server"),     # *1 同じAMI ID

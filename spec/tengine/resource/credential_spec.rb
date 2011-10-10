@@ -44,6 +44,19 @@ describe Tengine::Resource::Credential do
     end
   end
 
+  context "nameはベース名として定義される文字列です" do
+    it "スラッシュ'/’はリソース識別子で使われるのでnameには使用できません" do
+      server1 = Tengine::Resource::Credential.new(:name => "foo/bar")
+      server1.valid?.should == false
+      server1.errors[:name].should == [Tengine::Core::Validation::BASE_NAME.message]
+    end
+
+    it "コロン':'はリソース識別子で使われるのでnameには使用できません" do
+      server1 = Tengine::Resource::Credential.new(:name => "foo:bar")
+      server1.valid?.should == false
+      server1.errors[:name].should == [Tengine::Core::Validation::BASE_NAME.message]
+    end
+  end
 
   it "name で検索できるか" do
     Tengine::Resource::Credential.delete_all
