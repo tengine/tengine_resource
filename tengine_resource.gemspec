@@ -5,11 +5,11 @@
 
 Gem::Specification.new do |s|
   s.name = "tengine_resource"
-  s.version = "0.0.2"
+  s.version = "0.0.3"
 
   s.required_rubygems_version = Gem::Requirement.new(">= 0") if s.respond_to? :required_rubygems_version=
   s.authors = ["akima"]
-  s.date = "2011-10-10"
+  s.date = "2011-10-11"
   s.description = "tengine_resource provides physical/virtual server management"
   s.email = "akima@nautilus-technologies.com"
   s.executables = ["tengine_resource_watchd"]
@@ -40,7 +40,7 @@ Gem::Specification.new do |s|
     "lib/tengine/resource/virtual_server.rb",
     "lib/tengine/resource/virtual_server_image.rb",
     "lib/tengine_resource.rb",
-    "spec/fixtures/goku_at_ec2_west.rb",
+    "spec/fixtures/goku_at_ec2_ap_northeast.rb",
     "spec/mongoid.yml",
     "spec/spec_helper.rb",
     "spec/support/ec2.rb",
