@@ -81,9 +81,37 @@ describe Tengine::Resource::Server do
           "Validation failed - Name is already taken.")
       end
 
-
     end
   end
 
+
+  context :hostname_or_ipv4 do
+    context "何も設定されていない場合" do
+      subject{ Tengine::Resource::Server.new }
+      its(:hostname_or_ipv4){ should == nil}
+      its(:hostname_or_ipv4?){ should == false}
+    end
+
+    base_attrs = {
+      :local_ipv4      => '10.1.1.1',
+      :local_hostname  => 'local-name1',
+      :public_ipv4     => '184.1.1.1',
+      :public_hostname => 'public-name1',
+    }
+
+    [
+      [:local_ipv4    , :local_hostname ],
+      [:local_hostname, :public_ipv4    ],
+      [:public_ipv4   , :public_hostname],
+    ].each do |(attr1, attr2)|
+      context "#{attr1}と#{attr2}を設定した場合#{attr1}が優先されます" do
+        subject do
+          Tengine::Resource::Server.new({attr1 => base_attrs[attr1], attr2 => base_attrs[attr2]})
+        end
+        its(:hostname_or_ipv4){ should == base_attrs[attr1]}
+        its(:hostname_or_ipv4?){ should == true}
+      end
+    end
+  end
 
 end

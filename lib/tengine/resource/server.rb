@@ -23,6 +23,15 @@ class Tengine::Resource::Server
 
   has_many :guest, :class_name => "Tengine::Resource::VirtualServer", :inverse_of => :host
 
+  def hostname_or_ipv4
+    # local_ipv4 || local_hostname || public_ipv4 || public_hostname # nilだけでなく空文字列も考慮する必要があります
+    [:local_ipv4, :local_hostname, :public_ipv4, :public_hostname].map{|attr| send(attr)}.detect{|s| !s.blank?}
+  end
+
+  def hostname_or_ipv4?
+    !!hostname_or_ipv4
+  end
+
   class << self
     def find_or_create_by_name!(attrs = {}, &block)
       result = Tengine::Resource::Server.first(:conditions => {:name => attrs[:name]})
