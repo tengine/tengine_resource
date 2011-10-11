@@ -10,6 +10,7 @@ class Tengine::Resource::Provider
   field :description, :type => String
 
   validates :name, :presence => true, :uniqueness => true, :format => BASE_NAME.options
+  index :name, :unique => true
 
   with_options(:inverse_of => :provider, :dependent => :destroy) do |c|
     c.has_many :physical_servers       , :class_name => "Tengine::Resource::PhysicalServer"

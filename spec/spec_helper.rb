@@ -12,6 +12,7 @@ require 'rspec'
 require 'tengine_resource'
 require 'mongoid'
 Mongoid.load!(File.expand_path('mongoid.yml', File.dirname(__FILE__)))
+Mongoid.database.connection.drop_database(Mongoid.database.name)
 
 # Requires supporting files with custom matchers and macros, etc,
 # in ./support/ and its subdirectories.
