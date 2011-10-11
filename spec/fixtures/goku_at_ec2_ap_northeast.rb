@@ -32,6 +32,17 @@ class GokuAtEc2ApNortheast
       })
   end
 
+  def gohan_ssh_pk
+    Tengine::Resource::Credential.find_or_create_by_name!(
+      :name => "gohan_ssh_pk",
+      :auth_type_key => :ssh_public_key,
+      :auth_values => {
+        :username => 'gohan',
+        :private_keys => "1234567890",
+        :passphrase => 'dragonball'
+      })
+  end
+
   def physical_servers
     [availability_zone(1), availability_zone(2)]
   end
