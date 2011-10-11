@@ -4,7 +4,7 @@ require 'spec_helper'
 describe Tengine::Resource::VirtualServer do
 
   before(:all) do
-    @fixture = GokuAtEc2West.new
+    @fixture = GokuAtEc2ApNortheast.new
   end
 
   context "サーバの状態が変わったとき" do

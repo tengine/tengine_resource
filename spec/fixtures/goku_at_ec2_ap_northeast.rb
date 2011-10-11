@@ -1,24 +1,34 @@
 # -*- coding: utf-8 -*-
 
-class GokuAtEc2West
+class GokuAtEc2ApNortheast
   # # memoize については http://wota.jp/ac/?date=20081025#p11 などを参照してください
   # extend ActiveSupport::Memoizable
 
   def provider
     Tengine::Resource::Provider::Ec2.find_or_create_by_name!({
         :name => "goku_at_ec2_ap-northeast-1",
-        :credential_id => self.credential.id
+        :credential_id => self.goku_ec2.id
       })
   end
 
-  def credential
+  def goku_ec2
     Tengine::Resource::Credential.find_or_create_by_name!(
-      :name => "goku",
+      :name => "goku_ec2",
       :auth_type_key => :ec2_access_key,
       :auth_values => {
         :access_key => '12345',
         :secret_access_key => '1234567',
         :default_region => 'ap-northeast-1'
+      })
+  end
+
+  def goku_ssh_pw
+    Tengine::Resource::Credential.find_or_create_by_name!(
+      :name => "goku_ssh_pw",
+      :auth_type_key => :ssh_password,
+      :auth_values => {
+        :username => 'goku',
+        :password => 'dragonball'
       })
   end
 
