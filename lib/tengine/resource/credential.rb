@@ -9,6 +9,7 @@ class Tengine::Resource::Credential
   autoload :Ec2, 'tengine/resource/credential/ec2'
 
   include Mongoid::Document
+  include Mongoid::Timestamps
   include SelectableAttr::Base
   include Tengine::Core::CollectionAccessible
   include Tengine::Core::Validation

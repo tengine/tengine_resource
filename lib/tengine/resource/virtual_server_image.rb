@@ -2,6 +2,7 @@ require 'mongoid'
 
 class Tengine::Resource::VirtualServerImage
   include Mongoid::Document
+  include Mongoid::Timestamps
   include Tengine::Core::Validation
 
   field :name, :type => String

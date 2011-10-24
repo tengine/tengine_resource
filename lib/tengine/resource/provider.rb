@@ -4,6 +4,7 @@ class Tengine::Resource::Provider
   autoload :Ec2, 'tengine/resource/provider/ec2'
 
   include Mongoid::Document
+  include Mongoid::Timestamps
   include Tengine::Core::Validation
 
   field :name, :type => String

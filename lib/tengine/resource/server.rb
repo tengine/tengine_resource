@@ -3,6 +3,7 @@ require 'mongoid'
 
 class Tengine::Resource::Server
   include Mongoid::Document
+  include Mongoid::Timestamps
   include Tengine::Core::CollectionAccessible
   include Tengine::Core::Validation
 
