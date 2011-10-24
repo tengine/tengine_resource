@@ -4,15 +4,15 @@
 # -*- encoding: utf-8 -*-
 
 Gem::Specification.new do |s|
-  s.name = "tengine_resource"
-  s.version = "0.0.4"
+  s.name = %q{tengine_resource}
+  s.version = "0.0.5"
 
   s.required_rubygems_version = Gem::Requirement.new(">= 0") if s.respond_to? :required_rubygems_version=
-  s.authors = ["akima"]
-  s.date = "2011-10-12"
-  s.description = "tengine_resource provides physical/virtual server management"
-  s.email = "akima@nautilus-technologies.com"
-  s.executables = ["tengine_resource_watchd"]
+  s.authors = [%q{akima}]
+  s.date = %q{2011-10-24}
+  s.description = %q{tengine_resource provides physical/virtual server management}
+  s.email = %q{akima@nautilus-technologies.com}
+  s.executables = [%q{tengine_resource_watchd}]
   s.extra_rdoc_files = [
     "LICENSE.txt",
     "README.rdoc"
@@ -52,13 +52,14 @@ Gem::Specification.new do |s|
     "spec/tengine/resource/virtual_server_image_spec.rb",
     "spec/tengine/resource/virtual_server_spec.rb",
     "spec/tengine_resource_spec.rb",
-    "tengine_resource.gemspec"
+    "tengine_resource.gemspec",
+    "tmp/log/.gitignore"
   ]
-  s.homepage = "http://github.com/akm/tengine_resource"
-  s.licenses = ["MIT"]
-  s.require_paths = ["lib"]
-  s.rubygems_version = "1.8.10"
-  s.summary = "tengine_resource provides physical/virtual server management"
+  s.homepage = %q{http://github.com/akm/tengine_resource}
+  s.licenses = [%q{MIT}]
+  s.require_paths = [%q{lib}]
+  s.rubygems_version = %q{1.8.6}
+  s.summary = %q{tengine_resource provides physical/virtual server management}
 
   if s.respond_to? :specification_version then
     s.specification_version = 3
