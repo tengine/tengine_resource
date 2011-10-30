@@ -18,6 +18,8 @@ class Tengine::Resource::Server
   # field :local_ipv4     , :type => String
 
   field :addresses      , :type => Hash, :default => {}
+  field :address_keys   , :type => Array, :default => ['local_ipv4', 'local_hostname', 'public_ipv4', 'public_hostname']
+
   field :properties     , :type => Hash
   map_yaml_accessor :properties
 
@@ -35,8 +37,7 @@ class Tengine::Resource::Server
   end
 
   def hostname_or_ipv4
-    # local_ipv4 || local_hostname || public_ipv4 || public_hostname # nilだけでなく空文字列も考慮する必要があります
-    [:local_ipv4, :local_hostname, :public_ipv4, :public_hostname].map{|attr| send(attr)}.detect{|s| !s.blank?}
+    address_keys.map{|key| addresses[key]}.detect{|s| !s.blank?} # nilだけでなく空文字列も考慮する必要があります
   end
 
   def hostname_or_ipv4?
