@@ -12,10 +12,12 @@ class Tengine::Resource::Server
   field :provided_name, :type => String
   field :status       , :type => String
 
-  field :public_hostname, :type => String
-  field :public_ipv4    , :type => String
-  field :local_hostname , :type => String
-  field :local_ipv4     , :type => String
+  # field :public_hostname, :type => String
+  # field :public_ipv4    , :type => String
+  # field :local_hostname , :type => String
+  # field :local_ipv4     , :type => String
+
+  field :addresses      , :type => Hash, :default => {}
   field :properties     , :type => Hash
   map_yaml_accessor :properties
 
@@ -23,6 +25,14 @@ class Tengine::Resource::Server
   index :name, :unique => true
 
   has_many :guest, :class_name => "Tengine::Resource::VirtualServer", :inverse_of => :host
+
+  class << self
+    def find_or_create_by_name!(attrs = {}, &block)
+      result = Tengine::Resource::Server.first(:conditions => {:name => attrs[:name]})
+      result ||= self.create!(attrs)
+      result
+    end
+  end
 
   def hostname_or_ipv4
     # local_ipv4 || local_hostname || public_ipv4 || public_hostname # nilだけでなく空文字列も考慮する必要があります
@@ -33,11 +43,15 @@ class Tengine::Resource::Server
     !!hostname_or_ipv4
   end
 
-  class << self
-    def find_or_create_by_name!(attrs = {}, &block)
-      result = Tengine::Resource::Server.first(:conditions => {:name => attrs[:name]})
-      result ||= self.create!(attrs)
-      result
-    end
+  %w[public_hostname public_ipv4 local_hostname local_ipv4].each do |address_key|
+    class_eval(<<-END_OF_METHOD, __FILE__, __LINE__ + 1)
+      def #{address_key}
+        addresses['#{address_key}']
+      end
+      def #{address_key}=(value)
+        addresses['#{address_key}'] = value
+      end
+    END_OF_METHOD
   end
+
 end
