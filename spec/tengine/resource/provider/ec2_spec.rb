@@ -298,8 +298,8 @@ describe Tengine::Resource::Provider::Ec2 do
           assert_server = lambda do |server, index|
             server.public_hostname.should == "ec2-184-72-203-#{index + 101}.us-west-1.compute.amazonaws.com"
             server.public_ipv4.should == "184.72.20.#{index + 101}"
-            server.private_hostname.should == "ip-10-162-153-#{index + 101}.us-west-1.compute.internal"
-            server.private_ipv4.should == "10.162.153.#{index + 101}"
+            server.local_hostname.should == "ip-10-162-153-#{index + 101}.us-west-1.compute.internal"
+            server.local_ipv4.should == "10.162.153.#{index + 101}"
           end
           servers = subject.virtual_servers.order(:provided_name, :asc).to_a
           servers.each_with_index(&assert_server)

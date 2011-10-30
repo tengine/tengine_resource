@@ -47,8 +47,8 @@ class Tengine::Resource::Provider::Ec2 < Tengine::Resource::Provider
           :provided_image_name => hash.delete(:aws_image_id),
           :public_hostname  => hash.delete(:dns_name),
           :public_ipv4      => hash.delete(:ip_address),
-          :private_hostname => hash.delete(:private_dns_name),
-          :private_ipv4     => hash.delete(:private_ip_address),
+          :local_hostname => hash.delete(:private_dns_name),
+          :local_ipv4     => hash.delete(:private_ip_address),
           :status => hash.delete(:aws_state),
         }
         hash.delete(:aws_state_code)
