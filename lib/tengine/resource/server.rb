@@ -13,6 +13,8 @@ class Tengine::Resource::Server
   field :status       , :type => String
 
   field :addresses      , :type => Hash, :default => {}
+  map_yaml_accessor :addresses
+
   field :address_order   , :type => Array, :default => ['private_ip_address', 'private_dns_name', 'ip_address', 'dns_name']
 
   field :properties     , :type => Hash
