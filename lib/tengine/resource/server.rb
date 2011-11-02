@@ -18,7 +18,7 @@ class Tengine::Resource::Server
   # field :local_ipv4     , :type => String
 
   field :addresses      , :type => Hash, :default => {}
-  field :address_keys   , :type => Array, :default => ['local_ipv4', 'local_hostname', 'public_ipv4', 'public_hostname']
+  field :address_keys   , :type => Array, :default => ['private_ip_address', 'private_dns_name', 'ip_address', 'dns_name']
 
   field :properties     , :type => Hash
   map_yaml_accessor :properties
