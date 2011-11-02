@@ -9,7 +9,7 @@ class Tengine::Resource::Server
 
   field :name         , :type => String
   field :description  , :type => String
-  field :provided_name, :type => String
+  field :provided_id  , :type => String
   field :status       , :type => String
 
   field :addresses      , :type => Hash, :default => {}
