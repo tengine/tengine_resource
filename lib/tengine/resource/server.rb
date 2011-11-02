@@ -12,11 +12,6 @@ class Tengine::Resource::Server
   field :provided_name, :type => String
   field :status       , :type => String
 
-  # field :public_hostname, :type => String
-  # field :public_ipv4    , :type => String
-  # field :local_hostname , :type => String
-  # field :local_ipv4     , :type => String
-
   field :addresses      , :type => Hash, :default => {}
   field :address_order   , :type => Array, :default => ['private_ip_address', 'private_dns_name', 'ip_address', 'dns_name']
 
