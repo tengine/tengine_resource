@@ -99,19 +99,40 @@ describe Tengine::Resource::Server do
       :dns_name           => 'public-name1',
     }
 
-    [
-      [:private_ip_address, :private_dns_name  ],
-      [:private_dns_name  , :ip_address],
-      [:ip_address        , :dns_name],
-    ].each do |(attr1, attr2)|
-      context "#{attr1}と#{attr2}を設定した場合#{attr1}が優先されます" do
-        subject do
-          Tengine::Resource::Server.new(:addresses => {attr1.to_s => base_attrs[attr1], attr2.to_s => base_attrs[attr2]})
+    context "address_orderの指定なし" do
+      [
+        [:private_ip_address, :private_dns_name  ],
+        [:private_dns_name  , :ip_address],
+        [:ip_address        , :dns_name],
+      ].each do |(attr1, attr2)|
+        context "#{attr1}と#{attr2}を設定した場合#{attr1}が優先されます" do
+          subject do
+            Tengine::Resource::Server.new(:addresses => {attr1.to_s => base_attrs[attr1], attr2.to_s => base_attrs[attr2]})
+          end
+          its(:hostname_or_ipv4){ should == base_attrs[attr1]}
+          its(:hostname_or_ipv4?){ should == true}
         end
-        its(:hostname_or_ipv4){ should == base_attrs[attr1]}
-        its(:hostname_or_ipv4?){ should == true}
       end
     end
+
+    context "address_orderの指定あり" do
+      [
+        [:private_ip_address, :ip_address],
+        [:ip_address, :private_dns_name],
+        [:private_dns_name, :dns_name],
+      ].each do |(attr1, attr2)|
+        context "#{attr1}と#{attr2}を設定した場合#{attr1}が優先されます" do
+          subject do
+            Tengine::Resource::Server.new(
+              :address_order => %w[private_ip_address ip_address private_dns_name dns_name],
+              :addresses => {attr1.to_s => base_attrs[attr1], attr2.to_s => base_attrs[attr2]})
+          end
+          its(:hostname_or_ipv4){ should == base_attrs[attr1]}
+          its(:hostname_or_ipv4?){ should == true}
+        end
+      end
+    end
+
   end
 
 end
