@@ -143,10 +143,10 @@ class GokuAtEc2ApNortheast
   private
   def hostnames_and_ips(idx)
     {
-      :public_hostname => "ec2-184-72-20-#{idx}.ap-northeast-1.compute.amazonaws.com",
-      :public_ipv4         => "184.72.20.#{idx}",
-      :private_hostname => "ip-10-162-153-#{idx}.ap-northeast-1.compute.internal",
-      :private_ipv4     =>    "10.162.153.#{idx}",
+      :dns_name           => "ec2-184-72-20-#{idx}.ap-northeast-1.compute.amazonaws.com",
+      :ip_address         =>     "184.72.20.#{idx}",
+      :private_dns_name   => "ip-10-162-153-#{idx}.ap-northeast-1.compute.internal",
+      :private_ip_address =>    "10.162.153.#{idx}",
     }
   end
 
