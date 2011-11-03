@@ -10,7 +10,7 @@ class Tengine::Resource::Credential
 
   include Mongoid::Document
   include Mongoid::Timestamps
-  include SelectableAttr::Base
+  include Tengine::Core::SelectableAttr
   include Tengine::Core::CollectionAccessible
   include Tengine::Core::Validation
 
