@@ -97,56 +97,56 @@ class GokuAtEc2ApNortheast
 
   def hadoop_master_node
     Tengine::Resource::VirtualServer.find_or_create_by_name!(
-      hostnames_and_ips(1).update(
-        :provider_id => provider.id,
-        :provided_image_name => hadoop_image.provided_name,
-        :host => availability_zone(1), :status => "available",
-        :name => "hadoop_master_node", :provided_name => "i-10000001"))
+      :addresses => hostnames_and_ips(1),
+      :provider_id => provider.id,
+      :provided_image_name => hadoop_image.provided_name,
+      :host => availability_zone(1), :status => "available",
+      :name => "hadoop_master_node", :provided_name => "i-10000001")
   end
 
   def hadoop_slave_node(idx)
     Tengine::Resource::VirtualServer.find_or_create_by_name!(
-      hostnames_and_ips(idx + 10).update(
-        :provider_id => provider.id,
-        :provided_image_name => hadoop_image.provided_name,
-        :host => availability_zone(1), :status => "available",
-        :name => "hadoop_slave_node#{idx}", :provided_name => "i-1000001#{idx}"))
+      :addresses => hostnames_and_ips(idx + 10),
+      :provider_id => provider.id,
+      :provided_image_name => hadoop_image.provided_name,
+      :host => availability_zone(1), :status => "available",
+      :name => "hadoop_slave_node#{idx}", :provided_name => "i-1000001#{idx}")
   end
 
   def mysql_master
     Tengine::Resource::VirtualServer.find_or_create_by_name!(
-      hostnames_and_ips(20).update(
-        :provider_id => provider.id,
-        :provided_image_name => mysql_image.provided_name,
-        :host => availability_zone(1), :status => "available",
-        :name => "mysql_master", :provided_name => "i-10000020"))
+      :addresses => hostnames_and_ips(20),
+      :provider_id => provider.id,
+      :provided_image_name => mysql_image.provided_name,
+      :host => availability_zone(1), :status => "available",
+      :name => "mysql_master", :provided_name => "i-10000020")
   end
 
   def mysql_slave(idx)
     Tengine::Resource::VirtualServer.find_or_create_by_name!(
-      hostnames_and_ips(idx + 20).update(
-        :provider_id => provider.id,
-        :provided_image_name => mysql_image.provided_name,
-        :host => availability_zone(1), :status => "available",
-        :name => "mysql_slave#{idx}", :provided_name => "i-1000002#{idx}"))
+      :addresses => hostnames_and_ips(idx + 20),
+      :provider_id => provider.id,
+      :provided_image_name => mysql_image.provided_name,
+      :host => availability_zone(1), :status => "available",
+      :name => "mysql_slave#{idx}", :provided_name => "i-1000002#{idx}")
   end
 
   def rails_server(idx)
     Tengine::Resource::VirtualServer.find_or_create_by_name!(
-      hostnames_and_ips(idx + 30).update(
-        :provider_id => provider.id,
-        :provided_image_name => rails_image.provided_name,
-        :host => availability_zone(1), :status => "available",
-        :name => "rails#{idx}", :provided_name => "i-1000003#{idx}"))
+      :addresses => hostnames_and_ips(idx + 30),
+      :provider_id => provider.id,
+      :provided_image_name => rails_image.provided_name,
+      :host => availability_zone(1), :status => "available",
+      :name => "rails#{idx}", :provided_name => "i-1000003#{idx}")
   end
 
   private
   def hostnames_and_ips(idx)
     {
-      :dns_name           => "ec2-184-72-20-#{idx}.ap-northeast-1.compute.amazonaws.com",
-      :ip_address         =>     "184.72.20.#{idx}",
-      :private_dns_name   => "ip-10-162-153-#{idx}.ap-northeast-1.compute.internal",
-      :private_ip_address =>    "10.162.153.#{idx}",
+      'dns_name'           => "ec2-184-72-20-#{idx}.ap-northeast-1.compute.amazonaws.com",
+      'ip_address'         =>     "184.72.20.#{idx}",
+      'private_dns_name'   => "ip-10-162-153-#{idx}.ap-northeast-1.compute.internal",
+      'private_ip_address' =>    "10.162.153.#{idx}",
     }
   end
 

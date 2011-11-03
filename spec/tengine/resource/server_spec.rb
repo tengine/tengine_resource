@@ -133,6 +133,17 @@ describe Tengine::Resource::Server do
       end
     end
 
+    describe "フィクスチャから" do
+      before do
+        @fixture = GokuAtEc2ApNortheast.new
+      end
+      it do
+        server1 = @fixture.hadoop_master_node
+        server1.hostname_or_ipv4.should == "10.162.153.1"
+      end
+    end
+
   end
+
 
 end
