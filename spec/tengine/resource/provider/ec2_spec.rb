@@ -46,16 +46,16 @@ describe Tengine::Resource::Provider::Ec2 do
 
       shared_examples_for "取得した内容が反映される" do
         it do
-          servers = subject.physical_servers.order(:provided_name, :asc)
+          servers = subject.physical_servers.order(:provided_id, :asc)
           west_1a = servers.first
           west_1a.provider.should == subject
           west_1a.name.should == "us-west-1a"
-          west_1a.provided_name.should == "us-west-1a"
+          west_1a.provided_id.should == "us-west-1a"
           west_1a.status.should == "available"
           west_1b = servers.last
           west_1b.provider.should == subject
           west_1b.name.should == "us-west-1b"
-          west_1b.provided_name.should == "us-west-1b"
+          west_1b.provided_id.should == "us-west-1b"
           west_1b.status.should == "available"
         end
       end
@@ -71,7 +71,7 @@ describe Tengine::Resource::Provider::Ec2 do
 
       context "すでに1台登録されている場合" do
         before do
-          subject.physical_servers.create(:name => "us-west-1a", :provided_name => "us-west-1a", :status => "available")
+          subject.physical_servers.create(:name => "us-west-1a", :provided_id => "us-west-1a", :status => "available")
           subject.physical_servers.count.should == 1
           subject.update_physical_servers
           subject.physical_servers.count.should == 2
@@ -82,8 +82,8 @@ describe Tengine::Resource::Provider::Ec2 do
       context "すでに2台登録されている場合" do
         context "何も変わらない場合" do
           before do
-            subject.physical_servers.create(:name => "us-west-1a", :provided_name => "us-west-1a", :status => "available")
-            subject.physical_servers.create(:name => "us-west-1b", :provided_name => "us-west-1b", :status => "available")
+            subject.physical_servers.create(:name => "us-west-1a", :provided_id => "us-west-1a", :status => "available")
+            subject.physical_servers.create(:name => "us-west-1b", :provided_id => "us-west-1b", :status => "available")
             subject.physical_servers.count.should == 2
             subject.update_physical_servers
             subject.physical_servers.count.should == 2
@@ -93,8 +93,8 @@ describe Tengine::Resource::Provider::Ec2 do
 
         context "状態が変わった場合" do
           before do
-            subject.physical_servers.create(:name => "us-west-1a", :provided_name => "us-west-1a", :status => "available")
-            subject.physical_servers.create(:name => "us-west-1b", :provided_name => "us-west-1b", :status => "down")
+            subject.physical_servers.create(:name => "us-west-1a", :provided_id => "us-west-1a", :status => "available")
+            subject.physical_servers.create(:name => "us-west-1b", :provided_id => "us-west-1b", :status => "down")
             # こんな定義はないはずですが、そもそも定義がないので。
             # http://docs.amazonwebservices.com/AWSEC2/latest/APIReference/index.html?ApiReference-query-DescribeAvailabilityZones.html
             subject.physical_servers.count.should == 2
@@ -106,24 +106,24 @@ describe Tengine::Resource::Provider::Ec2 do
 
         context "nameが管理画面で変更されていた場合" do
           before do
-            subject.physical_servers.create(:name => "foo", :provided_name => "us-west-1a", :status => "available")
-            subject.physical_servers.create(:name => "us-west-1b", :provided_name => "us-west-1b", :status => "available")
+            subject.physical_servers.create(:name => "foo", :provided_id => "us-west-1a", :status => "available")
+            subject.physical_servers.create(:name => "us-west-1b", :provided_id => "us-west-1b", :status => "available")
             subject.physical_servers.count.should == 2
             subject.update_physical_servers
             subject.physical_servers.count.should == 2
           end
 
           it do
-            servers = subject.physical_servers.order(:provided_name, :asc)
+            servers = subject.physical_servers.order(:provided_id, :asc)
             west_1a = servers.first
             west_1a.provider.should == subject
             west_1a.name.should == "foo"
-            west_1a.provided_name.should == "us-west-1a"
+            west_1a.provided_id.should == "us-west-1a"
             west_1a.status.should == "available"
             west_1b = servers.last
             west_1b.provider.should == subject
             west_1b.name.should == "us-west-1b"
-            west_1b.provided_name.should == "us-west-1b"
+            west_1b.provided_id.should == "us-west-1b"
             west_1b.status.should == "available"
           end
         end
@@ -131,29 +131,29 @@ describe Tengine::Resource::Provider::Ec2 do
 
       context "すでに3台登録されている場合" do
         before do
-          subject.physical_servers.create(:name => "us-west-1a", :provided_name => "us-west-1a", :status => "available")
-          subject.physical_servers.create(:name => "us-west-1b", :provided_name => "us-west-1b", :status => "available")
-          subject.physical_servers.create(:name => "us-west-1c", :provided_name => "us-west-1c", :status => "available")
+          subject.physical_servers.create(:name => "us-west-1a", :provided_id => "us-west-1a", :status => "available")
+          subject.physical_servers.create(:name => "us-west-1b", :provided_id => "us-west-1b", :status => "available")
+          subject.physical_servers.create(:name => "us-west-1c", :provided_id => "us-west-1c", :status => "available")
           subject.physical_servers.count.should == 3
           subject.update_physical_servers
           subject.physical_servers.count.should == 3
         end
         it "物理サーバが減るということは一大事なので、自動でデータを削除するのではなく、見つからなかったということにする" do
-          servers = subject.physical_servers.order(:provided_name, :asc)
+          servers = subject.physical_servers.order(:provided_id, :asc)
           west_1a = servers.first
           west_1a.provider.should == subject
           west_1a.name.should == "us-west-1a"
-          west_1a.provided_name.should == "us-west-1a"
+          west_1a.provided_id.should == "us-west-1a"
           west_1a.status.should == "available"
           west_1b = servers[1]
           west_1b.provider.should == subject
           west_1b.name.should == "us-west-1b"
-          west_1b.provided_name.should == "us-west-1b"
+          west_1b.provided_id.should == "us-west-1b"
           west_1b.status.should == "available"
           west_1c = servers[2]
           west_1c.provider.should == subject
           west_1c.name.should == "us-west-1c"
-          west_1c.provided_name.should == "us-west-1c"
+          west_1c.provided_id.should == "us-west-1c"
           west_1c.status.should == "not_found"
         end
       end
@@ -166,9 +166,9 @@ describe Tengine::Resource::Provider::Ec2 do
         Tengine::Resource::PhysicalServer.delete_all
         Tengine::Resource::VirtualServer.delete_all
         Tengine::Resource::VirtualServerImage.delete_all
-        @us_west_1a = subject.physical_servers.create(:name => "us-west-1a", :provided_name => "us-west-1a", :status => "available")
-        @us_west_1b = subject.physical_servers.create(:name => "us-west-1b", :provided_name => "us-west-1b", :status => "available")
-        @ami_1 = subject.virtual_server_images.create(:name => "ami-11111111", :provided_name => "ami-11111111")
+        @us_west_1a = subject.physical_servers.create(:name => "us-west-1a", :provided_id => "us-west-1a", :status => "available")
+        @us_west_1b = subject.physical_servers.create(:name => "us-west-1b", :provided_id => "us-west-1b", :status => "available")
+        @ami_1 = subject.virtual_server_images.create(:name => "ami-11111111", :provided_id => "ami-11111111")
         @response_base = {
           # 起動後変更がない属性
           # :aws_instance_id    => "i-11111111",
@@ -192,7 +192,7 @@ describe Tengine::Resource::Provider::Ec2 do
 
         @base_attrs = {
           :status => "running",
-          :provided_image_name => "ami-11111111",
+          :provided_image_id => "ami-11111111",
           :properties => {
             :aws_availability_zone => "us-east-1a",
             :ssh_key_name=>"tengine",
@@ -206,35 +206,43 @@ describe Tengine::Resource::Provider::Ec2 do
         @server_base_attrs = [
           {
             :name          => "i-11111111",
-            :provided_name => "i-11111111",
-            :public_hostname => "ec2-184-72-203-101.us-west-1.compute.amazonaws.com",
-            :public_ipv4 => "184.72.20.101",
-            :private_hostname => "ip-10-162-153-101.us-west-1.compute.internal",
-            :private_ipv4 => "10.162.153.101",
+            :provided_id => "i-11111111",
+            :addresses => {
+              :dns_name => "ec2-184-72-203-101.us-west-1.compute.amazonaws.com",
+              :ip_address => "184.72.20.101",
+              :private_dns_name => "ip-10-162-153-101.us-west-1.compute.internal",
+              :private_ip_address => "10.162.153.101",
+            }
           },
           {
             :name          => "i-22222222",
-            :provided_name => "i-22222222",
-            :public_hostname => "ec2-184-72-203-102.us-west-1.compute.amazonaws.com",
-            :public_ipv4 => "184.72.20.102",
-            :private_hostname => "ip-10-162-153-102.us-west-1.compute.internal",
-            :private_ipv4 => "10.162.153.102",
+            :provided_id => "i-22222222",
+            :addresses => {
+              :dns_name => "ec2-184-72-203-102.us-west-1.compute.amazonaws.com",
+              :ip_address => "184.72.20.102",
+              :private_dns_name => "ip-10-162-153-102.us-west-1.compute.internal",
+              :private_ip_address => "10.162.153.102",
+            }
           },
           {
             :name          => "i-33333333",
-            :provided_name => "i-33333333",
-            :public_hostname => "ec2-184-72-203-103.us-west-1.compute.amazonaws.com",
-            :public_ipv4 => "184.72.20.103",
-            :private_hostname => "ip-10-162-153-103.us-west-1.compute.internal",
-            :private_ipv4 => "10.162.153.103",
+            :provided_id => "i-33333333",
+            :addresses => {
+              :dns_name => "ec2-184-72-203-103.us-west-1.compute.amazonaws.com",
+              :ip_address => "184.72.20.103",
+              :private_dns_name => "ip-10-162-153-103.us-west-1.compute.internal",
+              :private_ip_address => "10.162.153.103",
+            }
           },
           {
             :name          => "i-44444444",
-            :provided_name => "i-44444444",
-            :public_hostname => "ec2-184-72-203-104.us-west-1.compute.amazonaws.com",
-            :public_ipv4 => "184.72.20.104",
-            :private_hostname => "ip-10-162-153-104.us-west-1.compute.internal",
-            :private_ipv4 => "10.162.153.104",
+            :provided_id => "i-44444444",
+            :addresses => {
+              :dns_name => "ec2-184-72-203-104.us-west-1.compute.amazonaws.com",
+              :ip_address => "184.72.20.104",
+              :private_dns_name => "ip-10-162-153-104.us-west-1.compute.internal",
+              :private_ip_address => "10.162.153.104",
+            }
           }
         ]
 
@@ -265,7 +273,7 @@ describe Tengine::Resource::Provider::Ec2 do
       shared_examples_for "取得したstaticな情報が反映される" do
         it do
           assert_server = lambda do |server|
-            server.provided_image_name.should == "ami-11111111"
+            server.provided_image_id.should == "ami-11111111"
             server.properties.should == {
               'aws_availability_zone' => "us-east-1a",
               'ssh_key_name'=>"tengine",
@@ -276,7 +284,7 @@ describe Tengine::Resource::Provider::Ec2 do
               'aws_reason' => ""
             }
           end
-          servers = subject.virtual_servers.order(:provided_name, :asc).to_a
+          servers = subject.virtual_servers.order(:provided_id, :asc).to_a
           servers.each(&assert_server)
         end
       end
@@ -286,9 +294,9 @@ describe Tengine::Resource::Provider::Ec2 do
           assert_server = lambda do |server, index|
             name = "i-" + ((index + 1).to_s * 8)
             server.name.should == name
-            server.provided_name.should == name
+            server.provided_id.should == name
           end
-          servers = subject.virtual_servers.order(:provided_name, :asc).to_a
+          servers = subject.virtual_servers.order(:provided_id, :asc).to_a
           servers.each_with_index(&assert_server)
         end
       end
@@ -296,19 +304,19 @@ describe Tengine::Resource::Provider::Ec2 do
       shared_examples_for "取得したIPとホスト名が反映される" do
         it do
           assert_server = lambda do |server, index|
-            server.public_hostname.should == "ec2-184-72-203-#{index + 101}.us-west-1.compute.amazonaws.com"
-            server.public_ipv4.should == "184.72.20.#{index + 101}"
-            server.local_hostname.should == "ip-10-162-153-#{index + 101}.us-west-1.compute.internal"
-            server.local_ipv4.should == "10.162.153.#{index + 101}"
+            server.addresses['dns_name'].should == "ec2-184-72-203-#{index + 101}.us-west-1.compute.amazonaws.com"
+            server.addresses['ip_address'].should == "184.72.20.#{index + 101}"
+            server.addresses['private_dns_name'].should == "ip-10-162-153-#{index + 101}.us-west-1.compute.internal"
+            server.addresses['private_ip_address'].should == "10.162.153.#{index + 101}"
           end
-          servers = subject.virtual_servers.order(:provided_name, :asc).to_a
+          servers = subject.virtual_servers.order(:provided_id, :asc).to_a
           servers.each_with_index(&assert_server)
         end
       end
 
       shared_examples_for "取得した状態が反映される" do
         it do
-          servers = subject.virtual_servers.order(:provided_name, :asc).to_a
+          servers = subject.virtual_servers.order(:provided_id, :asc).to_a
           servers.each do |server|
             server.status.should == "running"
           end
@@ -330,12 +338,14 @@ describe Tengine::Resource::Provider::Ec2 do
       context "すでに1台登録されている場合" do
         before do
           subject.virtual_servers.create(@base_attrs.merge({
-              :name          => "i-11111111",
-              :provided_name => "i-11111111",
-              :public_hostname => "ec2-184-72-203-101.us-west-1.compute.amazonaws.com",
-              :public_ipv4 => "184.72.20.101",
-              :private_hostname => "ip-10-162-153-101.us-west-1.compute.internal",
-              :private_ipv4 => "10.162.153.101",
+                :name          => "i-11111111",
+                :provided_id => "i-11111111",
+                :addresses => {
+                  'dns_name' => "ec2-184-72-203-101.us-west-1.compute.amazonaws.com",
+                  'ip_address' => "184.72.20.101",
+                  'private_dns_name' => "ip-10-162-153-101.us-west-1.compute.internal",
+                  'private_ip_address' => "10.162.153.101",
+                },
               }))
           subject.virtual_servers.count.should == 1
           subject.update_virtual_servers
@@ -393,13 +403,13 @@ describe Tengine::Resource::Provider::Ec2 do
           it_behaves_like "取得した状態が反映される"
 
           it "nameはTenigneで指定するものなので更新されません" do
-            servers = subject.virtual_servers.order(:provided_name, :asc).to_a
+            servers = subject.virtual_servers.order(:provided_id, :asc).to_a
             servers[0].name.should == "master1"
             servers[1].name.should == "slave1"
             servers[2].name.should == "slave2"
-            servers[0].provided_name.should == "i-11111111"
-            servers[1].provided_name.should == "i-22222222"
-            servers[2].provided_name.should == "i-33333333"
+            servers[0].provided_id.should == "i-11111111"
+            servers[1].provided_id.should == "i-22222222"
+            servers[2].provided_id.should == "i-33333333"
           end
         end
       end

@@ -10,7 +10,7 @@ class Tengine::Resource::Provider::Ec2 < Tengine::Resource::Provider
       # http://docs.amazonwebservices.com/AWSEC2/latest/APIReference/index.html?ApiReference-query-DescribeAvailabilityZones.html
       hashs = conn.describe_availability_zones.map do |hash|
         {
-          :provided_name => hash[:zone_name],
+          :provided_id => hash[:zone_name],
           :name    => hash[:zone_name],
           :status => hash[:zone_state],
         }
@@ -43,16 +43,18 @@ class Tengine::Resource::Provider::Ec2 < Tengine::Resource::Provider
       # http://docs.amazonwebservices.com/AWSEC2/latest/APIReference/index.html?ApiReference-query-DescribeInstances.html
       hashs = conn.describe_instances.map do |hash|
         result = {
-          :provided_name => hash.delete(:aws_instance_id),
-          :provided_image_name => hash.delete(:aws_image_id),
-          :public_hostname  => hash.delete(:dns_name),
-          :public_ipv4      => hash.delete(:ip_address),
-          :local_hostname => hash.delete(:private_dns_name),
-          :local_ipv4     => hash.delete(:private_ip_address),
+          :provided_id => hash.delete(:aws_instance_id),
+          :provided_image_id => hash.delete(:aws_image_id),
           :status => hash.delete(:aws_state),
         }
         hash.delete(:aws_state_code)
         result[:properties] = hash
+        result[:addresses] = {
+          :dns_name        => hash.delete(:dns_name),
+          :ip_address      => hash.delete(:ip_address),
+          :private_dns_name => hash.delete(:private_dns_name),
+          :private_ip_address => hash.delete(:private_ip_address),
+        }
         result
       end
       update_virtual_servers_by(hashs)

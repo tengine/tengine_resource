@@ -28,12 +28,12 @@ class Tengine::Resource::Provider
   def update_physical_servers_by(hashs)
     found_ids = []
     hashs.each do |hash|
-      server = self.physical_servers.where(:provided_name => hash[:provided_name]).first
+      server = self.physical_servers.where(:provided_id => hash[:provided_id]).first
       if server
         server.update_attributes(:status => hash[:status])
       else
         server = self.physical_servers.create!(
-          :provided_name => hash[:provided_name],
+          :provided_id => hash[:provided_id],
           :name => hash[:name],
           :status => hash[:status])
       end
@@ -47,11 +47,11 @@ class Tengine::Resource::Provider
   def update_virtual_servers_by(hashs)
     found_ids = []
     hashs.each do |hash|
-      server = self.virtual_servers.where(:provided_name => hash[:provided_name]).first
+      server = self.virtual_servers.where(:provided_id => hash[:provided_id]).first
       if server
         server.update_attributes(hash)
       else
-        server = self.virtual_servers.create!(hash.merge(:name => hash[:provided_name]))
+        server = self.virtual_servers.create!(hash.merge(:name => hash[:provided_id]))
       end
       found_ids << server.id
     end

@@ -74,11 +74,11 @@ class Tengine::Resource::Credential::Ec2::LaunchOptions
     # ]
     saved_images = Tengine::Resource::VirtualServerImage.all
     # raw_images = @connection.describe_images_by_owner('self')
-    raw_images = @connection.describe_images(saved_images.map(&:provided_name).uniq.compact) #クラスタに登録されているAMI
+    raw_images = @connection.describe_images(saved_images.map(&:provided_id).uniq.compact) #クラスタに登録されているAMI
     # raw_images += @connection.describe_images_by_executable_by("self") # 実行可能なAMI
     amiid_to_hash = raw_images.inject({}){|d, hash| d[hash[:aws_id]] = hash; d}
     result = saved_images.map do |saved_image|
-      if ami = amiid_to_hash[saved_image.provided_name]
+      if ami = amiid_to_hash[saved_image.provided_id]
         {
           'id' => saved_image.id,
           'name' => ami[:aws_id],

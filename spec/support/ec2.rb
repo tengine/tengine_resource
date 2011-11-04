@@ -4,12 +4,12 @@ def setup_ec2_images
   Tengine::Resource::VirtualServerImage.delete_all
   result = [
     # us-west-1
-    klass.create!(:name => "ami-10101010mysql", :provided_name => "ami-10101000", :description => "MySQL server"),     # *1 同じAMI ID
-    klass.create!(:name => "ami-10101010rails", :provided_name => "ami-10101000", :description => "Rails App Server"), # *1 同じAMI ID
-    klass.create!(:name => "ami-10102000"     , :provided_name => "ami-10102000", :description => "Nginx Server"),
+    klass.create!(:name => "ami-10101010mysql", :provided_id => "ami-10101000", :description => "MySQL server"),     # *1 同じAMI ID
+    klass.create!(:name => "ami-10101010rails", :provided_id => "ami-10101000", :description => "Rails App Server"), # *1 同じAMI ID
+    klass.create!(:name => "ami-10102000"     , :provided_id => "ami-10102000", :description => "Nginx Server"),
     # us-west-2
-    klass.create!(:name => "ami-10103000"     , :provided_name => "ami-10103000", :description => "APP1 servers"),
-    klass.create!(:name => "ami-10104000"     , :provided_name => "ami-10104000", :description => "APP2 servers"),
+    klass.create!(:name => "ami-10103000"     , :provided_id => "ami-10103000", :description => "APP1 servers"),
+    klass.create!(:name => "ami-10104000"     , :provided_id => "ami-10104000", :description => "APP2 servers"),
   ]
 end
 
@@ -37,10 +37,10 @@ def setup_ec2_stub(images = setup_ec2_images)
         :aws_perms=>[{:from_port=>"80", :to_port=>"80", :cidr_ips=>"0.0.0.0/0", :protocol=>"tcp"}]},
     ])
   mock_ec2.stub!(:describe_images).
-    with(images.map(&:provided_name).uniq).
+    with(images.map(&:provided_id).uniq).
     and_return([
       {
-        :aws_id=>images[0].provided_name, # "ami-012b7a44",
+        :aws_id=>images[0].provided_id, # "ami-012b7a44",
         :aws_architecture=>"i386", :root_device_type=>"instance-store",
         :aws_kernel_id=>"aki-f70657b2", :aws_ramdisk_id=>"ari-ff0657ba",
         :root_device_name=>"/dev/sda5",
@@ -50,7 +50,7 @@ def setup_ec2_stub(images = setup_ec2_images)
         :aws_product_codes=>["F6F58AC9"]
       },
       {
-        :aws_id=>images[2].provided_name, # "ami-05530240",
+        :aws_id=>images[2].provided_id, # "ami-05530240",
         :aws_architecture=>"x86_64", :root_device_type=>"ebs",
         :aws_kernel_id=>"aki-6f3c6d2a", :aws_ramdisk_id=>"ari-693c6d2c",
         :root_device_name=>"/dev/sda1",
