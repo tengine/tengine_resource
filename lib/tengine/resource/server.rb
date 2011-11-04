@@ -23,7 +23,7 @@ class Tengine::Resource::Server
   validates :name, :presence => true, :uniqueness => true, :format => BASE_NAME.options
   index :name, :unique => true
 
-  has_many :guest, :class_name => "Tengine::Resource::VirtualServer", :inverse_of => :host
+  has_many :guest_servers, :class_name => "Tengine::Resource::VirtualServer", :inverse_of => :host_server
 
   class << self
     def find_or_create_by_name!(attrs = {}, &block)

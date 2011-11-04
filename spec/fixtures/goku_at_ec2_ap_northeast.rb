@@ -100,7 +100,7 @@ class GokuAtEc2ApNortheast
       :addresses => hostnames_and_ips(1),
       :provider_id => provider.id,
       :provided_image_name => hadoop_image.provided_name,
-      :host => availability_zone(1), :status => "available",
+      :host_server => availability_zone(1), :status => "available",
       :name => "hadoop_master_node", :provided_name => "i-10000001")
   end
 
@@ -109,7 +109,7 @@ class GokuAtEc2ApNortheast
       :addresses => hostnames_and_ips(idx + 10),
       :provider_id => provider.id,
       :provided_image_name => hadoop_image.provided_name,
-      :host => availability_zone(1), :status => "available",
+      :host_server => availability_zone(1), :status => "available",
       :name => "hadoop_slave_node#{idx}", :provided_name => "i-1000001#{idx}")
   end
 
@@ -118,7 +118,7 @@ class GokuAtEc2ApNortheast
       :addresses => hostnames_and_ips(20),
       :provider_id => provider.id,
       :provided_image_name => mysql_image.provided_name,
-      :host => availability_zone(1), :status => "available",
+      :host_server => availability_zone(1), :status => "available",
       :name => "mysql_master", :provided_name => "i-10000020")
   end
 
@@ -127,7 +127,7 @@ class GokuAtEc2ApNortheast
       :addresses => hostnames_and_ips(idx + 20),
       :provider_id => provider.id,
       :provided_image_name => mysql_image.provided_name,
-      :host => availability_zone(1), :status => "available",
+      :host_server => availability_zone(1), :status => "available",
       :name => "mysql_slave#{idx}", :provided_name => "i-1000002#{idx}")
   end
 
@@ -136,7 +136,7 @@ class GokuAtEc2ApNortheast
       :addresses => hostnames_and_ips(idx + 30),
       :provider_id => provider.id,
       :provided_image_name => rails_image.provided_name,
-      :host => availability_zone(1), :status => "available",
+      :host_server => availability_zone(1), :status => "available",
       :name => "rails#{idx}", :provided_name => "i-1000003#{idx}")
   end
 
