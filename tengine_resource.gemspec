@@ -5,11 +5,11 @@
 
 Gem::Specification.new do |s|
   s.name = "tengine_resource"
-  s.version = "0.0.8"
+  s.version = "0.0.9"
 
   s.required_rubygems_version = Gem::Requirement.new(">= 0") if s.respond_to? :required_rubygems_version=
   s.authors = ["akima"]
-  s.date = "2011-11-03"
+  s.date = "2011-11-04"
   s.description = "tengine_resource provides physical/virtual server management"
   s.email = "akima@nautilus-technologies.com"
   s.executables = ["tengine_resource_watchd"]
@@ -58,7 +58,7 @@ Gem::Specification.new do |s|
   s.homepage = "http://github.com/akm/tengine_resource"
   s.licenses = ["MIT"]
   s.require_paths = ["lib"]
-  s.rubygems_version = "1.8.10"
+  s.rubygems_version = "1.8.11"
   s.summary = "tengine_resource provides physical/virtual server management"
 
   if s.respond_to? :specification_version then
