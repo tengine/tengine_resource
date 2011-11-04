@@ -17,6 +17,7 @@ class Tengine::Resource::Provider
     c.has_many :physical_servers       , :class_name => "Tengine::Resource::PhysicalServer"
     c.has_many :virtual_servers        , :class_name => "Tengine::Resource::VirtualServer"
     c.has_many :virtual_server_images  , :class_name => "Tengine::Resource::VirtualServerImage"
+    c.has_many :virtual_server_types   , :class_name => "Tengine::Resource::VirtualServerType"
   end
 
   def update_physical_servers      ; raise NotImplementedError end

@@ -7,6 +7,7 @@ module Tengine::Resource
   autoload :PhysicalServer    , 'tengine/resource/physical_server'
   autoload :VirtualServer     , 'tengine/resource/virtual_server'
   autoload :VirtualServerImage, 'tengine/resource/virtual_server_image'
+  autoload :VirtualServerType , 'tengine/resource/virtual_server_type'
   autoload :Credential        , 'tengine/resource/credential'
   autoload :Provider          , 'tengine/resource/provider'
 
