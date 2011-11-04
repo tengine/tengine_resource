@@ -5,7 +5,7 @@
 
 Gem::Specification.new do |s|
   s.name = "tengine_resource"
-  s.version = "0.0.9"
+  s.version = "0.0.10"
 
   s.required_rubygems_version = Gem::Requirement.new(">= 0") if s.respond_to? :required_rubygems_version=
   s.authors = ["akima"]
@@ -39,6 +39,7 @@ Gem::Specification.new do |s|
     "lib/tengine/resource/server.rb",
     "lib/tengine/resource/virtual_server.rb",
     "lib/tengine/resource/virtual_server_image.rb",
+    "lib/tengine/resource/virtual_server_type.rb",
     "lib/tengine_resource.rb",
     "spec/fixtures/goku_at_ec2_ap_northeast.rb",
     "spec/mongoid.yml",
@@ -51,6 +52,7 @@ Gem::Specification.new do |s|
     "spec/tengine/resource/server_spec.rb",
     "spec/tengine/resource/virtual_server_image_spec.rb",
     "spec/tengine/resource/virtual_server_spec.rb",
+    "spec/tengine/resource/virtual_server_type_spec.rb",
     "spec/tengine_resource_spec.rb",
     "tengine_resource.gemspec",
     "tmp/log/.gitignore"
