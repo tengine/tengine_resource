@@ -39,9 +39,7 @@ class Tengine::Resource::Provider
       end
       found_ids << server.id
     end
-    self.physical_servers.not_in(:_id => found_ids).each do |server|
-      server.update_attributes(:status => "not_found")
-    end
+    self.physical_servers.not_in(:_id => found_ids).update_all(:status => "not_found")
   end
 
   def update_virtual_servers_by(hashs)
