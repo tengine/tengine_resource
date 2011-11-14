@@ -51,4 +51,44 @@ describe Tengine::Resource::VirtualServerImage do
     end
   end
 
+  context "nameで検索" do
+    before do
+      Tengine::Resource::VirtualServerImage.delete_all
+      @fixture = GokuAtEc2ApNortheast.new
+      @hadoop_image = @fixture.hadoop_image
+    end
+
+    context "見つかる場合" do
+      it "find_by_name" do
+        found_credential = nil
+        lambda{
+          found_credential = Tengine::Resource::VirtualServerImage.find_by_name(@hadoop_image.name)
+        }.should_not raise_error
+        found_credential.should_not be_nil
+        found_credential.id.should == @hadoop_image.id
+      end
+
+      it "find_by_name!" do
+        found_credential = nil
+        lambda{
+          found_credential = Tengine::Resource::VirtualServerImage.find_by_name!(@hadoop_image.name)
+        }.should_not raise_error
+        found_credential.should_not be_nil
+        found_credential.id.should == @hadoop_image.id
+      end
+    end
+
+    context "見つからない場合" do
+      it "find_by_name" do
+        found_credential = Tengine::Resource::VirtualServerImage.find_by_name("unexist_name").should == nil
+      end
+
+      it "find_by_name!" do
+        lambda{
+          found_credential = Tengine::Resource::VirtualServerImage.find_by_name!("unexist_name")
+        }.should raise_error(Tengine::Core::FindByName::Error)
+      end
+    end
+  end
+
 end

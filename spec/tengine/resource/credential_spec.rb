@@ -59,16 +59,55 @@ describe Tengine::Resource::Credential do
   end
 
 
-  it "name で検索できるか" do
-    Tengine::Resource::Credential.delete_all
-    credential = Tengine::Resource::Credential.create!(valid_attributes1)
-    found_credential = nil
-    lambda{
-      found_credential = Tengine::Resource::Credential.first(:conditions => {:name => "ssh-private_key"})
-    }.should_not raise_error
-    found_credential.should_not be_nil
-    found_credential.id.should == credential.id
+  context "nameで検索" do
+    before do
+      Tengine::Resource::Credential.delete_all
+      @credential = Tengine::Resource::Credential.create!(valid_attributes1)
+    end
+
+    context "見つかる場合" do
+      it "name で検索できるか" do
+        found_credential = nil
+        lambda{
+          found_credential = Tengine::Resource::Credential.first(:conditions => {:name => "ssh-private_key"})
+        }.should_not raise_error
+        found_credential.should_not be_nil
+        found_credential.id.should == @credential.id
+      end
+
+      it "find_by_name" do
+        found_credential = nil
+        lambda{
+          found_credential = Tengine::Resource::Credential.find_by_name("ssh-private_key")
+        }.should_not raise_error
+        found_credential.should_not be_nil
+        found_credential.id.should == @credential.id
+      end
+
+      it "find_by_name!" do
+        found_credential = nil
+        lambda{
+          found_credential = Tengine::Resource::Credential.find_by_name!("ssh-private_key")
+        }.should_not raise_error
+        found_credential.should_not be_nil
+        found_credential.id.should == @credential.id
+      end
+    end
+
+    context "見つからない場合" do
+      it "find_by_name" do
+        found_credential = Tengine::Resource::Credential.find_by_name("unexist_name").should == nil
+      end
+
+      it "find_by_name!" do
+        lambda{
+          found_credential = Tengine::Resource::Credential.find_by_name!("unexist_name")
+        }.should raise_error(Tengine::Core::FindByName::Error)
+      end
+    end
+
   end
+
 
   describe :secure_auth_values, "外部に見せても良いように見せちゃ拙い情報は取り除く" do
     it :ssh_password do

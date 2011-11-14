@@ -7,6 +7,7 @@ class Tengine::Resource::Provider
   include Mongoid::Document
   include Mongoid::Timestamps
   include Tengine::Core::Validation
+  include Tengine::Core::FindByName
 
   field :name, :type => String
   field :description, :type => String

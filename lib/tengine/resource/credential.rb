@@ -16,6 +16,7 @@ class Tengine::Resource::Credential
   include Tengine::Core::SelectableAttr
   include Tengine::Core::CollectionAccessible
   include Tengine::Core::Validation
+  include Tengine::Core::FindByName
 
   field :name, :type => String
   field :description, :type => String

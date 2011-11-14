@@ -6,6 +6,7 @@ class Tengine::Resource::Server
   include Mongoid::Timestamps
   include Tengine::Core::CollectionAccessible
   include Tengine::Core::Validation
+  include Tengine::Core::FindByName
 
   field :name         , :type => String
   field :description  , :type => String
