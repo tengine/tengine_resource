@@ -4,6 +4,9 @@ require 'selectable_attr'
 
 require 'net/ssh'
 require "right_aws"
+require 'apis/ec2'
+require 'apis/wakame'
+require 'controllers/controller'
 
 class Tengine::Resource::Credential
   autoload :Ec2, 'tengine/resource/credential/ec2'
@@ -30,6 +33,7 @@ class Tengine::Resource::Credential
     entry "02", :ssh_public_key, "SSH公開鍵認証"       , :for_launch => false
     entry "03", :ec2_access_key, "EC2 アクセスキー認証", :for_launch => true
     # entry "04", :ec2_x509_cert, "EC2 X.509認証"
+    entry "05", :tama, "Tama", :for_launch => true
   end
 
   validates :name, :presence => true, :uniqueness => true, :format => BASE_NAME.options
@@ -100,6 +104,17 @@ class Tengine::Resource::Credential
       AuthField.new(:secret_access_key, :string),
       AuthField.new(:default_region, :string, :default => "us-east-1"),
     ].freeze,
+
+    # {:access_key => "xxxxx", :secret_access_key =>"xxxxx"}
+    :tama => [
+      AuthField.new(:account, :string, :default => "a-shpoolxx"),
+      AuthField.new(:ec2_host, :string),
+      AuthField.new(:ec2_port, :integer),
+      AuthField.new(:ec2_protocol, :string, :options => %w"http https"),
+      AuthField.new(:wakame_host, :string),
+      AuthField.new(:wakame_port, :integer),
+      AuthField.new(:wakame_protocol, :string, :options => %w"http https"),
+    ].freeze,
   }.freeze
 
   def validate_auth_values
@@ -154,6 +169,7 @@ class Tengine::Resource::Credential
     when :ssh_password   then connect_with_ssh_password(conn_opts, *args, &block)
     when :ssh_public_key then connect_with_ssh_pk(conn_opts, *args, &block)
     when :ec2_access_key then connect_with_ec2_access_key(conn_opts, *args, &block)
+    when :tama           then connect_with_tama(conn_opts, *args, &block)
     else
       raise NotImplementedError, "#{auth_type_key} isn't supported."
     end
@@ -227,6 +243,29 @@ class Tengine::Resource::Credential
       block.call(connection)
   end
 
+  # tama API
+  def connect_with_tama(conn_opts, *args, &block)
+    runtime_options = args.extract_options!
+    h = [
+      :account, 
+      :ec2_host, :ec2_port, :ec2_protocol,
+      :wakame_host, :wakame_port, :wakame_protocol,
+    ].inject({}) {|r, i|
+      x = runtime_options.delete i
+      y = conn_opts.delete i
+      r.update i => (x || y)
+    }
+    connection = ::Tama::Controllers::ControllerFactory.create_controller(
+      h[:account],
+      h[:ec2_host],
+      h[:ec2_port],
+      h[:ec2_protocol],
+      h[:wakame_host],
+      h[:wakame_port],
+      h[:wakame_protocol],
+    )
+    block.call(connection)
+  end
 
   def tmp_private_key_files(private_keys)
     # Tempfileを使おうと思いましたが、なぜか"not a private key"というエラーが出てしまうので、諦めました。
