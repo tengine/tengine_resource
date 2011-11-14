@@ -1,5 +1,7 @@
 # -*- coding: utf-8 -*-
 require 'spec_helper'
+require 'apis/ec2'
+require 'apis/wakame'
 require 'controllers/controller'
 
 describe Tengine::Resource::Provider::Tama do
