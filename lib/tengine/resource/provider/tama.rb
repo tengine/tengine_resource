@@ -29,6 +29,8 @@ class Tengine::Resource::Provider::Tama < Tengine::Resource::Provider::Ec2
     # 12	block_device_mappings	 	nil	nil
     count = hash.delete :count
     ps    = hash.delete :physical_server
+    raise ArgumentError, "count missing, how many?" unless count
+    raise ArgumentError, "physical_server missing, where?" unless ps
     hash[:min_count]         = count
     hash[:max_count]         = count
     hash[:group_ids]         = []

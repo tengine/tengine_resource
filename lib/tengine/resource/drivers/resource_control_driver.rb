@@ -1,28 +1,46 @@
 # -*- coding: utf-8 -*-
+require 'active_support/core_ext/hash/keys'
 
 # リソース制御ドライバ
 driver :resource_control_driver do
 
   on :'仮想サーバ起動リクエストイベント' do
-    pid = event.properties.delete(:provider_id)
-    if pid
-      provider = Tengine::Resource::Provider.find(pid)
-      if provider
-        provider = provider.become provider._type
-        provider.create_virtual_servers event.properties
+    prop = event.properties.dup
+ 
+    raise "malformed event (packet corruption?), provider not found. #{event.inspect}" unless pid = prop.delete("provider_id")
+    provider = Tengine::Resource::Provider.find(pid)
+
+    name = provider._type
+    raise "logical bug or DB corruption, unknown class #{name}" unless klass = ObjectSpace.each_object(Class).select {|i| i.name == name }.first
+
+    [["physical_server", Tengine::Resource::PhysicalServer],
+     ["virtual_server_image", Tengine::Resource::VirtualServerImage],
+     ["virtual_server_type", Tengine::Resource::VirtualServerType],
+    ].each do |(i, j)|
+      if k = prop.delete("#{i}_id")
+        prop[i] = j.find(k)
       end
     end
+
+    provider.becomes(klass).create_virtual_servers prop.symbolize_keys
   end
 
   on :'仮想サーバ停止リクエストイベント' do
-    pid = event.properties.delete(:provider_id)
-    if pid
-      provider = Tengine::Resource::Provider.find(pid)
-      if provider
-        provider = provider.become provider._type
-        provider.terminate_virtual_servers event.properties[:virtual_servers]
-      end
+    prop = event.properties.dup
+ 
+    raise "malformed event (packet corruption?), provider not found. #{event.inspect}" unless pid = prop.delete("provider_id")
+    provider = Tengine::Resource::Provider.find(pid)
+
+    name = provider._type
+    raise "logical bug or DB corruption, unknown class #{name}" unless klass = ObjectSpace.each_object(Class).select {|i| i.name == name }.first
+
+    raise "malformed event (packet corruption?), no server to stop. #{event.inspect}" unless servers = prop.delete("virtual_servers")
+
+    servers.map! do |i|
+      Tengine::Resource::VirtualServer.find(i)
     end
+
+    provider.becomes(klass).terminate_virtual_servers servers
   end
 
   on :'Tengine::Resource::VirtualServer.created.tengine_resource_watchd'        # 仮想サーバ登録通知イベント

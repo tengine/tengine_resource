@@ -85,25 +85,25 @@ describe Tengine::Resource::Provider::Tama do
         with("a-shpoolxx", "192.168.2.22", 9005, "https", "192.168.2.22", 9001, "https").
         and_return(c)
       c.stub(:terminate_instances).
-        with(["wmi-lucid5"]).
+        with(["i-f222222d"]).
         and_return([{
          :aws_shutdown_state      => nil,
-         :aws_instance_id         => "wmi-lucid5",
+         :aws_instance_id         => "i-f222222d",
          :aws_shutdown_state_code => nil,
          :aws_prev_state          => nil,
          :aws_prev_state_code     => nil,
        }])
       c.stub(:terminate_instances).
-        with(["wmi-lucid5", "wmi-maverick5"]).
+        with(["i-f222222d", "i-f222222e"]).
         and_return([{
          :aws_shutdown_state      => nil,
-         :aws_instance_id         => "wmi-lucid5",
+         :aws_instance_id         => "i-f222222d",
          :aws_shutdown_state_code => nil,
          :aws_prev_state          => nil,
          :aws_prev_state_code     => nil,
        }, {
          :aws_shutdown_state      => nil,
-         :aws_instance_id         => "wmi-maverick5",
+         :aws_instance_id         => "i-f222222e",
          :aws_shutdown_state_code => nil,
          :aws_prev_state          => nil,
          :aws_prev_state_code     => nil,
@@ -111,26 +111,26 @@ describe Tengine::Resource::Provider::Tama do
     end
 
     it "1台の停止" do
-      vs = subject.virtual_servers.create(:provided_id => 'wmi-lucid5', :name => 'wmi-lucid5')
+      vs = subject.virtual_servers.create(:provided_id => 'i-f222222d', :name => 'i-f222222d')
       va = subject.terminate_virtual_servers([vs])
       va.count.should == 1
       v = va[0]
       v.should_not be_nil
       v.should be_valid
-      v.provided_id.should == 'wmi-lucid5'
+      v.provided_id.should == 'i-f222222d'
     end
 
     it "複数台の停止" do
-      v1 = subject.virtual_servers.create(:provided_id => 'wmi-lucid5', :name => 'wmi-lucid5')
-      v2 = subject.virtual_servers.create(:provided_id => 'wmi-maverick5', :name => 'wmi-maverick5')
+      v1 = subject.virtual_servers.create(:provided_id => 'i-f222222d', :name => 'i-f222222d')
+      v2 = subject.virtual_servers.create(:provided_id => 'i-f222222e', :name => 'i-f222222e')
       va = subject.terminate_virtual_servers([v1 ,v2])
       va.count.should == 2
       va[0].should_not be_nil
       va[0].should be_valid
-      va[0].provided_id.should == 'wmi-lucid5'
+      va[0].provided_id.should == 'i-f222222d'
       va[1].should_not be_nil
       va[1].should be_valid
-      va[1].provided_id.should == 'wmi-maverick5'
+      va[1].provided_id.should == 'i-f222222e'
     end
   end
 end
