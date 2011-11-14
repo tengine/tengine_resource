@@ -6,7 +6,7 @@ require 'tengine/core/config'
 
 class Tengine::Resource::Watcher
 
-  attr_reader :config, :pid, :sender
+  attr_reader :config, :pid
 
   def initialize(argv = [])
     @config = Tengine::Core::Config.parse(argv)
@@ -39,7 +39,6 @@ class Tengine::Resource::Watcher
     end
 
     EM.run do
-      mq_suite
       init_process
     end
   end

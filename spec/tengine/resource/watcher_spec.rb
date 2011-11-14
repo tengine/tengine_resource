@@ -25,45 +25,49 @@ describe Tengine::Resource::Watcher do
   context :start do
     before do
       @watcher = Tengine::Resource::Watcher.new
+      EM.should_receive(:run).and_yield
     end
 
     it "初期処理が呼び出される" do
-      EM.should_receive(:run).and_yield
-      @watcher.should_receive(:mq_suite)
       @watcher.should_receive(:init_process)
       @watcher.start
     end
+
+    describe :init_process do
+      before do
+        # コネクションの mock を生成
+        mock_conn = mock(:connection)
+        AMQP.should_receive(:connect).with({
+            :user=>"guest", :pass=>"guest", :vhost=>"/",
+            :logging=>false, :insist=>false, :host=>"localhost", :port=>5672}).
+          and_return(mock_conn)
+        mock_conn.should_receive(:on_tcp_connection_loss)
+        mock_conn.should_receive(:after_recovery)
+        mock_conn.should_receive(:on_closed)
+      end
+
+      it "生成したmq_suiteが設定されている" do
+        mock_mq = Tengine::Mq::Suite.new(@watcher.config[:event_queue])
+        Tengine::Mq::Suite.should_receive(:new).
+          with(@watcher.config[:event_queue]).and_return(mock_mq)
+
+        @watcher.sender.should_receive(:wait_for_connection)
+        @watcher.start
+      end
+
+      it "生成したsenderが設定されている", :failure => true do
+        mock_mq = Tengine::Mq::Suite.new(@watcher.config[:event_queue])
+        Tengine::Mq::Suite.should_receive(:new).
+          with(@watcher.config[:event_queue]).and_return(mock_mq)
+        mock_sender = mock(:sender)
+        Tengine::Event::Sender.should_receive(:new).with(mock_mq).and_return(mock_sender)
+
+        @watcher.sender.should_receive(:wait_for_connection)
+        @watcher.start
+      end
+
+    end
   end
 
-  context :sender do
-    before do
-      @watcher = Tengine::Resource::Watcher.new
-    end
-
-    it "生成したSenderが設定されている" do
-      EM.should_receive(:run).and_yield
-
-      # コネクションの mock を生成
-      mock_conn = mock(:connection)
-      AMQP.should_receive(:connect).with({
-          :user=>"guest", :pass=>"guest", :vhost=>"/",
-          :logging=>false, :insist=>false, :host=>"localhost", :port=>5672}).
-        and_return(mock_conn)
-      mock_conn.should_receive(:on_tcp_connection_loss)
-      mock_conn.should_receive(:after_recovery)
-      mock_conn.should_receive(:on_closed)
-      mock_conn.stub(:connected?).and_return(true)
-
-      # キューの mock を生成
-      mock_queue = mock(:queue)
-      mock_mq = Tengine::Mq::Suite.new(@watcher.config[:event_queue])
-      Tengine::Mq::Suite.should_receive(:new).
-        with(@watcher.config[:event_queue]).and_return(mock_mq)
-      Tengine::Event::Sender.should_receive(:new).any_number_of_times.with(mock_mq)
-
-      @watcher.sender.should_receive(:wait_for_connection)
-      @watcher.start
-    end
-  end
 
 end
