@@ -1,5 +1,4 @@
 require 'tengine_core'
+require 'tengine/resource'
 
-module Tengine
-  autoload :Resource, "tengine/resource"
-end
+Tengine.plugins.add(Tengine::Resource)

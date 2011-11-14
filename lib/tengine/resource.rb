@@ -13,4 +13,14 @@ module Tengine::Resource
 
   # モデルの更新を受けてイベントを発火するオブザーバ
   autoload :Observer          , 'tengine/resource/observer'
+
+  def self.notify ctx, msg
+    # called from tengine_core/lib/tengine/core/plugins.rb
+    case msg when :after___evalate__
+      Dir.glob(File.expand_path("../resource/drivers/*.rb", __FILE__)) do |f|
+        ctx.instance_eval File.read(f), f # load additional drivers
+      end
+    end
+  end
+
 end

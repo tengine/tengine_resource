@@ -2,6 +2,7 @@ require 'mongoid'
 
 class Tengine::Resource::Provider
   autoload :Ec2, 'tengine/resource/provider/ec2'
+  autoload :Tama, 'tengine/resource/provider/tama'
 
   include Mongoid::Document
   include Mongoid::Timestamps
@@ -40,9 +41,7 @@ class Tengine::Resource::Provider
       end
       found_ids << server.id
     end
-    self.physical_servers.not_in(:_id => found_ids).each do |server|
-      server.update_attributes(:status => "not_found")
-    end
+    self.physical_servers.not_in(:_id => found_ids).update_all(:status => "not_found")
   end
 
   def update_virtual_servers_by(hashs)
