@@ -14,6 +14,8 @@ module Tengine::Resource
   # モデルの更新を受けてイベントを発火するオブザーバ
   autoload :Observer          , 'tengine/resource/observer'
 
+  autoload :Watcher           , 'tengine/resource/watcher'
+
   def self.notify ctx, msg
     # called from tengine_core/lib/tengine/core/plugins.rb
     case msg when :after___evalate__
