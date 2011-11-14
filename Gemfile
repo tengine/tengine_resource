@@ -12,6 +12,7 @@ gem "tengine_core", "~> 0.3.3"
 # http://rightaws.rubyforge.org/
 # http://github.com/rightscale/right_aws
 gem "right_aws", "~> 2.1.0"
+gem "wakame-adapters-tengine", "~> 0.0.0", :git => "git@github.com:tengine/wakame-adapters-tengine.git", :branch => "master"
 
 gem "net-ssh", "~> 2.2.1"
 

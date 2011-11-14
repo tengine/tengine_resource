@@ -432,7 +432,54 @@ describe Tengine::Resource::Provider::Ec2 do
         it_behaves_like "取得した状態が反映される"
       end
 
+      context "仮想マシンの起動" do
+        it "1台の起動" do
+          vi = subject.virtual_server_images.create(:provided_id => "ami-e444444d")
+          vt = subject.virtual_server_types.create(:provided_id => "m1.small")
+          ps = subject.physical_servers.create(:provided_id => "us-east-1b")
+          vs = subject.create_virtual_servers({
+            :virtual_server_image => vi,
+            :virtual_server_type => vt,
+            :min_count => 1,
+            :max_count => 1,
+            :group_ids => ["my_awesome_group"],
+            :key_name => "my_awesome_key",
+            :kernel_id => "aki-9905e0f0",
+            :ramdisk_id => "ari-8605e0ef",
+            :availability_zone => ps.provided_id,
+          })
+          vs.count.should == 1
+          v = vs.first
+          v.should be_valid
+          v.status.should == "pending"
+          v.provided_image_id.should == vi.provided_id
+        end
+      end
+
+      context "仮想マシンの停止" do
+        it "1台の停止" do
+          vs = subject.virtual_servers.create(:provided_id => 'i-f222222d', :name => 'i-f222222d')
+          va = subject.terminate_virtual_servers([vs])
+          va.count.should == 1
+          v = va[0]
+          v.should_not be_nil
+          v.should be_valid
+          v.provided_id.should == 'i-f222222d'
+        end
+
+        it "複数台の停止" do
+          v1 = subject.virtual_servers.create(:provided_id => 'i-f222222d', :name => 'i-f222222d')
+          v2 = subject.virtual_servers.create(:provided_id => 'i-f222222e', :name => 'i-f222222e')
+          va = subject.terminate_virtual_servers([v1 ,v2])
+          va.count.should == 2
+          va[0].should_not be_nil
+          va[0].should be_valid
+          va[0].provided_id.should == 'i-f222222d'
+          va[1].should_not be_nil
+          va[1].should be_valid
+          va[1].provided_id.should == 'i-f222222e'
+        end
+      end
     end
   end
-
 end

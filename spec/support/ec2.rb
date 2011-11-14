@@ -80,5 +80,50 @@ def setup_ec2_stub(images = setup_ec2_images)
       {:root_device_type=>"instance-store", :aws_location=>"ec2-public-images-us-west-1/ec2-initrd-2.6.21.7-2.fc8xen.x86_64.manifest.xml"                       , :aws_image_type=>"ramdisk", :aws_state=>"available", :aws_owner=>"206029621532", :aws_is_public=>true, :image_owner_alias=>"amazon", :aws_id=>"ari-22222222", :aws_architecture=>"x86_64"},
       {:root_device_type=>"instance-store", :aws_location=>"ec2-public-images-us-west-1/initrd-2.6.21.7-2.ec2.v1.1.fc8xen-x86_64-lvm-rootVG-rootFS.manifest.xml", :aws_image_type=>"ramdisk", :aws_state=>"available", :aws_owner=>"206029621532", :aws_is_public=>true, :name=>"initrd-2.6.21.7-2.ec2.v1.1.fc8xen-x86_64-lvm-rootVG-rootFS", :image_owner_alias=>"amazon", :aws_id=>"ari-33333333", :aws_architecture=>"x86_64"},
     ])
+
+  # http://rightscale.rubyforge.org/right_aws_gem_doc/classes/RightAws/Ec2.html#M000285
+  mock_ec2.stub!(:run_instances).with("ami-e444444d", 1, 1, ["my_awesome_group"], "my_awesome_key", "", nil, "m1.small", "aki-9905e0f0", "ari-8605e0ef", "us-east-1b", nil).and_return([
+    {
+    :aws_image_id       => "ami-e444444d",
+    :aws_reason         => "",
+    :aws_state_code     => "0",
+    :aws_owner          => "000000000888",
+    :aws_instance_id    => "i-123f1234",
+    :aws_reservation_id => "r-aabbccdd",
+    :aws_state          => "pending",
+    :dns_name           => "",
+    :ssh_key_name       => "my_awesome_key",
+    :aws_groups         => ["my_awesome_group"],
+    :private_dns_name   => "",
+    :aws_instance_type  => "m1.small",
+    :aws_launch_time    => "2008-1-1T00:00:00.000Z",
+    :aws_ramdisk_id     => "ari-8605e0ef",
+    :aws_kernel_id      => "aki-9905e0f0",
+    :ami_launch_index   => "0",
+    :aws_availability_zone => "us-east-1b",
+    }
+  ])
+
+  # http://rightscale.rubyforge.org/right_aws_gem_doc/classes/RightAws/Ec2.html#M000287
+  mock_ec2.stub!(:terminate_instances).with(['i-f222222d','i-f222222e']).and_return(
+   [{:aws_shutdown_state      => "shutting-down",
+     :aws_instance_id         => "i-f222222d",
+     :aws_shutdown_state_code => 32,
+     :aws_prev_state          => "running",
+     :aws_prev_state_code     => 16},
+    {:aws_shutdown_state      => "shutting-down",
+     :aws_instance_id         => "i-f222222e",
+     :aws_shutdown_state_code => 32,
+     :aws_prev_state          => "running",
+     :aws_prev_state_code     => 16}]
+  )
+  mock_ec2.stub!(:terminate_instances).with(['i-f222222d']).and_return(
+   [{:aws_shutdown_state      => "shutting-down",
+     :aws_instance_id         => "i-f222222d",
+     :aws_shutdown_state_code => 32,
+     :aws_prev_state          => "running",
+     :aws_prev_state_code     => 16},]
+  )
+
   mock_ec2
 end
