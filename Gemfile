@@ -7,7 +7,7 @@ source "http://rubygems.org"
 # Example:
 #   gem "activesupport", ">= 2.3.5"
 
-gem "tengine_core", "~> 0.3.0"
+gem "tengine_core", "~> 0.3.3"
 
 # http://rightaws.rubyforge.org/
 # http://github.com/rightscale/right_aws
