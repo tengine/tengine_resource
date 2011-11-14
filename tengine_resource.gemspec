@@ -8,13 +8,12 @@ Gem::Specification.new do |s|
   s.version = "0.3.4"
 
   s.required_rubygems_version = Gem::Requirement.new(">= 0") if s.respond_to? :required_rubygems_version=
-  s.authors = ["akima"]
+  s.authors = ["saishu", "w-irie", "taigou", "totty", "hiroshinakao", "g-morita", "guemon", "aoetk", "hattori-at-nt", "t-yamada", "y-karashima", "akm"]
   s.date = "2011-11-14"
   s.description = "tengine_resource provides physical/virtual server management"
-  s.email = "akima@nautilus-technologies.com"
+  s.email = "tengine@nautilus-technologies.com"
   s.executables = ["tengine_resource_watchd"]
   s.extra_rdoc_files = [
-    "LICENSE.txt",
     "README.rdoc"
   ]
   s.files = [
@@ -22,7 +21,6 @@ Gem::Specification.new do |s|
     ".rspec",
     "Gemfile",
     "Gemfile.lock",
-    "LICENSE.txt",
     "README.rdoc",
     "Rakefile",
     "VERSION",
@@ -61,8 +59,8 @@ Gem::Specification.new do |s|
     "tengine_resource.gemspec",
     "tmp/log/.gitignore"
   ]
-  s.homepage = "http://github.com/akm/tengine_resource"
-  s.licenses = ["MIT"]
+  s.homepage = "http://github.com/tengine/tengine_resource"
+  s.licenses = ["MPL/LGPL"]
   s.require_paths = ["lib"]
   s.rubygems_version = "1.8.11"
   s.summary = "tengine_resource provides physical/virtual server management"

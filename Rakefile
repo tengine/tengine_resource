@@ -15,12 +15,12 @@ require 'jeweler'
 Jeweler::Tasks.new do |gem|
   # gem is a Gem::Specification... see http://docs.rubygems.org/read/chapter/20 for more options
   gem.name = "tengine_resource"
-  gem.homepage = "http://github.com/akm/tengine_resource"
-  gem.license = "MIT"
+  gem.homepage = "http://github.com/tengine/tengine_resource"
+  gem.license = "MPL/LGPL"
   gem.summary = %Q{tengine_resource provides physical/virtual server management}
   gem.description = %Q{tengine_resource provides physical/virtual server management}
-  gem.email = "akima@nautilus-technologies.com"
-  gem.authors = ["akima"]
+  gem.email = "tengine@nautilus-technologies.com"
+  gem.authors = %w[saishu w-irie taigou totty hiroshinakao g-morita guemon aoetk hattori-at-nt t-yamada y-karashima akm]
   # dependencies defined in Gemfile
 end
 Jeweler::RubygemsDotOrgTasks.new
