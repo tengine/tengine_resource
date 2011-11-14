@@ -2,6 +2,7 @@ require 'mongoid'
 
 class Tengine::Resource::Provider
   autoload :Ec2, 'tengine/resource/provider/ec2'
+  autoload :Tama, 'tengine/resource/provider/tama'
 
   include Mongoid::Document
   include Mongoid::Timestamps

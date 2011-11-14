@@ -32,7 +32,7 @@ class Tengine::Resource::Provider::Tama < Tengine::Resource::Provider::Ec2
     hash[:min_count]         = count
     hash[:max_count]         = count
     hash[:group_ids]         = []
-    hash[:key_name]          = self.properties[:key_name]
+    hash[:key_name]          = self.credential.auth_values[:key_name]
     hash[:kernel_id]         = nil
     hash[:ramdisk_id]        = nil
     hash[:availability_zone] = ps.provided_id
