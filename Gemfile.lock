@@ -1,3 +1,12 @@
+GIT
+  remote: git@github.com:tengine/wakame-adapters-tengine.git
+  revision: 9e30f21dfae4baa323da41c608e9e689dee2ce4c
+  branch: master
+  specs:
+    wakame-adapters-tengine (0.0.1)
+      json
+      right_aws
+
 GEM
   remote: http://bts.tenginefw.com/gemserver/
   remote: http://rubygems.org/
@@ -31,6 +40,7 @@ GEM
       bundler (~> 1.0)
       git (>= 1.2.5)
       rake
+    json (1.6.1)
     macaddr (1.5.0)
       systemu (>= 2.4.0)
     mongo (1.4.0)
@@ -92,4 +102,5 @@ DEPENDENCIES
   rspec (~> 2.6.0)
   simplecov (~> 0.5.3)
   tengine_core (~> 0.3.2)
+  wakame-adapters-tengine (~> 0.0.0)!
   yard (~> 0.7.2)
