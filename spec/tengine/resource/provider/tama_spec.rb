@@ -1,0 +1,136 @@
+# -*- coding: utf-8 -*-
+require 'spec_helper'
+require 'controllers/controller'
+
+describe Tengine::Resource::Provider::Tama do
+  before(:all) {
+    @credential = Tengine::Resource::Credential.new(
+      :name => "tama-key",
+      :auth_type_key => :tama,
+      :auth_values => {
+        :account => "a-shpoolxx",
+        :ec2_host => "192.168.2.22",
+        :ec2_port => 9005,
+        :ec2_protocol => "https",
+        :wakame_host => "192.168.2.22",
+        :wakame_port => 9001,
+        :wakame_protocol => "https",
+      }
+    )
+  }
+
+  subject {
+    Tengine::Resource::Provider::Tama.delete_all(:name => 'tama0001')
+    Tengine::Resource::Provider::Tama.create(
+      :name => "tama0001",
+      :description => "provided by wakame / tama",
+      :credential => @credential
+    )
+  }
+
+  context "仮想マシンの起動" do
+    before do
+      c = mock(::Tama::Controllers::ControllerFactory.allocate)
+      ::Tama::Controllers::ControllerFactory.
+        stub(:create_controller).
+        with("a-shpoolxx", "192.168.2.22", 9005, "https", "192.168.2.22", 9001, "https").
+        and_return(c)
+      c.stub(:run_instances).
+        with("wmi-lucid5", 1, 1, [], nil, "", nil, "is-small", nil, nil, "foo-dc", nil).
+        and_return([{
+          :aws_image_id       => "wmi-lucid5",
+          :aws_reason         => "",
+          :aws_state_code     => "0",
+          :aws_owner          => "000000000888",
+          :aws_instance_id    => "i-123f1234",
+          :aws_reservation_id => "r-aabbccdd",
+          :aws_state          => "pending",
+          :dns_name           => "",
+          :ssh_key_name       => "",
+          :aws_groups         => [""],
+          :private_dns_name   => "",
+          :aws_instance_type  => "is-small",
+          :aws_launch_time    => "2008-1-1T00:00:00.000Z",
+          :aws_ramdisk_id     => "",
+          :aws_kernel_id      => "",
+          :ami_launch_index   => "0",
+          :aws_availability_zone => "",
+        }])
+    end
+
+    it "1台の起動" do
+      vi = subject.virtual_server_images.create(:provided_id => "wmi-lucid5")
+      vt = subject.virtual_server_types.create(:provided_id => "is-small")
+      ps = subject.physical_servers.create(:provided_id => "foo-dc")
+      vs = subject.create_virtual_servers({
+        :virtual_server_image => vi,
+        :virtual_server_type => vt,
+        :physical_server => ps,
+        :count => 1,
+      })
+      vs.count.should == 1
+      v = vs.first
+      v.should be_valid
+      v.status.should == "pending"
+      v.provided_image_id.should == vi.provided_id
+    end
+  end
+
+  context "仮想マシンの停止" do
+    before do
+      Tengine::Resource::VirtualServer.delete_all
+      c = mock(::Tama::Controllers::ControllerFactory.allocate)
+      ::Tama::Controllers::ControllerFactory.
+        stub(:create_controller).
+        with("a-shpoolxx", "192.168.2.22", 9005, "https", "192.168.2.22", 9001, "https").
+        and_return(c)
+      c.stub(:terminate_instances).
+        with(["wmi-lucid5"]).
+        and_return([{
+         :aws_shutdown_state      => nil,
+         :aws_instance_id         => "wmi-lucid5",
+         :aws_shutdown_state_code => nil,
+         :aws_prev_state          => nil,
+         :aws_prev_state_code     => nil,
+       }])
+      c.stub(:terminate_instances).
+        with(["wmi-lucid5", "wmi-maverick5"]).
+        and_return([{
+         :aws_shutdown_state      => nil,
+         :aws_instance_id         => "wmi-lucid5",
+         :aws_shutdown_state_code => nil,
+         :aws_prev_state          => nil,
+         :aws_prev_state_code     => nil,
+       }, {
+         :aws_shutdown_state      => nil,
+         :aws_instance_id         => "wmi-maverick5",
+         :aws_shutdown_state_code => nil,
+         :aws_prev_state          => nil,
+         :aws_prev_state_code     => nil,
+       }])
+    end
+
+    it "1台の停止" do
+      vs = subject.virtual_servers.create(:provided_id => 'wmi-lucid5', :name => 'wmi-lucid5')
+      va = subject.terminate_virtual_servers([vs])
+      va.count.should == 1
+      v = va[0]
+      v.should_not be_nil
+      v.should be_valid
+      v.provided_id.should == 'wmi-lucid5'
+    end
+
+    it "複数台の停止" do
+      v1 = subject.virtual_servers.create(:provided_id => 'wmi-lucid5', :name => 'wmi-lucid5')
+      v2 = subject.virtual_servers.create(:provided_id => 'wmi-maverick5', :name => 'wmi-maverick5')
+      va = subject.terminate_virtual_servers([v1 ,v2])
+      va.count.should == 2
+      va[0].should_not be_nil
+      va[0].should be_valid
+      va[0].provided_id.should == 'wmi-lucid5'
+      va[1].should_not be_nil
+      va[1].should be_valid
+      va[1].provided_id.should == 'wmi-maverick5'
+    end
+  end
+end
