@@ -12,12 +12,9 @@ describe Tengine::Resource::Provider::Wakame do
       :description => "provided by wakame / tama",
       :connection_settings => {
         :account => "a-shpoolxx",
-        :ec2_host => "192.168.2.22",
-        :ec2_port => 9005,
-        :ec2_protocol => "https",
-        :wakame_host => "192.168.2.22",
-        :wakame_port => 9001,
-        :wakame_protocol => "https",
+        :host => "192.168.2.22",
+        :port => 9001,
+        :protocol => "https",
       },
       :properties => {
         :key_name => "ssh-xxxxx"
@@ -30,7 +27,7 @@ describe Tengine::Resource::Provider::Wakame do
       c = mock(::Tama::Controllers::ControllerFactory.allocate)
       ::Tama::Controllers::ControllerFactory.
         stub(:create_controller).
-        with("a-shpoolxx", "192.168.2.22", 9005, "https", "192.168.2.22", 9001, "https").
+        with("a-shpoolxx", nil, nil, nil, "192.168.2.22", 9001, "https").
         and_return(c)
       c.stub(:run_instances).
         with("wmi-lucid5", 1, 1, [], "ssh-xxxxx", "", nil, "is-small", nil, nil, "foo-dc", nil).
@@ -79,7 +76,7 @@ describe Tengine::Resource::Provider::Wakame do
       c = mock(::Tama::Controllers::ControllerFactory.allocate)
       ::Tama::Controllers::ControllerFactory.
         stub(:create_controller).
-        with("a-shpoolxx", "192.168.2.22", 9005, "https", "192.168.2.22", 9001, "https").
+        with("a-shpoolxx", nil, nil, nil, "192.168.2.22", 9001, "https").
         and_return(c)
       c.stub(:terminate_instances).
         with(["i-f222222d"]).

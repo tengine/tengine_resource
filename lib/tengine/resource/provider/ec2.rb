@@ -1,5 +1,8 @@
 # -*- coding: utf-8 -*-
 class Tengine::Resource::Provider::Ec2 < Tengine::Resource::Provider
+
+  field :connection_settings, :type => Hash
+
   def update_physical_servers
     connect do |conn|
       # ec2.describe_availability_zones  #=> [{:region_name=>"us-east-1",

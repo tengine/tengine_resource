@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 class Tengine::Resource::Provider::Wakame < Tengine::Resource::Provider::Ec2
 
+  field :connection_settings, :type => Hash
+
   def update_virtual_server_images
     connect do |conn|
       hashs = conn.describe_images.map do |hash|
@@ -51,24 +53,22 @@ class Tengine::Resource::Provider::Wakame < Tengine::Resource::Provider::Ec2
       end
     end
   end
-  private
 
   def connect
     h = [
-      :account, 
-      :ec2_host, :ec2_port, :ec2_protocol,
-      :wakame_host, :wakame_port, :wakame_protocol,
+      :account,
+      :host, :port, :protocol,
     ].inject({}) {|r, i|
       r.update i => self.connection_settings[i]
     }
     connection = ::Tama::Controllers::ControllerFactory.create_controller(
       h[:account],
-      h[:ec2_host],
-      h[:ec2_port],
-      h[:ec2_protocol],
-      h[:wakame_host],
-      h[:wakame_port],
-      h[:wakame_protocol],
+      nil,
+      nil,
+      nil,
+      h[:host],
+      h[:port],
+      h[:protocol],
     )
     yield connection
   end
