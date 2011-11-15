@@ -5,16 +5,15 @@
 
 Gem::Specification.new do |s|
   s.name = "tengine_resource"
-  s.version = "0.3.3"
+  s.version = "0.3.6"
 
   s.required_rubygems_version = Gem::Requirement.new(">= 0") if s.respond_to? :required_rubygems_version=
-  s.authors = ["akima"]
-  s.date = "2011-11-14"
+  s.authors = ["saishu", "w-irie", "taigou", "totty", "hiroshinakao", "g-morita", "guemon", "aoetk", "hattori-at-nt", "t-yamada", "y-karashima", "akm"]
+  s.date = "2011-11-15"
   s.description = "tengine_resource provides physical/virtual server management"
-  s.email = "akima@nautilus-technologies.com"
+  s.email = "tengine@nautilus-technologies.com"
   s.executables = ["tengine_resource_watchd"]
   s.extra_rdoc_files = [
-    "LICENSE.txt",
     "README.rdoc"
   ]
   s.files = [
@@ -22,7 +21,6 @@ Gem::Specification.new do |s|
     ".rspec",
     "Gemfile",
     "Gemfile.lock",
-    "LICENSE.txt",
     "README.rdoc",
     "Rakefile",
     "VERSION",
@@ -61,8 +59,8 @@ Gem::Specification.new do |s|
     "tengine_resource.gemspec",
     "tmp/log/.gitignore"
   ]
-  s.homepage = "http://github.com/akm/tengine_resource"
-  s.licenses = ["MIT"]
+  s.homepage = "http://github.com/tengine/tengine_resource"
+  s.licenses = ["MPL/LGPL"]
   s.require_paths = ["lib"]
   s.rubygems_version = "1.8.11"
   s.summary = "tengine_resource provides physical/virtual server management"
@@ -71,9 +69,9 @@ Gem::Specification.new do |s|
     s.specification_version = 3
 
     if Gem::Version.new(Gem::VERSION) >= Gem::Version.new('1.2.0') then
+      s.add_runtime_dependency(%q<tengine_support>, ["~> 0.3.0"])
       s.add_runtime_dependency(%q<tengine_core>, ["~> 0.3.3"])
       s.add_runtime_dependency(%q<right_aws>, ["~> 2.1.0"])
-      s.add_runtime_dependency(%q<wakame-adapters-tengine>, ["~> 0.0.0"])
       s.add_runtime_dependency(%q<net-ssh>, ["~> 2.2.1"])
       s.add_development_dependency(%q<rspec>, ["~> 2.6.0"])
       s.add_development_dependency(%q<factory_girl>, ["~> 2.1.2"])
@@ -82,10 +80,11 @@ Gem::Specification.new do |s|
       s.add_development_dependency(%q<jeweler>, ["~> 1.6.4"])
       s.add_development_dependency(%q<simplecov>, ["~> 0.5.3"])
       s.add_development_dependency(%q<ZenTest>, ["~> 4.6.2"])
+      s.add_development_dependency(%q<wakame-adapters-tengine>, ["~> 0.0.0"])
     else
+      s.add_dependency(%q<tengine_support>, ["~> 0.3.0"])
       s.add_dependency(%q<tengine_core>, ["~> 0.3.3"])
       s.add_dependency(%q<right_aws>, ["~> 2.1.0"])
-      s.add_dependency(%q<wakame-adapters-tengine>, ["~> 0.0.0"])
       s.add_dependency(%q<net-ssh>, ["~> 2.2.1"])
       s.add_dependency(%q<rspec>, ["~> 2.6.0"])
       s.add_dependency(%q<factory_girl>, ["~> 2.1.2"])
@@ -94,11 +93,12 @@ Gem::Specification.new do |s|
       s.add_dependency(%q<jeweler>, ["~> 1.6.4"])
       s.add_dependency(%q<simplecov>, ["~> 0.5.3"])
       s.add_dependency(%q<ZenTest>, ["~> 4.6.2"])
+      s.add_dependency(%q<wakame-adapters-tengine>, ["~> 0.0.0"])
     end
   else
+    s.add_dependency(%q<tengine_support>, ["~> 0.3.0"])
     s.add_dependency(%q<tengine_core>, ["~> 0.3.3"])
     s.add_dependency(%q<right_aws>, ["~> 2.1.0"])
-    s.add_dependency(%q<wakame-adapters-tengine>, ["~> 0.0.0"])
     s.add_dependency(%q<net-ssh>, ["~> 2.2.1"])
     s.add_dependency(%q<rspec>, ["~> 2.6.0"])
     s.add_dependency(%q<factory_girl>, ["~> 2.1.2"])
@@ -107,6 +107,7 @@ Gem::Specification.new do |s|
     s.add_dependency(%q<jeweler>, ["~> 1.6.4"])
     s.add_dependency(%q<simplecov>, ["~> 0.5.3"])
     s.add_dependency(%q<ZenTest>, ["~> 4.6.2"])
+    s.add_dependency(%q<wakame-adapters-tengine>, ["~> 0.0.0"])
   end
 end
 

@@ -1,6 +1,9 @@
 # -*- coding: utf-8 -*-
 require 'mongoid'
 
+require 'yaml'
+require 'tengine/support/yaml_with_erb'
+
 # http://mongoid.org/docs/callbacks/observers.html
 class Tengine::Resource::Observer < Mongoid::Observer
   include Tengine::Event::ModelNotifiable
