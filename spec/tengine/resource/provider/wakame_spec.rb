@@ -5,11 +5,12 @@ require 'apis/wakame'
 require 'controllers/controller'
 
 describe Tengine::Resource::Provider::Wakame do
-  before(:all) {
-    @credential = Tengine::Resource::Credential.new(
-      :name => "tama-key",
-      :auth_type_key => :tama,
-      :auth_values => {
+  subject {
+    Tengine::Resource::Provider::Wakame.delete_all(:name => 'tama0001')
+    Tengine::Resource::Provider::Wakame.create(
+      :name => "tama0001",
+      :description => "provided by wakame / tama",
+      :connection_settings => {
         :account => "a-shpoolxx",
         :ec2_host => "192.168.2.22",
         :ec2_port => 9005,
@@ -17,16 +18,10 @@ describe Tengine::Resource::Provider::Wakame do
         :wakame_host => "192.168.2.22",
         :wakame_port => 9001,
         :wakame_protocol => "https",
+      },
+      :properties => {
+        :key_name => "ssh-xxxxx"
       }
-    )
-  }
-
-  subject {
-    Tengine::Resource::Provider::Wakame.delete_all(:name => 'tama0001')
-    Tengine::Resource::Provider::Wakame.create(
-      :name => "tama0001",
-      :description => "provided by wakame / tama",
-      :credential => @credential
     )
   }
 
@@ -38,7 +33,7 @@ describe Tengine::Resource::Provider::Wakame do
         with("a-shpoolxx", "192.168.2.22", 9005, "https", "192.168.2.22", 9001, "https").
         and_return(c)
       c.stub(:run_instances).
-        with("wmi-lucid5", 1, 1, [], nil, "", nil, "is-small", nil, nil, "foo-dc", nil).
+        with("wmi-lucid5", 1, 1, [], "ssh-xxxxx", "", nil, "is-small", nil, nil, "foo-dc", nil).
         and_return([{
           :aws_image_id       => "wmi-lucid5",
           :aws_reason         => "",
@@ -48,7 +43,7 @@ describe Tengine::Resource::Provider::Wakame do
           :aws_reservation_id => "r-aabbccdd",
           :aws_state          => "pending",
           :dns_name           => "",
-          :ssh_key_name       => "",
+          :ssh_key_name       => "ssh-xxxxxx",
           :aws_groups         => [""],
           :private_dns_name   => "",
           :aws_instance_type  => "is-small",

@@ -2,18 +2,12 @@
 require 'spec_helper'
 
 describe Tengine::Resource::Provider::Ec2 do
-
-  before(:all) do
-    @credential = Tengine::Resource::Credential.new(:name => "ec2-access-key1",
-      :auth_type_key => :ec2_access_key,
-      :auth_values => {:access_key => 'ACCESS_KEY1', :secret_access_key => "SECRET_ACCESS_KEY1", :default_region => "us-west-1"})
-  end
-
   before do
     Tengine::Resource::Provider::Ec2.delete_all
+    @conn = {:access_key => 'ACCESS_KEY1', :secret_access_key => "SECRET_ACCESS_KEY1", :region => "us-west-1"}
     @valid_attributes1 = {
       :name => "my_west-1",
-      :credential => @credential
+      :connection_settings => @conn
     }
   end
 
@@ -31,7 +25,7 @@ describe Tengine::Resource::Provider::Ec2 do
 
   describe 'update resources' do
     subject do
-      Tengine::Resource::Provider::Ec2.create!(:name => "ec2-us-west-1", :credential => @credential)
+      Tengine::Resource::Provider::Ec2.create!(:name => "ec2-us-west-1", :connection_settings => @conn)
     end
 
     context "物理サーバ" do

@@ -2,7 +2,7 @@
 class Tengine::Resource::Provider::Wakame < Tengine::Resource::Provider::Ec2
 
   def update_virtual_server_images
-    credential.connect do |conn|
+    connect do |conn|
       hashs = conn.describe_images.map do |hash|
         {
           :provided_id => hash.delete(:aws_id),
@@ -34,7 +34,7 @@ class Tengine::Resource::Provider::Wakame < Tengine::Resource::Provider::Ec2
     hash[:min_count]         = count
     hash[:max_count]         = count
     hash[:group_ids]         = []
-    hash[:key_name]          = self.credential.auth_values[:key_name]
+    hash[:key_name]          = self.properties[:key_name]
     hash[:kernel_id]         = nil
     hash[:ramdisk_id]        = nil
     hash[:availability_zone] = ps.provided_id
@@ -43,12 +43,33 @@ class Tengine::Resource::Provider::Wakame < Tengine::Resource::Provider::Ec2
   end
 
   def terminate_virtual_servers servers
-    credential.connect do |conn|
+    connect do |conn|
       conn.terminate_instances(servers.map {|i| i.provided_id }).map do |hash|
         serv = self.virtual_servers.where(:provided_id => hash[:aws_instance_id]).first
         serv.update_attributes(:status => "shutdown in progress") if serv # <- ?
         serv
       end
     end
+  end
+  private
+
+  def connect
+    h = [
+      :account, 
+      :ec2_host, :ec2_port, :ec2_protocol,
+      :wakame_host, :wakame_port, :wakame_protocol,
+    ].inject({}) {|r, i|
+      r.update i => self.connection_settings[i]
+    }
+    connection = ::Tama::Controllers::ControllerFactory.create_controller(
+      h[:account],
+      h[:ec2_host],
+      h[:ec2_port],
+      h[:ec2_protocol],
+      h[:wakame_host],
+      h[:wakame_port],
+      h[:wakame_protocol],
+    )
+    yield connection
   end
 end

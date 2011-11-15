@@ -7,18 +7,11 @@ class GokuAtEc2ApNortheast
   def provider
     Tengine::Resource::Provider::Ec2.find_or_create_by_name!({
         :name => "goku_at_ec2_ap-northeast-1",
-        :credential_id => self.goku_ec2.id
-      })
-  end
-
-  def goku_ec2
-    Tengine::Resource::Credential.find_or_create_by_name!(
-      :name => "goku_ec2",
-      :auth_type_key => :ec2_access_key,
-      :auth_values => {
-        :access_key => '12345',
-        :secret_access_key => '1234567',
-        :default_region => 'ap-northeast-1'
+        :connection_settings => {
+          :access_key => '12345',
+          :secret_access_key => '1234567',
+          :default_region => 'ap-northeast-1',
+        }
       })
   end
 
