@@ -11,6 +11,8 @@ class Tengine::Resource::Provider
 
   field :name, :type => String
   field :description, :type => String
+  field :connection_settings, :type => Hash
+  field :properties, :type => Hash
 
   validates :name, :presence => true, :uniqueness => true, :format => BASE_NAME.options
   index :name, :unique => true
@@ -57,7 +59,6 @@ class Tengine::Resource::Provider
     end
     self.virtual_servers.not_in(:_id => found_ids).destroy_all
   end
-
 
   class << self
     def find_or_create_by_name!(attrs)

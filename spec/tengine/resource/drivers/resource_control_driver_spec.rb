@@ -13,17 +13,15 @@ describe 'resource_control_driver' do
     @provider = Tengine::Resource::Provider::Wakame.create(
       :name => "tama0001",
       :description => "provided by wakame / tama",
-      :credential => Tengine::Resource::Credential.create(
-        :name => "tama-key",
-        :auth_type_key => :tama,
-        :auth_values => {
-          :account => "a-shpoolxx",
-          :ec2_host => "192.168.2.22",
-          :ec2_port => 9005,
-          :ec2_protocol => "https",
-          :wakame_host => "192.168.2.22",
-          :wakame_port => 9001,
-          :wakame_protocol => "https",}))
+      :connection_settings => {
+        :account => "a-shpoolxx",
+        :ec2_host => "192.168.2.22",
+        :ec2_port => 9005,
+        :ec2_protocol => "https",
+        :wakame_host => "192.168.2.22",
+        :wakame_port => 9001,
+        :wakame_protocol => "https",},
+      :properties => { :key_name => "ssh-xxxxx" })
   end
 
   context '仮想サーバ起動リクエストイベント' do

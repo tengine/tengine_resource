@@ -1,10 +1,7 @@
 # -*- coding: utf-8 -*-
 class Tengine::Resource::Provider::Ec2 < Tengine::Resource::Provider
-  belongs_to :credential, :class_name => "Tengine::Resource::Credential"
-  validates_presence_of :credential
-
   def update_physical_servers
-    credential.connect do |conn|
+    connect do |conn|
       # ec2.describe_availability_zones  #=> [{:region_name=>"us-east-1",
       #                                        :zone_name=>"us-east-1a",
       #                                        :zone_state=>"available"}, ... ]
@@ -21,7 +18,7 @@ class Tengine::Resource::Provider::Ec2 < Tengine::Resource::Provider
   end
 
   def update_virtual_servers
-    credential.connect do |conn|
+    connect do |conn|
       # http://rightscale.rubyforge.org/right_aws_gem_doc/
       # ec2.describe_instances #=>
       #   [{:aws_image_id       => "ami-e444444d",
@@ -63,7 +60,7 @@ class Tengine::Resource::Provider::Ec2 < Tengine::Resource::Provider
   end
 
   def update_virtual_server_images
-    credential.connect do |conn|
+    connect do |conn|
       hashs = conn.describe_images.map do |hash|
         { :provided_id => hash.delete(:aws_id), }
       end
@@ -100,7 +97,7 @@ class Tengine::Resource::Provider::Ec2 < Tengine::Resource::Provider
     availability_zone     = hash[:availability_zone]
     block_device_mappings = nil
 
-    credential.connect {|conn|
+    connect {|conn|
       a = conn.run_instances(
         image_id,
         min_count,
@@ -139,7 +136,7 @@ class Tengine::Resource::Provider::Ec2 < Tengine::Resource::Provider
   end
 
   def terminate_virtual_servers servers
-    credential.connect do |conn|
+    connect do |conn|
       # http://rightscale.rubyforge.org/right_aws_gem_doc/classes/RightAws/Ec2.html#M000287
       # http://docs.amazonwebservices.com/AWSEC2/latest/APIReference/ApiReference-query-TerminateInstances.html
       conn.terminate_instances(servers.map {|i| i.provided_id }).map do |hash|
@@ -148,5 +145,19 @@ class Tengine::Resource::Provider::Ec2 < Tengine::Resource::Provider
         serv
       end
     end    
+  end
+
+  private
+  def connect
+    klass = (ENV['EC2_DUMMY'] == "true") ? Tengine::Resource::Credential::Ec2::Dummy : RightAws::Ec2
+    connection = klass.new(
+      self.connection_settings[:access_key],
+      self.connection_settings[:secret_access_key],
+      {
+        :logger => Tengine.logger,
+        :region => self.connection_settings[:region]
+      }
+      )
+    yield connection
   end
 end
