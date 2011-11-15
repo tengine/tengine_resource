@@ -54,12 +54,17 @@ class Tengine::Resource::Provider::Wakame < Tengine::Resource::Provider::Ec2
     end
   end
 
+  def instance_specs_from_api(uuids = [])
+    connect do |conn|
+      conn.show_instance_specs(uuids)
+    end
+  end
+
   def connect
     h = [
-      :account,
-      :host, :port, :protocol,
+      :account, :host, :port, :protocol, :private_network_data,
     ].inject({}) {|r, i|
-      r.update i => self.connection_settings[i]
+      r.update i => self.connection_settings[i] || self.connection_settings[i.to_s]
     }
     connection = ::Tama::Controllers::ControllerFactory.create_controller(
       h[:account],
@@ -68,7 +73,7 @@ class Tengine::Resource::Provider::Wakame < Tengine::Resource::Provider::Ec2
       nil,
       h[:host],
       h[:port],
-      h[:protocol],
+      h[:protocol]
     )
     yield connection
   end

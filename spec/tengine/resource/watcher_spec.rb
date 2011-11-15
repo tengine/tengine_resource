@@ -3,6 +3,8 @@ require 'spec_helper'
 require 'eventmachine'
 require 'amqp'
 require 'tengine/mq/suite'
+require 'apis/wakame'
+require 'controllers/controller'
 
 describe Tengine::Resource::Watcher do
   before do
@@ -81,14 +83,13 @@ describe Tengine::Resource::Watcher do
 #                 :description => "",
 #                 :properties => {
 #                 },
-#                 :provider_inquiry_interval => 30,
-#                 :provider_heartbeat_interval => 30,
+#                 :polling_interval => 30,
 #                 :connection_settings => {
 #                   :access_key => "",
 #                   :secret_access_key => "",
 #                   :options => {
 #                     :server => "ec2.amazonaws.com",
-#                     :port => "443",
+#                     :port => 443,
 #                     :protocol => "https",
 #                     :multi_thread => false,
 #                     :logger => nil,
@@ -101,16 +102,15 @@ describe Tengine::Resource::Watcher do
                 :name => "wakame-vdc",
                 :description => "",
                 :properties => {
+                  :key_name => "ssh-xxxxx"
                 },
-                :provider_inquiry_interval => 30,
-                :provider_heartbeat_interval => 30,
+                :polling_interval => 30,
                 :connection_settings => {
-                  :account_id => "test",
-                  :server => "192.168.0.10",
-                  :port => "80",
+                  :account => "test",
+                  :host => "192.168.0.10",
+                  :port => 80,
                   :protocol => "http",
-                  :user_data => "",
-                  :options => {},
+                  :private_network_data => "",
                 },
               })
             @virtual_server_type_wakame = @provider_wakame.create_virtual_server_type({
@@ -137,15 +137,25 @@ describe Tengine::Resource::Watcher do
             Tengine::Event.should_receive(:default_sender).
               and_return(Tengine::Event::Sender.new(@mock_mq))
             Tengine::Event::Sender.should_receive(:new).with(@mock_mq)
+
+            @tama_controller_factory = mock(::Tama::Controllers::ControllerFactory.allocate)
+            ::Tama::Controllers::ControllerFactory.
+              stub(:create_controller).
+              with("test", nil, nil, nil, "192.168.0.10", 80, "http").
+              and_return(@tama_controller_factory)
           end
 
-          it "apiから仮想サーバタイプの情報が取得できる" do
+          it "apiから仮想サーバタイプの情報が取得できる", :api => true do
             @watcher.sender.should_receive(:wait_for_connection).and_yield
-            api_conn = mock(:tama)
-            api_conn.should_receive(:show_instance_specs).with([]).
+#             api_conn = mock(:tama)
+#             api_conn.should_receive(:show_instance_specs).with([]).
+#               and_return(RESULT_UPDATE_WAKAME_SHOW_INSTANCE_SPECS)
+#             @provider_wakame.should_receive(:connect).and_yield(api_conn)
+            @tama_controller_factory.
+              should_receive(:show_instance_specs).with([]).
               and_return(RESULT_UPDATE_WAKAME_SHOW_INSTANCE_SPECS)
-            @provider_wakame.should_receive(:connection).and_yield(api_conn)
             @watcher.start
+
           end
 
           it "更新対象あったら更新完了後イベントを発火する" do
@@ -154,7 +164,7 @@ describe Tengine::Resource::Watcher do
             api_conn = mock(:tama)
             api_conn.should_receive(:show_instance_specs).with([]).
               and_return(RESULT_UPDATE_WAKAME_SHOW_INSTANCE_SPECS)
-            @provider_wakame.should_receive(:connection).and_yield(api_conn)
+            @provider_wakame.should_receive(:connect).and_yield(api_conn)
 
             @virtual_server_type_wakame.update({
                 :cpu_cores => 2,
@@ -164,7 +174,7 @@ describe Tengine::Resource::Watcher do
               with(@virtual_server_type_wakame)
             Tengine::Event.should_receive(:fire)
             mock_queue = mock(:queue)
-            mock_mq.should_receive(:queue).and_return(mock_queue)
+            @mock_mq.should_receive(:queue).and_return(mock_queue)
             # mock_mq.should_receive(:wait_for_connection)
 
             @watcher.start
@@ -176,7 +186,7 @@ describe Tengine::Resource::Watcher do
             api_conn = mock(:tama)
             api_conn.should_receive(:show_instance_specs).with([]).
               and_return(RESULT_CREATE_WAKAME_SHOW_INSTANCE_SPECS)
-            @provider_wakame.should_receive(:connection).and_yield(api_conn)
+            @provider_wakame.should_receive(:connect).and_yield(api_conn)
 
             @provider_wakame.should_receive(:create_virtual_servers).
               with([{
@@ -198,7 +208,7 @@ describe Tengine::Resource::Watcher do
               )
             Tengine::Event.should_receive(:fire)
             mock_queue = mock(:queue)
-            mock_mq.should_receive(:queue).and_return(mock_queue)
+            @mock_mq.should_receive(:queue).and_return(mock_queue)
             # mock_mq.should_receive(:wait_for_connection)
 
             @watcher.start
@@ -209,12 +219,12 @@ describe Tengine::Resource::Watcher do
 
             api_conn = mock(:tama)
             api_conn.should_receive(:show_instance_specs).with([]).and_return("")
-            @provider_wakame.should_receive(:connection).and_yield(api_conn)
+            @provider_wakame.should_receive(:connect).and_yield(api_conn)
 
             @provider_wakame.should_receive(:destroy_virtual_servers).with(@virtual_server_type_wakame)
             Tengine::Event.should_receive(:fire)
             mock_queue = mock(:queue)
-            mock_mq.should_receive(:queue).and_return(mock_queue)
+            @mock_mq.should_receive(:queue).and_return(mock_queue)
             # mock_mq.should_receive(:wait_for_connection)
 
             @watcher.start
@@ -226,42 +236,34 @@ describe Tengine::Resource::Watcher do
   end
 
 
-RESULT_UPDATE_WAKAME_SHOW_INSTANCE_SPECS = <<-EOS
-[
-  {
-    "cpu_cores": 1,
-    "memory_size": 256,
-    "arch": "x86_64",
-    "hypervisor": "kvm",
-    "updated_at": "2011-10-28T02:58:57Z",
-    "account_id": "a-shpoolxx",
-    "vifs": "--- \neth0: \n  :bandwidth: 100000\n  :index: 0\n",
-    "quota_weight": 1.0,
-    "id": "is-demospec",
-    "created_at": "2011-10-28T02:58:57Z",
-    "drives": "--- \nephemeral1: \n  :type: :local\n  :size: 100\n  :index: 0\n",
-    "uuid": "is-demospec"
-  }
-]
-EOS
+  RESULT_UPDATE_WAKAME_SHOW_INSTANCE_SPECS = [{
+      :cpu_cores => 1,
+      :memory_size => 256,
+      :arch => "x86_64",
+      :hypervisor => "kvm",
+      :updated_at => "2011-10-28T02:58:57Z",
+      :account_id => "a-shpoolxx",
+      :vifs => "--- \neth0: \n  :bandwidth: 100000\n  :index: 0\n",
+      :quota_weight => 1.0,
+      :id => "is-demospec",
+      :created_at => "2011-10-28T02:58:57Z",
+      :drives => "--- \nephemeral1: \n  :type: :local\n  :size: 100\n  :index: 0\n",
+      :uuid => "is-demospec"
+    }]
 
-RESULT_CREATE_WAKAME_SHOW_INSTANCE_SPECS = <<-EOS
-[
-  {
-    "cpu_cores": 2,
-    "memory_size": 1024,
-    "arch": "x86_64",
-    "hypervisor": "kvm",
-    "updated_at": "2011-10-28T02:58:57Z",
-    "account_id": "b-shpoolxx",
-    "vifs": "--- \neth0: \n  :bandwidth: 100000\n  :index: 0\n",
-    "quota_weight": 1.0,
-    "id": "is-demospec2",
-    "created_at": "2011-10-28T02:58:57Z",
-    "drives": "--- \nephemeral1: \n  :type: :local\n  :size: 100\n  :index: 0\n",
-    "uuid": "is-demospec2"
-  }
-]
-EOS
+  RESULT_CREATE_WAKAME_SHOW_INSTANCE_SPECS = [{
+      :cpu_cores => 2,
+      :memory_size => 1024,
+      :arch => "x86_64",
+      :hypervisor => "kvm",
+      :updated_at => "2011-10-28T02:58:57Z",
+      :account_id => "b-shpoolxx",
+      :vifs => "--- \neth0: \n  :bandwidth: 100000\n  :index: 0\n",
+      :quota_weight => 1.0,
+      :id => "is-demospec2",
+      :created_at => "2011-10-28T02:58:57Z",
+      :drives => "--- \nephemeral1: \n  :type: :local\n  :size: 100\n  :index: 0\n",
+      :uuid => "is-demospec2"
+    }]
 
 end

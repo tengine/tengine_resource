@@ -24,6 +24,46 @@ class Tengine::Resource::Provider
     c.has_many :virtual_server_types   , :class_name => "Tengine::Resource::VirtualServerType"
   end
 
+  def create_virtual_server_type(hash)
+    properties = hash.dup
+    puts "properties "*10
+    puts properties
+    self.virtual_server_types.create!(
+      :provided_id => properties.delete(:id),
+      :caption => properties.delete(:uuid),
+      :cpu_cores => properties.delete(:cpu_cores),
+      :memory_size => properties.delete(:memory_size),
+      :properties => properties)
+  end
+  def create_virtual_server_types(hashs)
+    created_ids = []
+    hashs.each do |hash|
+      server_type = create_virtual_server_type(hash)
+      created_ids << server_type.id
+    end
+    created_ids
+  end
+
+  def update_virtual_server_type(hash)
+    virtual_server_type = self.virtual_server_types.where(
+      :provided_id => hash[:id]).first
+    properties = hash.dup
+    virtual_server_type.update_attributes(
+      :provided_id => properties.delete(:id),
+      :caption => properties.delete(:uuid),
+      :cpu_cores => properties.delete(:cpu_cores),
+      :memory_size => properties.delete(:memory_size),
+      :properties => properties)
+  end
+  def update_virtual_server_types(hashs)
+    updated_ids = []
+    hashs.each do |hash|
+      server_type = update_virtual_server_type(hash)
+      updated_server_types << server_type
+    end
+    updated_server_types
+  end
+
   def update_physical_servers      ; raise NotImplementedError end
   def update_virtual_servers       ; raise NotImplementedError end
   def update_virtual_server_imagess; raise NotImplementedError end

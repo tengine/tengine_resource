@@ -56,13 +56,10 @@ class Tengine::Resource::Watcher
   def init_process
     sender.wait_for_connection do
       # Wakameのプロバイダを対象として取得
-      providers = Provider::Wakame.all
+      providers = Tengine::Resource::Provider::Wakame.all
       providers.each do |provider|
         # APIからの仮想サーバタイプ情報を取得
-        instance_specs = []
-        provider.connection do |conn|
-          instance_specs = JSON.parse(conn.show_instance_specs([]))
-        end
+        instance_specs = provider.instance_specs_from_api
 
         exists_instance_specs = []
         create_server_types = []
@@ -89,7 +86,9 @@ class Tengine::Resource::Watcher
         end
         # APIで取得したサーバタイプがTengine上に存在しないものであれば登録対象
         create_server_types = instance_specs - exists_instance_specs
-        create_server_types.map(:ServerType.convert)
+        create_server_types = create_server_types.inject do |server_type|
+          Tengine::Resource::ProviderVirtualServerType.convert(server_type)
+        end
 
         # 更新
         provider.update_virtual_server_types(update_server_types) unless update_server_types.empty?
