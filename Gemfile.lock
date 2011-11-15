@@ -84,6 +84,7 @@ GEM
       activesupport (>= 3.0.0)
       amqp (~> 0.8.0)
       uuid (~> 2.3.4)
+    tengine_support (0.3.0)
     tzinfo (0.3.31)
     uuid (2.3.4)
       macaddr (~> 1.0)
@@ -102,5 +103,6 @@ DEPENDENCIES
   rspec (~> 2.6.0)
   simplecov (~> 0.5.3)
   tengine_core (~> 0.3.3)
+  tengine_support (~> 0.3.0)
   wakame-adapters-tengine (~> 0.0.0)!
   yard (~> 0.7.2)
