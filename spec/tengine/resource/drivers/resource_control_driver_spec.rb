@@ -9,8 +9,8 @@ describe 'resource_control_driver' do
   driver :resource_control_driver
 
   before do
-    Tengine::Resource::Provider::Tama.delete_all(:name => 'tama0001')
-    @provider = Tengine::Resource::Provider::Tama.create(
+    Tengine::Resource::Provider::Wakame.delete_all(:name => 'tama0001')
+    @provider = Tengine::Resource::Provider::Wakame.create(
       :name => "tama0001",
       :description => "provided by wakame / tama",
       :credential => Tengine::Resource::Credential.create(
@@ -37,7 +37,7 @@ describe 'resource_control_driver' do
              :virtual_server_type => vt,
              :physical_server => ps,
              :count => 1)
-      Tengine::Resource::Provider::Tama.stub(:instantiate).with(anything).and_return(@provider)
+      Tengine::Resource::Provider::Wakame.stub(:instantiate).with(anything).and_return(@provider)
 
       tengine.receive('仮想サーバ起動リクエストイベント', :properties => {
         :provider_id => @provider._id,
@@ -55,7 +55,7 @@ describe 'resource_control_driver' do
       @provider.
         should_receive(:terminate_virtual_servers).
         with([v1, v2])
-      Tengine::Resource::Provider::Tama.stub(:instantiate).with(anything).and_return(@provider)
+      Tengine::Resource::Provider::Wakame.stub(:instantiate).with(anything).and_return(@provider)
 
       tengine.receive('仮想サーバ停止リクエストイベント', :properties => {
         :provider_id => @provider._id,

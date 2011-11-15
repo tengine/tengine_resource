@@ -4,7 +4,7 @@ require 'apis/ec2'
 require 'apis/wakame'
 require 'controllers/controller'
 
-describe Tengine::Resource::Provider::Tama do
+describe Tengine::Resource::Provider::Wakame do
   before(:all) {
     @credential = Tengine::Resource::Credential.new(
       :name => "tama-key",
@@ -22,8 +22,8 @@ describe Tengine::Resource::Provider::Tama do
   }
 
   subject {
-    Tengine::Resource::Provider::Tama.delete_all(:name => 'tama0001')
-    Tengine::Resource::Provider::Tama.create(
+    Tengine::Resource::Provider::Wakame.delete_all(:name => 'tama0001')
+    Tengine::Resource::Provider::Wakame.create(
       :name => "tama0001",
       :description => "provided by wakame / tama",
       :credential => @credential
