@@ -10,6 +10,10 @@ describe Tengine::Resource::Watcher do
   before do
   end
 
+  after do
+    @watcher = nil
+  end
+
   describe :initialize do
     it "default" do
       Tengine::Core::MethodTraceable.stub(:disabled=)
@@ -78,6 +82,7 @@ describe Tengine::Resource::Watcher do
         context "wakame" do
           before do
             Tengine::Resource::Provider.delete_all
+            Tengine::Resource::VirtualServerType.delete_all
 #             @provider_ec2 = Tengine::Resource::Provider::Ec2.create!({
 #                 :name => "amazon-ec2",
 #                 :description => "",
@@ -113,7 +118,7 @@ describe Tengine::Resource::Watcher do
                   :private_network_data => "",
                 },
               })
-            @virtual_server_type_wakame = @provider_wakame.create_virtual_server_type({
+            @virtual_server_type_wakame = @provider_wakame.virtual_server_types.create!({
                 :provided_id => "is-demospec",
                 :caption => "is-demospec",
                 :cpu_cores => 2,
@@ -133,101 +138,73 @@ describe Tengine::Resource::Watcher do
             @mock_mq = Tengine::Mq::Suite.new(@watcher.config[:event_queue])
             Tengine::Mq::Suite.should_receive(:new).
               with(@watcher.config[:event_queue]).and_return(@mock_mq)
-            Tengine::Event.should_receive(:mq_suite).and_return(@mock_mq)
-            Tengine::Event.should_receive(:default_sender).
-              and_return(Tengine::Event::Sender.new(@mock_mq))
-            Tengine::Event::Sender.should_receive(:new).with(@mock_mq)
 
             @tama_controller_factory = mock(::Tama::Controllers::ControllerFactory.allocate)
             ::Tama::Controllers::ControllerFactory.
-              stub(:create_controller).
+              should_receive(:create_controller).
               with("test", nil, nil, nil, "192.168.0.10", 80, "http").
               and_return(@tama_controller_factory)
+
+            @watcher.sender.should_receive(:wait_for_connection).and_yield
           end
 
-          it "apiから仮想サーバタイプの情報が取得できる", :api => true do
-            @watcher.sender.should_receive(:wait_for_connection).and_yield
-#             api_conn = mock(:tama)
-#             api_conn.should_receive(:show_instance_specs).with([]).
-#               and_return(RESULT_UPDATE_WAKAME_SHOW_INSTANCE_SPECS)
-#             @provider_wakame.should_receive(:connect).and_yield(api_conn)
+          it "更新対象があったら更新完了後イベントを発火する" do
             @tama_controller_factory.
               should_receive(:show_instance_specs).with([]).
               and_return(RESULT_UPDATE_WAKAME_SHOW_INSTANCE_SPECS)
+
+            Tengine::Event.default_sender.should_receive(:fire)
+
             @watcher.start
 
+            @virtual_server_type_wakame.cpu_cores.should == 2
+            @virtual_server_type_wakame.memory_size.should == 512
+
+            @provider_wakame.reload
+            new_server_type = @provider_wakame.virtual_server_types.first
+            new_server_type.cpu_cores.should == 1
+            new_server_type.memory_size.should == 256
           end
 
-          it "更新対象あったら更新完了後イベントを発火する" do
-            @watcher.sender.should_receive(:wait_for_connection).and_yield
+          it "更新対象がなかったらイベントは発火しない", :update => true do
+            @tama_controller_factory.
+              should_receive(:show_instance_specs).with([]).
+              and_return(ORIGINAL_WAKAME_SHOW_INSTANCE_SPECS)
 
-            api_conn = mock(:tama)
-            api_conn.should_receive(:show_instance_specs).with([]).
-              and_return(RESULT_UPDATE_WAKAME_SHOW_INSTANCE_SPECS)
-            @provider_wakame.should_receive(:connect).and_yield(api_conn)
-
-            @virtual_server_type_wakame.update({
-                :cpu_cores => 2,
-                :memory_size => 512,
-              })
-            @provider_wakame.should_receive(:update_virtual_servers).
-              with(@virtual_server_type_wakame)
-            Tengine::Event.should_receive(:fire)
-            mock_queue = mock(:queue)
-            @mock_mq.should_receive(:queue).and_return(mock_queue)
-            # mock_mq.should_receive(:wait_for_connection)
+            Tengine::Event.default_sender.should_not_receive(:fire)
 
             @watcher.start
+
+            @virtual_server_type_wakame.cpu_cores.should == 2
+            @virtual_server_type_wakame.memory_size.should == 512
+
+            @provider_wakame.reload
+            new_server_type = @provider_wakame.virtual_server_types.first
+            new_server_type.cpu_cores.should == 2
+            new_server_type.memory_size.should == 512
           end
 
           it "登録対象があったら登録完了後イベントを発火する" do
-            @watcher.sender.should_receive(:wait_for_connection).and_yield
-
-            api_conn = mock(:tama)
-            api_conn.should_receive(:show_instance_specs).with([]).
+            @tama_controller_factory.
+              should_receive(:show_instance_specs).with([]).
               and_return(RESULT_CREATE_WAKAME_SHOW_INSTANCE_SPECS)
-            @provider_wakame.should_receive(:connect).and_yield(api_conn)
 
-            @provider_wakame.should_receive(:create_virtual_servers).
-              with([{
-                  :provided_id => "is-demospec2",
-                  :caption => "is-demospec2",
-                  :cpu_cores => 2,
-                  :memory_size => 1024,
-                  :properties => {
-                    :arch => "x86_64",
-                    :hypervisor => "kvm",
-                    :account_id => "b-shpoolxx",
-                    :vifs => "--- \neth0: \n  :bandwidth: 100000\n  :index: 0\n",
-                    :quota_weight => "1.0",
-                    :drives => "--- \nephemeral1: \n  :type: :local\n  :size: 100\n  :index: 0\n",
-                    :created_at => "2011-10-28T02:58:57Z",
-                    :updated_at => "2011-10-28T02:58:57Z",
-                  }
-                }]
-              )
-            Tengine::Event.should_receive(:fire)
-            mock_queue = mock(:queue)
-            @mock_mq.should_receive(:queue).and_return(mock_queue)
-            # mock_mq.should_receive(:wait_for_connection)
+            Tengine::Event.default_sender.should_receive(:fire)
 
-            @watcher.start
+            puts @provider_wakame.virtual_server_types.count
+            expect { @watcher.start; @provider_wakame.reload; puts @provider_wakame.virtual_server_types.count }.should change(
+              @provider_wakame.virtual_server_types, :count).by(1)
           end
 
           it "削除対象があったら削除完了後イベントを発火する" do
-            @watcher.sender.should_receive(:wait_for_connection).and_yield
+            @tama_controller_factory.
+              should_receive(:show_instance_specs).with([]).
+              and_return([])
 
-            api_conn = mock(:tama)
-            api_conn.should_receive(:show_instance_specs).with([]).and_return("")
-            @provider_wakame.should_receive(:connect).and_yield(api_conn)
+            Tengine::Event.default_sender.should_receive(:fire)
 
-            @provider_wakame.should_receive(:destroy_virtual_servers).with(@virtual_server_type_wakame)
-            Tengine::Event.should_receive(:fire)
-            mock_queue = mock(:queue)
-            @mock_mq.should_receive(:queue).and_return(mock_queue)
-            # mock_mq.should_receive(:wait_for_connection)
-
-            @watcher.start
+            expect { @watcher.start }.should change(
+              @provider_wakame.virtual_server_types, :size).by(-1)
           end
 
         end
@@ -235,6 +212,20 @@ describe Tengine::Resource::Watcher do
     end
   end
 
+  ORIGINAL_WAKAME_SHOW_INSTANCE_SPECS = [{
+      :cpu_cores => 2,
+      :memory_size => 512,
+      :arch => "x86_64",
+      :hypervisor => "kvm",
+      :updated_at => "2011-10-28T02:58:57Z",
+      :account_id => "a-shpoolxx",
+      :vifs => "--- \neth0: \n  :bandwidth: 100000\n  :index: 0\n",
+      :quota_weight => 1.0,
+      :id => "is-demospec",
+      :created_at => "2011-10-28T02:58:57Z",
+      :drives => "--- \nephemeral1: \n  :type: :local\n  :size: 100\n  :index: 0\n",
+      :uuid => "is-demospec"
+    }]
 
   RESULT_UPDATE_WAKAME_SHOW_INSTANCE_SPECS = [{
       :cpu_cores => 1,
@@ -264,6 +255,6 @@ describe Tengine::Resource::Watcher do
       :created_at => "2011-10-28T02:58:57Z",
       :drives => "--- \nephemeral1: \n  :type: :local\n  :size: 100\n  :index: 0\n",
       :uuid => "is-demospec2"
-    }]
+    }] + ORIGINAL_WAKAME_SHOW_INSTANCE_SPECS
 
 end
