@@ -127,4 +127,5 @@ describe Tengine::Resource::Provider::Wakame do
       va[1].provided_id.should == 'i-f222222e'
     end
   end
+
 end
