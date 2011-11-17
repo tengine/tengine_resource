@@ -72,8 +72,8 @@ class Tengine::Resource::Watcher
           instance_spec = instance_spec.symbolize_keys if instance_spec
 
           if instance_spec
-            # APIで取得したサーバタイプと一致する且つ更新対象の差分があれば更新対象
-            update_instance_specs << instance_spec if needs_to_update_server_type?(old_server_type, instance_spec)
+            # APIで取得したサーバタイプと一致するものがあれば更新対象
+            update_instance_specs << instance_spec
           else
             # APIで取得したサーバタイプと一致するものがなければ削除対象
             destroy_server_types << old_server_type
@@ -82,49 +82,14 @@ class Tengine::Resource::Watcher
         # APIで取得したサーバタイプがTengine上に存在しないものであれば登録対象
         create_instance_specs = instance_specs - update_instance_specs
 
-        puts
-        puts " >> target_instance_specs" * 5
-        puts "    >> update_instance_specs"
-        puts update_instance_specs.inspect
-        puts "    >> create_instance_specs"
-        puts create_instance_specs.inspect
-        puts "    >> destroy_server_types"
-        puts destroy_server_types.inspect
-
         # 更新
-        provider.update_virtual_server_type_hashs(update_instance_specs) unless update_instance_specs.empty?
+        provider.differential_update_virtual_server_type_hashs(update_instance_specs) unless update_instance_specs.empty?
         # 登録
         provider.create_virtual_server_type_hashs(create_instance_specs) unless create_instance_specs.empty?
         # 削除
         destroy_server_types.each { |target| target.destroy }
       end
     end
-  end
-
-  private
-
-  def needs_to_update_server_type?(old_server_type, instance_spec_hash)
-    return false unless instance_spec_hash
-    # :id
-    # :uuid
-    # :account_id
-    # :cpu_cores
-    # :memory_size
-    # :arch
-    # :hypervisor
-    # :drives
-    # :vifs
-    # :quota_weight
-    # :created_at
-    # :updated_at
-    instance_spec = instance_spec_hash.dup
-    changed_flag = false
-    changed_flag = changed_flag || old_server_type.provided_id == instance_spec.delete(:id)
-    changed_flag = changed_flag || old_server_type.caption == instance_spec.delete(:uuid)
-    changed_flag = changed_flag || old_server_type.cpu_cores == instance_spec.delete(:cpu_cores)
-    changed_flag = changed_flag || old_server_type.memory_size == instance_spec.delete(:memory_size)
-    changed_flag = changed_flag || old_server_type.properties == instance_spec
-    return changed_flag
   end
 
   extend Tengine::Core::MethodTraceable

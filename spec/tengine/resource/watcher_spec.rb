@@ -29,7 +29,6 @@ describe Tengine::Resource::Watcher do
   end
 
   describe :start do
-
     before do
       @watcher = Tengine::Resource::Watcher.new
       EM.should_receive(:run).and_yield
@@ -41,7 +40,6 @@ describe Tengine::Resource::Watcher do
     end
 
     describe :init_process do
-
       before do
         # コネクションの mock を生成
         mock_conn = mock(:connection)
@@ -55,7 +53,6 @@ describe Tengine::Resource::Watcher do
       end
 
       describe :sender do
-
         it "生成したmq_suiteが設定されている" do
           mock_mq = Tengine::Mq::Suite.new(@watcher.config[:event_queue])
           Tengine::Mq::Suite.should_receive(:new).
@@ -81,28 +78,41 @@ describe Tengine::Resource::Watcher do
 
         context "wakame" do
           before do
+            @mock_mq = Tengine::Mq::Suite.new(@watcher.config[:event_queue])
+            Tengine::Mq::Suite.should_receive(:new).
+              with(@watcher.config[:event_queue]).and_return(@mock_mq)
+
+            @tama_controller_factory = mock(::Tama::Controllers::ControllerFactory.allocate)
+            ::Tama::Controllers::ControllerFactory.
+              should_receive(:create_controller).
+              with("test", nil, nil, nil, "192.168.0.10", 80, "http").
+              and_return(@tama_controller_factory)
+
+            @watcher.sender.should_receive(:wait_for_connection).and_yield
+
+
             Tengine::Resource::Provider.delete_all
             Tengine::Resource::VirtualServerType.delete_all
-#             @provider_ec2 = Tengine::Resource::Provider::Ec2.create!({
-#                 :name => "amazon-ec2",
-#                 :description => "",
-#                 :properties => {
-#                 },
-#                 :polling_interval => 30,
-#                 :connection_settings => {
-#                   :access_key => "",
-#                   :secret_access_key => "",
-#                   :options => {
-#                     :server => "ec2.amazonaws.com",
-#                     :port => 443,
-#                     :protocol => "https",
-#                     :multi_thread => false,
-#                     :logger => nil,
-#                     :signature_version => '1',
-#                     :cache => false,
-#                   }
-#                 }
-#               })
+            @provider_ec2 = Tengine::Resource::Provider::Ec2.create!({
+                :name => "amazon-ec2",
+                :description => "",
+                :properties => {
+                },
+                :polling_interval => 30,
+                :connection_settings => {
+                  :access_key => "",
+                  :secret_access_key => "",
+                  :options => {
+                    :server => "ec2.amazonaws.com",
+                    :port => 443,
+                    :protocol => "https",
+                    :multi_thread => false,
+                    :logger => nil,
+                    :signature_version => '1',
+                    :cache => false,
+                  }
+                }
+              })
             @provider_wakame = Tengine::Resource::Provider::Wakame.create!({
                 :name => "wakame-vdc",
                 :description => "",
@@ -118,6 +128,9 @@ describe Tengine::Resource::Watcher do
                   :private_network_data => "",
                 },
               })
+            Tengine::Event.default_sender.should_receive(:fire).with(
+              "Tengine::Resource::VirtualServerType.created.tengine_resource_watchd",
+              anything())
             @virtual_server_type_wakame = @provider_wakame.virtual_server_types.create!({
                 :provided_id => "is-demospec",
                 :caption => "is-demospec",
@@ -134,26 +147,16 @@ describe Tengine::Resource::Watcher do
                   :updated_at => "2011-10-28T02:58:57Z",
                 }
               })
-
-            @mock_mq = Tengine::Mq::Suite.new(@watcher.config[:event_queue])
-            Tengine::Mq::Suite.should_receive(:new).
-              with(@watcher.config[:event_queue]).and_return(@mock_mq)
-
-            @tama_controller_factory = mock(::Tama::Controllers::ControllerFactory.allocate)
-            ::Tama::Controllers::ControllerFactory.
-              should_receive(:create_controller).
-              with("test", nil, nil, nil, "192.168.0.10", 80, "http").
-              and_return(@tama_controller_factory)
-
-            @watcher.sender.should_receive(:wait_for_connection).and_yield
           end
 
-          it "更新対象があったら更新完了後イベントを発火する" do
+          it "更新対象があったら更新完了後イベントを発火する", :update => true do
             @tama_controller_factory.
               should_receive(:show_instance_specs).with([]).
               and_return(RESULT_UPDATE_WAKAME_SHOW_INSTANCE_SPECS)
 
-            Tengine::Event.default_sender.should_receive(:fire)
+            Tengine::Event.default_sender.should_receive(:fire).with(
+              "Tengine::Resource::VirtualServerType.updated.tengine_resource_watchd",
+              anything())
 
             @watcher.start
 
@@ -166,7 +169,7 @@ describe Tengine::Resource::Watcher do
             new_server_type.memory_size.should == 256
           end
 
-          it "更新対象がなかったらイベントは発火しない", :update => true do
+          it "更新対象がなかったらイベントは発火しない", :noupdate => true do
             @tama_controller_factory.
               should_receive(:show_instance_specs).with([]).
               and_return(ORIGINAL_WAKAME_SHOW_INSTANCE_SPECS)
@@ -189,10 +192,11 @@ describe Tengine::Resource::Watcher do
               should_receive(:show_instance_specs).with([]).
               and_return(RESULT_CREATE_WAKAME_SHOW_INSTANCE_SPECS)
 
-            Tengine::Event.default_sender.should_receive(:fire)
+            Tengine::Event.default_sender.should_receive(:fire).with(
+              "Tengine::Resource::VirtualServerType.created.tengine_resource_watchd",
+              anything())
 
-            puts @provider_wakame.virtual_server_types.count
-            expect { @watcher.start; @provider_wakame.reload; puts @provider_wakame.virtual_server_types.count }.should change(
+            expect { @watcher.start }.should change(
               @provider_wakame.virtual_server_types, :count).by(1)
           end
 
@@ -201,7 +205,9 @@ describe Tengine::Resource::Watcher do
               should_receive(:show_instance_specs).with([]).
               and_return([])
 
-            Tengine::Event.default_sender.should_receive(:fire)
+            Tengine::Event.default_sender.should_receive(:fire).with(
+              "Tengine::Resource::VirtualServerType.destroyed.tengine_resource_watchd",
+              anything())
 
             expect { @watcher.start }.should change(
               @provider_wakame.virtual_server_types, :size).by(-1)

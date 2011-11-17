@@ -3,29 +3,30 @@ class Tengine::Resource::Provider::Wakame < Tengine::Resource::Provider::Ec2
 
   field :connection_settings, :type => Hash
 
-  def update_virtual_server_type_hash(hash)
-    puts " @@ "*5
-    puts hash.inspect
+  def differential_update_virtual_server_type_hash(hash)
     virtual_server_type = self.virtual_server_types.where(:provided_id => hash[:id]).first
-    puts "before ->"
-    puts virtual_server_type.attributes
     properties = hash.dup
-    virtual_server_type.update_attributes(
-      :provided_id => properties.delete(:id),
-      :caption => properties.delete(:uuid),
-      :cpu_cores => properties.delete(:cpu_cores),
-      :memory_size => properties.delete(:memory_size),
-      :properties => properties)
-    puts "after ->"
-    puts virtual_server_type.attributes
-    puts "confirm ->"
-    puts self.virtual_server_types.where(:provided_id => hash[:id]).first.attributes
+    virtual_server_type.provided_id = properties.delete(:id)
+    virtual_server_type.caption = properties.delete(:uuid)
+    virtual_server_type.cpu_cores = properties.delete(:cpu_cores)
+    virtual_server_type.memory_size = properties.delete(:memory_size)
+    properties.each do |key, val|
+      value =  properties.delete(key)
+      unless val.to_s == value.to_s
+        if virtual_server_type.properties[key.to_sym]
+          virtual_server_type.properties[key.to_sym] = value
+        else
+          virtual_server_type.properties[key.to_s] = value
+        end
+      end
+    end
+    virtual_server_type.save! if virtual_server_type.changed?
   end
 
-  def update_virtual_server_type_hashs(hashs)
+  def differential_update_virtual_server_type_hashs(hashs)
     updated_server_types = []
     hashs.each do |hash|
-      server_type = update_virtual_server_type_hash(hash)
+      server_type = differential_update_virtual_server_type_hash(hash)
       updated_server_types << server_type
     end
     updated_server_types
