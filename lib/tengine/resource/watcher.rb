@@ -52,63 +52,14 @@ class Tengine::Resource::Watcher
       sender.wait_for_connection do
         providers = Tengine::Resource::Provider.all
         providers.each do |provider|
-          virtual_server_type_watch(provider)
+          # 仮想サーバタイプの監視
+          provider.virtual_server_type_watch
+          # 物理サーバの監視
+          # 仮想サーバの監視
+          # 仮想サーバイメージの監視
         end
       end
     end
-  end
-
-  # 仮想サーバイメージが提供されるプロバイダを定義しています
-  HAS_VIRTUAL_SERVER_TYPES_ON_PROVIDER_CLASSES = [
-    Tengine::Resource::Provider::Wakame
-  ]
-
-  def virtual_server_type_watch(provider)
-    # 仮想サーバイメージが提供されるプロバイダのみ処理を行います
-    return unless HAS_VIRTUAL_SERVER_TYPES_ON_PROVIDER_CLASSES.include?(provider.class)
-
-    # APIからの仮想サーバタイプ情報を取得
-    instance_specs = provider.instance_specs_from_api
-
-    create_instance_specs = []
-    update_instance_specs = []
-    destroy_server_types = []
-
-    # 仮想イメージタイプの取得
-    old_server_types = provider.virtual_server_types
-    old_server_types.each do |old_server_type|
-      instance_spec = instance_specs.detect { |instance_spec| instance_spec[:id] == old_server_type.provided_id }
-      instance_spec = instance_spec.symbolize_keys if instance_spec
-
-      if instance_spec
-        # APIで取得したサーバタイプと一致するものがあれば更新対象
-        update_instance_specs << instance_spec
-      else
-        # APIで取得したサーバタイプと一致するものがなければ削除対象
-        destroy_server_types << old_server_type
-      end
-    end
-    # APIで取得したサーバタイプがTengine上に存在しないものであれば登録対象
-    create_instance_specs = instance_specs - update_instance_specs
-
-    # 更新
-    provider.differential_update_virtual_server_type_hashs(update_instance_specs) unless update_instance_specs.empty?
-    # 登録
-    provider.create_virtual_server_type_hashs(create_instance_specs) unless create_instance_specs.empty?
-    # 削除
-    destroy_server_types.each { |target| target.destroy }
-  end
-
-  def physical_server_watch(provider)
-    # APIからの物理サーバ情報を取得
-  end
-
-  def virtual_server_watch(provider)
-    # APIからの仮想サーバ情報を取得
-  end
-
-  def virtual_server_image_watch(provider)
-    # APIからの仮想サーバイメージ情報を取得
   end
 
   extend Tengine::Core::MethodTraceable

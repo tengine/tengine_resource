@@ -154,6 +154,8 @@ describe Tengine::Resource::Watcher do
 
       context "wakame" do
         before do
+          Tengine::Resource::Provider.should_receive(:all).and_return([@provider_wakame])
+
           @tama_controller_factory = mock(::Tama::Controllers::ControllerFactory.allocate)
           ::Tama::Controllers::ControllerFactory.
             should_receive(:create_controller).

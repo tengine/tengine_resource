@@ -102,13 +102,63 @@ class Tengine::Resource::Provider::Wakame < Tengine::Resource::Provider::Ec2
     end
   end
 
+  # 仮想サーバタイプの監視
+  def virtual_server_type_watch
+    # APIからの仮想サーバタイプ情報を取得
+    instance_specs = instance_specs_from_api
+
+    create_instance_specs = []
+    update_instance_specs = []
+    destroy_server_types = []
+
+    # 仮想イメージタイプの取得
+    old_server_types = self.virtual_server_types
+    old_server_types.each do |old_server_type|
+      instance_spec = instance_specs.detect { |instance_spec| instance_spec[:id] == old_server_type.provided_id }
+      instance_spec = instance_spec.symbolize_keys if instance_spec
+
+      if instance_spec
+        # APIで取得したサーバタイプと一致するものがあれば更新対象
+        update_instance_specs << instance_spec
+      else
+        # APIで取得したサーバタイプと一致するものがなければ削除対象
+        destroy_server_types << old_server_type
+      end
+    end
+    # APIで取得したサーバタイプがTengine上に存在しないものであれば登録対象
+    create_instance_specs = instance_specs - update_instance_specs
+
+    # 更新
+    self.differential_update_virtual_server_type_hashs(update_instance_specs) unless update_instance_specs.empty?
+    # 登録
+    self.create_virtual_server_type_hashs(create_instance_specs) unless create_instance_specs.empty?
+    # 削除
+    destroy_server_types.each { |target| target.destroy }
+  end
+
+  # 物理サーバの監視
+  def physical_server_watch
+    # APIからの物理サーバ情報を取得
+  end
+
+  # 仮想サーバの監視
+  def virtual_server_watch
+    # APIからの仮想サーバ情報を取得
+  end
+
+  # 仮想サーバイメージの監視
+  def virtual_server_image_watch
+    # APIからの仮想サーバイメージ情報を取得
+  end
+
+
+  private
+
   def instance_specs_from_api(uuids = [])
     connect do |conn|
       conn.show_instance_specs(uuids)
     end
   end
-
-  private
 
   def connect
     h = [

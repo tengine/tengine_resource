@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 require 'mongoid'
 
 class Tengine::Resource::Provider
@@ -22,6 +23,22 @@ class Tengine::Resource::Provider
     c.has_many :virtual_servers        , :class_name => "Tengine::Resource::VirtualServer"
     c.has_many :virtual_server_images  , :class_name => "Tengine::Resource::VirtualServerImage"
     c.has_many :virtual_server_types   , :class_name => "Tengine::Resource::VirtualServerType"
+  end
+
+  # 仮想サーバタイプの監視
+  def virtual_server_type_watch
+  end
+
+  # 物理サーバの監視
+  def physical_server_watch
+  end
+
+  # 仮想サーバの監視
+  def virtual_server_watch
+  end
+
+  # 仮想サーバイメージの監視
+  def virtual_server_image_watch
   end
 
   def update_physical_servers      ; raise NotImplementedError end
