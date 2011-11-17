@@ -306,8 +306,7 @@ describe Tengine::Resource::Watcher do
 
         it "更新対象があったら更新完了後イベントを発火する" do
           @tama_controller_factory.
-            should_receive(:show_host_nodes).with([]).
-            and_return(RESULT_UPDATE_WAKAME_HOST_NODES)
+            should_receive(:show_host_nodes).and_return(RESULT_UPDATE_WAKAME_HOST_NODES)
 
           Tengine::Event.default_sender.should_receive(:fire).with(
             "Tengine::Resource::PhysicalServer.updated.tengine_resource_watchd",
@@ -322,6 +321,47 @@ describe Tengine::Resource::Watcher do
           new_server = @provider_wakame.physical_servers.first
           new_server.cpu_cores.should == 75
           new_server.memory_size.should == 350000
+        end
+
+        it "更新対象がなかったらイベントは発火しない" do
+          @tama_controller_factory.
+            should_receive(:show_host_nodes).and_return(ORIGINAL_WAKAME_HOST_NODES)
+
+          Tengine::Event.default_sender.should_not_receive(:fire)
+
+          @watcher.start
+
+          @physical_server_wakame.cpu_cores.should == 100
+          @physical_server_wakame.memory_size.should == 400000
+
+          @provider_wakame.reload
+          new_server = @provider_wakame.physical_servers.first
+          new_server.cpu_cores.should == 100
+          new_server.memory_size.should == 400000
+        end
+
+        it "登録対象があったら登録完了後イベントを発火する" do
+          @tama_controller_factory.
+            should_receive(:show_host_nodes).and_return(RESULT_CREATE_WAKAME_HOST_NODES)
+
+          Tengine::Event.default_sender.should_receive(:fire).with(
+            "Tengine::Resource::PhysicalServer.created.tengine_resource_watchd",
+            anything())
+
+          expect { @watcher.start }.should change(
+            @provider_wakame.physical_servers, :count).by(1)
+        end
+
+        it "削除対象があったら削除完了後イベントを発火する" do
+          @tama_controller_factory.
+            should_receive(:show_host_nodes).and_return([])
+
+          Tengine::Event.default_sender.should_receive(:fire).with(
+            "Tengine::Resource::PhysicalServer.destroyed.tengine_resource_watchd",
+            anything())
+
+          expect { @watcher.start }.should change(
+            @provider_wakame.physical_servers, :size).by(-1)
         end
       end   # end to :wakame
     end   # end to :phyical_server_watch
