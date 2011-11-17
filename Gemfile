@@ -28,5 +28,5 @@ group :development do
   gem "simplecov", "~> 0.5.3"
   gem "ZenTest", "~> 4.6.2"
 
-  gem "wakame-adapters-tengine", "~> 0.0.0", :git => "git@github.com:tengine/wakame-adapters-tengine.git", :branch => "master"
+  gem "wakame-adapters-tengine", "~> 0.0.0"
 end

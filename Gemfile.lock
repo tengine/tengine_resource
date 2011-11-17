@@ -1,12 +1,3 @@
-GIT
-  remote: git@github.com:tengine/wakame-adapters-tengine.git
-  revision: 49f87ab558276bdc0264fed31199ed1cde150afd
-  branch: master
-  specs:
-    wakame-adapters-tengine (0.0.1)
-      json
-      right_aws
-
 GEM
   remote: http://bts.tenginefw.com/gemserver/
   remote: http://rubygems.org/
@@ -70,7 +61,7 @@ GEM
       simplecov-html (~> 0.5.3)
     simplecov-html (0.5.3)
     systemu (2.4.1)
-    tengine_core (0.3.6)
+    tengine_core (0.3.7)
       activemodel (~> 3.1.0)
       activesupport (~> 3.1.0)
       bson (~> 1.4.0)
@@ -79,9 +70,9 @@ GEM
       mongo (~> 1.4.0)
       mongoid (~> 2.3.3)
       selectable_attr (~> 0.3.15)
-      tengine_event (~> 0.3.0)
+      tengine_event (~> 0.3.3)
       tengine_support (~> 0.3.0)
-    tengine_event (0.3.1)
+    tengine_event (0.3.4)
       activesupport (>= 3.0.0)
       amqp (~> 0.8.0)
       uuid (~> 2.3.4)
@@ -89,6 +80,9 @@ GEM
     tzinfo (0.3.31)
     uuid (2.3.4)
       macaddr (~> 1.0)
+    wakame-adapters-tengine (0.0.1)
+      json
+      right_aws
     yard (0.7.3)
 
 PLATFORMS
@@ -105,5 +99,5 @@ DEPENDENCIES
   simplecov (~> 0.5.3)
   tengine_core (~> 0.3.3)
   tengine_support (~> 0.3.0)
-  wakame-adapters-tengine (~> 0.0.0)!
+  wakame-adapters-tengine (~> 0.0.0)
   yard (~> 0.7.2)
