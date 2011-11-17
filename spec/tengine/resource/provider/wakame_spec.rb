@@ -59,17 +59,11 @@ describe Tengine::Resource::Provider::Wakame do
       vi = subject.virtual_server_images.create(:provided_id => "wmi-lucid5")
       vt = subject.virtual_server_types.create(:provided_id => "is-small")
       ps = subject.physical_servers.create(:provided_id => "foo-dc")
-      vs = subject.create_virtual_servers({
-        :virtual_server_image => vi,
-        :virtual_server_type => vt,
-        :physical_server => ps,
-        :count => 1,
-      })
+      vs = subject.create_virtual_servers("name", vi, vt, ps, "description", 1)
       vs.count.should == 1
       v = vs.first
       v.should be_valid
-      v.status.should == "pending"
-      v.provided_image_id.should == vi.provided_id
+      v.name.should == "name001"
     end
   end
 

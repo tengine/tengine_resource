@@ -430,22 +430,14 @@ describe Tengine::Resource::Provider::Ec2 do
         it "1台の起動" do
           vi = subject.virtual_server_images.create(:provided_id => "ami-e444444d")
           vt = subject.virtual_server_types.create(:provided_id => "m1.small")
-          ps = subject.physical_servers.create(:provided_id => "us-east-1b")
-          vs = subject.create_virtual_servers({
-            :virtual_server_image => vi,
-            :virtual_server_type => vt,
-            :min_count => 1,
-            :max_count => 1,
-            :group_ids => ["my_awesome_group"],
-            :key_name => "my_awesome_key",
-            :kernel_id => "aki-9905e0f0",
-            :ramdisk_id => "ari-8605e0ef",
-            :availability_zone => ps.provided_id,
-          })
+          vs = subject.create_virtual_servers(
+            "name", vi, vt, "us-east-1b", "description", 1, 1, ["my_awesome_group"], "my_awesome_key", "", "aki-9905e0f0", "ari-8605e0ef",
+          )
           vs.count.should == 1
           v = vs.first
           v.should be_valid
           v.status.should == "pending"
+          v.name.should == "name001"
           v.provided_image_id.should == vi.provided_id
         end
       end
