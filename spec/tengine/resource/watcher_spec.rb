@@ -187,7 +187,7 @@ describe Tengine::Resource::Watcher do
         it "更新対象があったら更新完了後イベントを発火する" do
           @tama_controller_factory.
             should_receive(:show_instance_specs).with([]).
-            and_return(RESULT_UPDATE_WAKAME_INSTANCE_SPECS)
+            and_return(UPDATE_WAKAME_INSTANCE_SPECS)
 
           Tengine::Event.default_sender.should_receive(:fire).with(
             "Tengine::Resource::VirtualServerType.updated.tengine_resource_watchd",
@@ -225,7 +225,7 @@ describe Tengine::Resource::Watcher do
         it "登録対象があったら登録完了後イベントを発火する" do
           @tama_controller_factory.
             should_receive(:show_instance_specs).with([]).
-            and_return(RESULT_CREATE_WAKAME_INSTANCE_SPECS)
+            and_return(CREATE_WAKAME_INSTANCE_SPECS)
 
           Tengine::Event.default_sender.should_receive(:fire).with(
             "Tengine::Resource::VirtualServerType.created.tengine_resource_watchd",
@@ -296,6 +296,8 @@ describe Tengine::Resource::Watcher do
           Tengine::Resource::Provider.should_receive(:all).and_return([@provider_wakame])
           @provider_wakame.should_receive(:virtual_server_type_watch)
           EM.should_receive(:add_periodic_timer).with(@provider_wakame.polling_interval).and_yield
+          @provider_wakame.should_receive(:virtual_server_watch)
+          @provider_wakame.should_receive(:virtual_server_image_watch)
 
           @tama_controller_factory = mock(::Tama::Controllers::ControllerFactory.allocate)
           ::Tama::Controllers::ControllerFactory.
@@ -306,7 +308,7 @@ describe Tengine::Resource::Watcher do
 
         it "更新対象があったら更新完了後イベントを発火する" do
           @tama_controller_factory.
-            should_receive(:show_host_nodes).and_return(RESULT_UPDATE_WAKAME_HOST_NODES)
+            should_receive(:show_host_nodes).and_return(UPDATE_WAKAME_HOST_NODES)
 
           Tengine::Event.default_sender.should_receive(:fire).with(
             "Tengine::Resource::PhysicalServer.updated.tengine_resource_watchd",
@@ -342,7 +344,7 @@ describe Tengine::Resource::Watcher do
 
         it "登録対象があったら登録完了後イベントを発火する" do
           @tama_controller_factory.
-            should_receive(:show_host_nodes).and_return(RESULT_CREATE_WAKAME_HOST_NODES)
+            should_receive(:show_host_nodes).and_return(CREATE_WAKAME_HOST_NODES)
 
           Tengine::Event.default_sender.should_receive(:fire).with(
             "Tengine::Resource::PhysicalServer.created.tengine_resource_watchd",
@@ -366,6 +368,140 @@ describe Tengine::Resource::Watcher do
       end   # end to :wakame
     end   # end to :phyical_server_watch
 
+    # 仮想サーバ
+    describe :virtual_server_watch do
+      before do
+        Tengine::Event.default_sender.should_receive(:fire).with(
+          "Tengine::Resource::VirtualServer.created.tengine_resource_watchd",
+          anything())
+
+        Tengine::Resource::VirtualServer.delete_all
+        @virtual_server_wakame = @provider_wakame.virtual_servers.create!({
+            :name => "vhost",
+            :description => "",
+            :provided_id => "i-jria301q",
+            :provided_image_id => "wmi-lucid5",
+            :provided_type_id => "is-demospec",
+            :status => "running",
+            :addresses => {
+              "nw-data" => ["192.168.2.188"],
+              "nw-outside" => ["172.16.0.234"]
+            },
+            :address_order => ["192.168.2.188"],
+            :properties => {
+              :aws_kernel_id => "",
+              :aws_launch_time => "2011-10-18T06:51:16Z",
+              :tags => {},
+              :aws_reservation_id => "",
+              :aws_owner => "a-shpoolxx",
+              :instance_lifecycle => "",
+              :block_device_mappings => [{
+                  :ebs_volume_id => "",
+                  :ebs_status => "",
+                  :ebs_attach_time => "",
+                  :ebs_delete_on_termination => false,
+                  :device_name => ""
+                }],
+              :ami_launch_index => "",
+              :root_device_name => "",
+              :aws_ramdisk_id => "",
+              :aws_availability_zone => "hp-demohost",
+              :aws_groups => nil,
+              :spot_instance_request_id => "",
+              :ssh_key_name => nil,
+              :virtualization_type => "",
+              :placement_group_name => "",
+              :requester_id => "",
+              :aws_product_codes => [],
+              :client_token => "",
+              :architecture => "x86_64",
+              :aws_state_code => 0,
+              :root_device_type => "",
+              :dns_name => {
+                "nw-data" => "jria301q.shpoolxx.vdc.local",
+                "nw-outside" => "jria301q.shpoolxx.vdc.public"
+              },
+              :monitoring_state => "",
+              :private_dns_name => "jria301q.shpoolxx.vdc.local",
+              :aws_reason => ""
+            }
+          })
+
+        @watcher.sender.should_receive(:wait_for_connection).and_yield
+      end
+
+      context "wakame" do
+        before do
+          Tengine::Resource::Provider.should_receive(:all).and_return([@provider_wakame])
+          @provider_wakame.should_receive(:virtual_server_type_watch)
+          EM.should_receive(:add_periodic_timer).with(@provider_wakame.polling_interval).and_yield
+          @provider_wakame.should_receive(:physical_server_watch)
+          @provider_wakame.should_receive(:virtual_server_image_watch)
+
+          @tama_controller_factory = mock(::Tama::Controllers::ControllerFactory.allocate)
+          ::Tama::Controllers::ControllerFactory.
+            should_receive(:create_controller).
+            with("test", nil, nil, nil, "192.168.0.10", 80, "http").
+            and_return(@tama_controller_factory)
+        end
+
+        it "更新対象があったら更新完了後イベントを発火する" do
+          @tama_controller_factory.
+            should_receive(:describe_instances).with([]).
+            and_return(UPDATE_WAKAME_INSTANCES)
+
+          Tengine::Event.default_sender.should_receive(:fire).with(
+            "Tengine::Resource::VirtualServer.updated.tengine_resource_watchd",
+            anything())
+
+          @watcher.start
+
+          @virtual_server_wakame.status.should == "running"
+
+          @provider_wakame.reload
+          new_server = @provider_wakame.virtual_servers.first
+          new_server.status.should == "terminated"
+        end
+
+        it "更新対象がなかったらイベントは発火しない" do
+          @tama_controller_factory.
+            should_receive(:describe_instances).with([]).
+            and_return(ORIGINAL_WAKAME_INSTANCES)
+
+          Tengine::Event.default_sender.should_not_receive(:fire)
+
+          @watcher.start
+        end
+
+        it "登録対象があったら登録完了後イベントを発火する" do
+          @tama_controller_factory.
+            should_receive(:describe_instances).with([]).
+            and_return(CREATE_WAKAME_INSTANCES)
+
+          Tengine::Event.default_sender.should_receive(:fire).with(
+            "Tengine::Resource::VirtualServer.created.tengine_resource_watchd",
+            anything())
+
+          expect { @watcher.start }.should change(
+            @provider_wakame.virtual_servers, :count).by(1)
+        end
+
+        it "削除対象があったら削除完了後イベントを発火する" do
+          @tama_controller_factory.
+            should_receive(:describe_instances).with([]).
+            and_return([])
+
+          Tengine::Event.default_sender.should_receive(:fire).with(
+            "Tengine::Resource::VirtualServer.destroyed.tengine_resource_watchd",
+            anything())
+
+          expect { @watcher.start }.should change(
+            @provider_wakame.virtual_servers, :size).by(-1)
+        end
+      end  # end to wakame
+
+    end   # end to :virtual_server_watch
+
   end   # end to :start
 
   ORIGINAL_WAKAME_INSTANCE_SPECS = [{
@@ -382,7 +518,7 @@ describe Tengine::Resource::Watcher do
       :drives => "--- \nephemeral1: \n  :type: :local\n  :size: 100\n  :index: 0\n",
       :uuid => "is-demospec"
     }]
-  RESULT_UPDATE_WAKAME_INSTANCE_SPECS = [{
+  UPDATE_WAKAME_INSTANCE_SPECS = [{
       :cpu_cores => 1,
       :memory_size => 256,
       :arch => "x86_64",
@@ -396,7 +532,7 @@ describe Tengine::Resource::Watcher do
       :drives => "--- \nephemeral1: \n  :type: :local\n  :size: 100\n  :index: 0\n",
       :uuid => "is-demospec"
     }]
-  RESULT_CREATE_WAKAME_INSTANCE_SPECS = [{
+  CREATE_WAKAME_INSTANCE_SPECS = [{
       :cpu_cores => 2,
       :memory_size => 1024,
       :arch => "x86_64",
@@ -424,7 +560,7 @@ describe Tengine::Resource::Watcher do
       :uuid => "hp-demohost",
       :id => "hp-demohost"
     }]
-  RESULT_UPDATE_WAKAME_HOST_NODES = [{
+  UPDATE_WAKAME_HOST_NODES = [{
       :status => "online",
       :updated_at => "2011-10-18T03:53:24Z",
       :account_id => "a-shpoolxx",
@@ -437,7 +573,7 @@ describe Tengine::Resource::Watcher do
       :uuid => "hp-demohost",
       :id => "hp-demohost"
     }]
-  RESULT_CREATE_WAKAME_HOST_NODES = [{
+  CREATE_WAKAME_HOST_NODES = [{
       :status => "online",
       :updated_at => "2011-10-18T03:53:24Z",
       :account_id => "a-shpoolxx",
@@ -451,70 +587,143 @@ describe Tengine::Resource::Watcher do
       :id => "hp-demohost2"
     }] + ORIGINAL_WAKAME_HOST_NODES
 
-  ORIGINAL_WAKAME_DESCRIBE_INSTANCES = [{
-      :vif => [{
-         :ipv4 => {
-           :nat_address => "172.16.0.234",
-           :address => "192.168.2.188"
-         },
-         :vif_id => "vif-aspojqs4"
-       }],
-      :status => "online",
-      :memory_size => 256,
-      :ha_enabled => 0,
-      :network => [{
-         :nat_ipaddr => ["172.16.0.234"],
-         :nat_dns_name => "jria301q.shpoolxx.vdc.public",
-         :dns_name => "jria301q.shpoolxx.vdc.local",
-         :ipaddr => ["192.168.2.188"],
-         :nat_network_name => "nw-outside",
-         :network_name => "nw-data"
-       }],
-      :state => "running",
-      :image_id => "wmi-lucid5",
-      :arch => "x86_64",
-      :hostname => "jria301q",
-      :host_node => "hp-demohost",
-      :created_at => "2011-10-18T06:51:16Z",
-      :instance_spec_id => "is-demospec",
-      :netfilter_group_id => ["ng-demofgr"],
-      #:ssh_key_pair => null,
-      :volume => [],
-      :netfilter_group => ["default"],
-      :id => "i-jria301q",
-      :cpu_cores => 1
-    },
-    {
-      :vif => [{
-         :ipv4 => {
-           #:nat_address => null,
-           :address => "192.168.2.94"
-         },
-         :vif_id => "vif-h85j75s9"
-       }],
-      :status => "online",
-      :memory_size => 256,
-      :ha_enabled => 0,
-      :network => [{
-         :nat_ipaddr => [],
-         #:nat_dns_name => null,
-         :dns_name => "9pia8e7p.shpoolxx.vdc.local",
-         :ipaddr => ["192.168.2.94"],
-         #:nat_network_name => null,
-         :network_name => "nw-data"
-       }],
-      :state => "running",
-      :image_id => "wmi-lucid5",
-      :arch => "x86_64",
-      :hostname => "9pia8e7p",
-      :host_node => "hp-demohost",
-      :created_at => "2011-10-18T06:48:47Z",
-      :instance_spec_id => "is-demospec",
-      :netfilter_group_id => ["ng-demofgr"],
-      #:ssh_key_pair => null,
-      :volume => [],
-      :netfilter_group => ["default"],
-      :id => "i-9pia8e7p",
-      :cpu_cores => 1
+  ORIGINAL_WAKAME_INSTANCES = [{
+      :aws_kernel_id => "",
+      :aws_launch_time => "2011-10-18T06:51:16Z",
+      :tags => {},
+      :aws_reservation_id => "",
+      :aws_owner => "a-shpoolxx",
+      :instance_lifecycle => "",
+      :block_device_mappings => [{
+          :ebs_volume_id => "",
+          :ebs_status => "",
+          :ebs_attach_time => "",
+          :ebs_delete_on_termination => false,
+          :device_name => ""
+        }],
+      :ami_launch_index => "",
+      :root_device_name => "",
+      :aws_ramdisk_id => "",
+      :aws_availability_zone => "hp-demohost",
+      #:aws_groups => nil,
+      :spot_instance_request_id => "",
+      #:ssh_key_name => nil,
+      :virtualization_type => "",
+      :placement_group_name => "",
+      :requester_id => "",
+      :aws_instance_id => "i-jria301q",
+      :aws_product_codes => [],
+      :client_token => "",
+      :private_ip_address => ["192.168.2.188"],
+      :architecture => "x86_64",
+      :aws_state_code => 0,
+      :aws_image_id => "wmi-lucid5",
+      :root_device_type => "",
+      :ip_address => {
+        "nw-data" => ["192.168.2.188"],
+        "nw-outside" => ["172.16.0.234"]
+      },
+      :dns_name => {
+        "nw-data" => "jria301q.shpoolxx.vdc.local",
+        "nw-outside" => "jria301q.shpoolxx.vdc.public"
+      },
+      :monitoring_state => "",
+      :aws_instance_type => "is-demospec",
+      :aws_state => "running",
+      :private_dns_name => "jria301q.shpoolxx.vdc.local",
+      :aws_reason => ""
     }]
+  UPDATE_WAKAME_INSTANCES = [{
+      :aws_kernel_id => "",
+      :aws_launch_time => "2011-10-18T06:51:16Z",
+      :tags => {},
+      :aws_reservation_id => "",
+      :aws_owner => "a-shpoolxx",
+      :instance_lifecycle => "",
+      :block_device_mappings => [{
+          :ebs_volume_id => "",
+          :ebs_status => "",
+          :ebs_attach_time => "",
+          :ebs_delete_on_termination => false,
+          :device_name => ""
+        }],
+      :ami_launch_index => "",
+      :root_device_name => "",
+      :aws_ramdisk_id => "",
+      :aws_availability_zone => "hp-demohost",
+      #:aws_groups => nil,
+      :spot_instance_request_id => "",
+      #:ssh_key_name => nil,
+      :virtualization_type => "",
+      :placement_group_name => "",
+      :requester_id => "",
+      :aws_instance_id => "i-jria301q",
+      :aws_product_codes => [],
+      :client_token => "",
+      :private_ip_address => ["192.168.2.188"],
+      :architecture => "x86_64",
+      :aws_state_code => 1,
+      :aws_image_id => "wmi-lucid5",
+      :root_device_type => "",
+      :ip_address => {
+        "nw-data" => ["192.168.2.188"],
+        "nw-outside" => ["172.16.0.234"]
+      },
+      :dns_name => {
+        "nw-data" => "jria301q.shpoolxx.vdc.local",
+        "nw-outside" => "jria301q.shpoolxx.vdc.public"
+      },
+      :monitoring_state => "",
+      :aws_instance_type => "is-demospec",
+      :aws_state => "terminated",
+      :private_dns_name => "jria301q.shpoolxx.vdc.local",
+      :aws_reason => ""
+    }]
+  CREATE_WAKAME_INSTANCES = [{
+      :aws_kernel_id => "",
+      :aws_launch_time => "2011-10-18T06:51:16Z",
+      :tags => {},
+      :aws_reservation_id => "",
+      :aws_owner => "a-shpoolxx",
+      :instance_lifecycle => "",
+      :block_device_mappings => [{
+          :ebs_volume_id => "",
+          :ebs_status => "",
+          :ebs_attach_time => "",
+          :ebs_delete_on_termination => false,
+          :device_name => ""
+        }],
+      :ami_launch_index => "",
+      :root_device_name => "",
+      :aws_ramdisk_id => "",
+      :aws_availability_zone => "hp-demohost",
+      #:aws_groups => nil,
+      :spot_instance_request_id => "",
+      #:ssh_key_name => nil,
+      :virtualization_type => "",
+      :placement_group_name => "",
+      :requester_id => "",
+      :aws_instance_id => "i-jria302q",
+      :aws_product_codes => [],
+      :client_token => "",
+      :private_ip_address => ["192.168.2.189"],
+      :architecture => "x86_64",
+      :aws_state_code => 0,
+      :aws_image_id => "wmi-lucid5",
+      :root_device_type => "",
+      :ip_address => {
+        "nw-data" => ["192.168.2.189"],
+        "nw-outside" => ["172.16.0.235"]
+      },
+      :dns_name => {
+        "nw-data" => "jria302q.shpoolxx.vdc.local",
+        "nw-outside" => "jria302q.shpoolxx.vdc.public"
+      },
+      :monitoring_state => "",
+      :aws_instance_type => "is-demospec",
+      :aws_state => "running",
+      :private_dns_name => "jria302q.shpoolxx.vdc.local",
+      :aws_reason => ""
+    }] + ORIGINAL_WAKAME_INSTANCES
+
 end

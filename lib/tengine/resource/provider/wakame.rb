@@ -117,6 +117,56 @@ class Tengine::Resource::Provider::Wakame < Tengine::Resource::Provider::Ec2
   end
 
   # virtual_server
+  def differential_update_virtual_server_hash(hash)
+    virtual_server = self.virtual_servers.where(:provided_id => hash[:aws_instance_id]).first
+    properties = hash.dup
+    virtual_server.provided_id = properties.delete(:aws_instance_id)
+    virtual_server.provided_image_id = properties.delete(:aws_image_id)
+    virtual_server.provided_type_id = properties.delete(:aws_instance_type)
+    virtual_server.status = properties.delete(:aws_state)
+    properties.each do |key, val|
+      value =  properties.delete(key)
+      unless val.to_s == value.to_s
+        if virtual_server.properties[key.to_sym]
+          virtual_server.properties[key.to_sym] = value
+        else
+          virtual_server.properties[key.to_s] = value
+        end
+      end
+    end
+    virtual_server.save! if virtual_server.changed?
+  end
+
+  def differential_update_virtual_server_hashs(hashs)
+    updated_servers = []
+    hashs.each do |hash|
+      server = differential_update_virtual_server_hash(hash)
+      updated_servers << server
+    end
+    updated_servers
+  end
+
+  def create_virtual_server_hash(hash)
+    properties = hash.dup
+    self.virtual_servers.create!(
+      :name => properties.delete(:aws_instance_id),
+      :provided_image_id => properties.delete(:aws_image_id),
+      :provided_type_id => properties.delete(:aws_instance_type),
+      :status => properties.delete(:aws_state),
+      :addresses => properties.delete(:ip_address),
+      :address_order => properties.delete(:private_ip_address),
+      :properties => properties)
+  end
+
+  def create_virtual_server_hashs(hashs)
+    created_ids = []
+    hashs.each do |hash|
+      server = create_virtual_server_hash(hash)
+      created_ids << server.id
+    end
+    created_ids
+  end
+
   def create_virtual_servers hash
     #  0  (使用するAPI)   RightAws::Ec2#run_instances Tama::Tama#run_instances   
     #  1  image_id  仮想サーバイメージ  仮想サーバイメージのprovided_id 仮想サーバイメージのprovided_id  
@@ -221,6 +271,29 @@ class Tengine::Resource::Provider::Wakame < Tengine::Resource::Provider::Ec2
   # 仮想サーバの監視
   def virtual_server_watch
     # APIからの仮想サーバ情報を取得
+    instances = instances_from_api
+
+    create_instances = []
+    update_instances = []
+    destroy_servers = []
+
+    # 仮想サーバの取得
+    old_servers = self.virtual_servers
+    old_servers.each do |old_server|
+      instance = instances.detect { |instance| instance[:aws_instance_id] == old_server.provided_id }
+      instance = instance.symbolize_keys if instance
+
+      if instance
+        update_instances << instance
+      else
+        destroy_servers << old_server
+      end
+    end
+    create_instances = instances - update_instances
+
+    self.differential_update_virtual_server_hashs(update_instances) unless update_instances.empty?
+    self.create_virtual_server_hashs(create_instances) unless create_instances.empty?
+    destroy_servers.each { |target| target.destroy }
   end
 
   # 仮想サーバイメージの監視
@@ -237,9 +310,15 @@ class Tengine::Resource::Provider::Wakame < Tengine::Resource::Provider::Ec2
     end
   end
 
-  def host_nodes_from_api(uuids = [])
+  def host_nodes_from_api
     connect do |conn|
-      conn.show_host_nodes(uuids)
+      conn.show_host_nodes
+    end
+  end
+
+  def instances_from_api(uuids = [])
+    connect do |conn|
+      conn.describe_instances(uuids)
     end
   end
 
