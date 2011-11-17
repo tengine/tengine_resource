@@ -3,6 +3,7 @@ class Tengine::Resource::Provider::Wakame < Tengine::Resource::Provider::Ec2
 
   field :connection_settings, :type => Hash
 
+  # virtual_server_type
   def differential_update_virtual_server_type_hash(hash)
     virtual_server_type = self.virtual_server_types.where(:provided_id => hash[:id]).first
     properties = hash.dup
@@ -51,6 +52,58 @@ class Tengine::Resource::Provider::Wakame < Tengine::Resource::Provider::Ec2
     created_ids
   end
 
+  # physical_server
+  def differential_update_physical_server_hash(hash)
+    physical_server = self.physical_servers.where(:provided_id => hash[:id]).first
+    properties = hash.dup
+    physical_server.name = properties.delete(:name)
+    physical_server.provided_id = properties.delete(:id)
+    physical_server.status = properties.delete(:status)
+    physical_server.cpu_cores = properties.delete(:offering_cpu_cores)
+    physical_server.memory_size = properties.delete(:offering_memory_size)
+    properties.each do |key, val|
+      value =  properties.delete(key)
+      unless val.to_s == value.to_s
+        if physical_server.properties[key.to_sym]
+          physical_server.properties[key.to_sym] = value
+        else
+          physical_server.properties[key.to_s] = value
+        end
+      end
+    end
+    physical_server.save! if physical_server.changed?
+  end
+
+  def differential_update_physical_server_hashs(hashs)
+    updated_servers = []
+    hashs.each do |hash|
+      server = differential_update_physical_server_hash(hash)
+      updated_servers << server
+    end
+    updated_servers
+  end
+
+  def create_physical_server_hash(hash)
+    properties = hash.dup
+    self.physical_servers.create!(
+      :name => properties.delete(:name),
+      :provided_id => properties.delete(:id),
+      :status => properties.delete(:status),
+      :cpu_cores => properties.delete(:offering_cpu_cores),
+      :memory_size => properties.delete(:offering_memory_size),
+      :properties => properties)
+  end
+
+  def create_physical_server_hashs(hashs)
+    created_ids = []
+    hashs.each do |hash|
+      server = create_physical_server_hash(hash)
+      created_ids << server.id
+    end
+    created_ids
+  end
+
+  # virtual_server_image
   def update_virtual_server_images
     connect do |conn|
       hashs = conn.describe_images.map do |hash|
@@ -63,6 +116,7 @@ class Tengine::Resource::Provider::Wakame < Tengine::Resource::Provider::Ec2
     end
   end
 
+  # virtual_server
   def create_virtual_servers hash
     #  0  (使用するAPI)   RightAws::Ec2#run_instances Tama::Tama#run_instances   
     #  1  image_id  仮想サーバイメージ  仮想サーバイメージのprovided_id 仮想サーバイメージのprovided_id  
@@ -139,6 +193,29 @@ class Tengine::Resource::Provider::Wakame < Tengine::Resource::Provider::Ec2
   # 物理サーバの監視
   def physical_server_watch
     # APIからの物理サーバ情報を取得
+    host_nodes = host_nodes_from_api
+
+    create_host_nodes = []
+    update_host_nodes = []
+    destroy_servers = []
+
+    # 物理サーバの取得
+    old_servers = self.physical_servers
+    old_servers.each do |old_server|
+      host_node = host_nodes.detect { |host_node| host_node[:id] == old_server.provided_id }
+      host_node = host_node.symbolize_keys if host_node
+
+      if host_node
+        update_host_nodes << host_node
+      else
+        destroy_servers << old_server
+      end
+    end
+    create_host_nodes = host_nodes - update_host_nodes
+
+    self.differential_update_physical_server_hashs(update_host_nodes) unless update_host_nodes.empty?
+    self.create_physical_server_hashs(create_host_nodes) unless create_host_nodes.empty?
+    destroy_servers.each { |target| target.destroy }
   end
 
   # 仮想サーバの監視
@@ -157,6 +234,12 @@ class Tengine::Resource::Provider::Wakame < Tengine::Resource::Provider::Ec2
   def instance_specs_from_api(uuids = [])
     connect do |conn|
       conn.show_instance_specs(uuids)
+    end
+  end
+
+  def host_nodes_from_api(uuids = [])
+    connect do |conn|
+      conn.show_host_nodes(uuids)
     end
   end
 

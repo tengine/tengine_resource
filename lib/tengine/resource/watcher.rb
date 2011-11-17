@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 require 'eventmachine'
 require 'mongoid'
-require 'apis/wakame'
 require 'tengine/core/config'
 
 class Tengine::Resource::Watcher
@@ -54,9 +53,16 @@ class Tengine::Resource::Watcher
         providers.each do |provider|
           # 仮想サーバタイプの監視
           provider.virtual_server_type_watch
-          # 物理サーバの監視
-          # 仮想サーバの監視
-          # 仮想サーバイメージの監視
+
+          @periodic = EM.add_periodic_timer(provider.polling_interval) do
+            # 物理サーバの監視
+            provider.physical_server_watch
+            # 仮想サーバの監視
+            provider.virtual_server_watch
+            # 仮想サーバイメージの監視
+            provider.virtual_server_image_watch
+          end
+
         end
       end
     end
