@@ -5,11 +5,11 @@
 
 Gem::Specification.new do |s|
   s.name = "tengine_resource"
-  s.version = "0.3.6"
+  s.version = "0.3.8"
 
   s.required_rubygems_version = Gem::Requirement.new(">= 0") if s.respond_to? :required_rubygems_version=
   s.authors = ["saishu", "w-irie", "taigou", "totty", "hiroshinakao", "g-morita", "guemon", "aoetk", "hattori-at-nt", "t-yamada", "y-karashima", "akm"]
-  s.date = "2011-11-15"
+  s.date = "2011-11-17"
   s.description = "tengine_resource provides physical/virtual server management"
   s.email = "tengine@nautilus-technologies.com"
   s.executables = ["tengine_resource_watchd"]
@@ -31,11 +31,12 @@ Gem::Specification.new do |s|
     "lib/tengine/resource/credential/ec2/dummy.rb",
     "lib/tengine/resource/credential/ec2/launch_options.rb",
     "lib/tengine/resource/drivers/resource_control_driver.rb",
+    "lib/tengine/resource/net_ssh.rb",
     "lib/tengine/resource/observer.rb",
     "lib/tengine/resource/physical_server.rb",
     "lib/tengine/resource/provider.rb",
     "lib/tengine/resource/provider/ec2.rb",
-    "lib/tengine/resource/provider/tama.rb",
+    "lib/tengine/resource/provider/wakame.rb",
     "lib/tengine/resource/server.rb",
     "lib/tengine/resource/virtual_server.rb",
     "lib/tengine/resource/virtual_server_image.rb",
@@ -47,9 +48,10 @@ Gem::Specification.new do |s|
     "spec/support/ec2.rb",
     "spec/tengine/resource/credential_spec.rb",
     "spec/tengine/resource/drivers/resource_control_driver_spec.rb",
+    "spec/tengine/resource/net_ssh_spec.rb",
     "spec/tengine/resource/physical_server_spec.rb",
     "spec/tengine/resource/provider/ec2_spec.rb",
-    "spec/tengine/resource/provider/tama_spec.rb",
+    "spec/tengine/resource/provider/wakame_spec.rb",
     "spec/tengine/resource/provider_spec.rb",
     "spec/tengine/resource/server_spec.rb",
     "spec/tengine/resource/virtual_server_image_spec.rb",

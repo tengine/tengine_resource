@@ -1,10 +1,7 @@
 # -*- coding: utf-8 -*-
 class Tengine::Resource::Provider::Ec2 < Tengine::Resource::Provider
-  belongs_to :credential, :class_name => "Tengine::Resource::Credential"
-  validates_presence_of :credential
-
   def update_physical_servers
-    credential.connect do |conn|
+    connect do |conn|
       # ec2.describe_availability_zones  #=> [{:region_name=>"us-east-1",
       #                                        :zone_name=>"us-east-1a",
       #                                        :zone_state=>"available"}, ... ]
@@ -21,7 +18,7 @@ class Tengine::Resource::Provider::Ec2 < Tengine::Resource::Provider
   end
 
   def update_virtual_servers
-    credential.connect do |conn|
+    connect do |conn|
       # http://rightscale.rubyforge.org/right_aws_gem_doc/
       # ec2.describe_instances #=>
       #   [{:aws_image_id       => "ami-e444444d",
@@ -63,7 +60,7 @@ class Tengine::Resource::Provider::Ec2 < Tengine::Resource::Provider
   end
 
   def update_virtual_server_images
-    credential.connect do |conn|
+    connect do |conn|
       hashs = conn.describe_images.map do |hash|
         { :provided_id => hash.delete(:aws_id), }
       end
@@ -71,75 +68,57 @@ class Tengine::Resource::Provider::Ec2 < Tengine::Resource::Provider
     end
   end
 
-  def create_virtual_servers hash
-    #  0	(使用するAPI)	 	RightAws::Ec2#run_instances	Tama::Tama#run_instances	 
-    #  1	image_id	仮想サーバイメージ	仮想サーバイメージのprovided_id	仮想サーバイメージのprovided_id	 
-    #  2	min_count	最小起動台数	指定された起動台数	指定された起動台数	max_countと同じ
-    #  3	max_count	最大起動台数	指定された起動台数	指定された起動台数	min_countと同じ
-    #  4	group_ids	セキュリティグループの配列	(画面で入力)	(空の配列)	 
-    #  5	key_name	起動した仮想サーバにrootでアクセスできるキー名	(画面で入力)	別途設定された文字列 例: “ssh-xxxxx”	 
-    #  6	user_data	起動した仮想サーバから参照可能なデータ	(空の文字列)	(空の文字列)	 
-    #  7	addressing_type	(deprecatedなパラメータ)	nil	nil	 
-    #  8	instance_type	仮想サーバタイプ	(画面で入力した仮想サーバタイプのprovided_id)	(画面で入力した仮想サーバタイプのprovided_id)	 
-    #  9	kernel_id	カーネル	(画面で入力)	nil	 
-    # 10	ramdisk_id	カーネル	(画面で入力)	nil	 
-    # 11	availability_zone	起動するデータセンター	(画面で入力)	仮想サーバを起動する物理サーバのprovided_id	 
-    # 12	block_device_mappings	 	nil	nil
-    vi = hash.delete :virtual_server_image
-    vt = hash.delete :virtual_server_type
-    image_id              = vi.provided_id
-    min_count             = hash[:min_count]
-    max_count             = hash[:max_count]
-    group_ids             = hash[:group_ids]
-    key_name              = hash[:key_name]
-    user_data             = ""
-    addressing_type       = nil
-    instance_type         = vt.provided_id
-    kernel_id             = hash[:kernel_id]
-    ramdisk_id            = hash[:ramdisk_id]
-    availability_zone     = hash[:availability_zone]
-    block_device_mappings = nil
-
-    credential.connect {|conn|
-      a = conn.run_instances(
-        image_id,
+  # @param  [String]                                 name         Name template for created virtual servers
+  # @param  [Tengine::Resource::VirtualServerImage]  image        Virtual server image object
+  # @param  [Tengine::Resource::VirtualServerType]   type         Virtual server type object
+  # @param  [String]                                 physical     Data center name to put virtual machines (availability zone)
+  # @param  [String]                                 description  What this virtual server is
+  # @param  [Numeric]                                min_count    Minimum number of vortial servers to boot
+  # @param  [Numeric]                                max_count    Maximum number of vortial servers to boot
+  # @param  [Array<Strng>]                           group_ids    Array of names of security group IDs
+  # @param  [Strng]                                  key_name     Name of root key to sue
+  # @param  [Strng]                                  user_data    User-specified
+  # @param  [Strng]                                  kernel_id    Kernel image ID
+  # @param  [Strng]                                  ramdisk_id   Ramdisk image ID
+  # @return [Array<Tengine::Resource::VirtualServer>]
+  def create_virtual_servers name, image, type, physical, description, min_count, max_count, group_ids, key_name, user_data = "", kernel_id, ramdisk_id
+    connect {|conn|
+      conn.run_instances(
+        image.provided_id,
         min_count,
         max_count,
         group_ids,
         key_name,
         user_data,
-        addressing_type,
-        instance_type,
+        nil, # <- addressing_type
+        type.provided_id,
         kernel_id,
         ramdisk_id,
-        availability_zone,
-        block_device_mappings
-      ).map {|hash|
-        hash.delete(:aws_state_code)
-        name = hash.delete(:aws_instance_id)
-        {
-          :name                 => name,
-          :provided_id          => name,
+        physical,
+        nil  # <- block_device_mappings
+      ).map.with_index {|hash, idx|
+        self.virtual_servers.create(
+          :name                 => sprintf("%s%03d", name, idx + 1), # 1 origin
+          :address_order        => address_order,
+          :description          => description,
+          :provided_id          => hash.delete(:aws_instance_id),
           :provided_image_id    => hash.delete(:aws_image_id),
+          :provided_type_id     => hash.delete(:aws_type_id),
           :status               => hash.delete(:aws_state),
           :properties           => hash,
           :addresses            => {
-            :dns_name           => hash.delete(:dns_name),
-            :ip_address         => hash.delete(:ip_address),
-            :private_dns_name   => hash.delete(:private_dns_name),
-            :private_ip_address => hash.delete(:private_ip_address),
-          },
-        }
-      }
-
-      return a.map {|i|
-        self.virtual_servers.create(i)
+#             :dns_name           => hash.delete(:dns_name),
+#             :ip_address         => hash.delete(:ip_address),
+#             :private_dns_name   => hash.delete(:private_dns_name),
+#             :private_ip_address => hash.delete(:private_ip_address),
+          }
+        )
       }
     }
   end
 
   def terminate_virtual_servers servers
-    credential.connect do |conn|
+    connect do |conn|
       # http://rightscale.rubyforge.org/right_aws_gem_doc/classes/RightAws/Ec2.html#M000287
       # http://docs.amazonwebservices.com/AWSEC2/latest/APIReference/ApiReference-query-TerminateInstances.html
       conn.terminate_instances(servers.map {|i| i.provided_id }).map do |hash|
@@ -148,5 +127,23 @@ class Tengine::Resource::Provider::Ec2 < Tengine::Resource::Provider
         serv
       end
     end    
+  end
+
+  private
+  def address_order
+    @@address_order ||= %w"private_ip_address private_dns_name ip_address dns_name".each(&:freeze).freeze
+  end
+
+  def connect
+    klass = (ENV['EC2_DUMMY'] == "true") ? Tengine::Resource::Credential::Ec2::Dummy : RightAws::Ec2
+    connection = klass.new(
+      self.connection_settings[:access_key],
+      self.connection_settings[:secret_access_key],
+      {
+        :logger => Tengine.logger,
+        :region => self.connection_settings[:region]
+      }
+      )
+    yield connection
   end
 end
