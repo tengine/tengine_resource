@@ -44,7 +44,7 @@ class << Net::SSH
     when Tengine::Resource::Credential
       hash = obj1.auth_values.symbolize_keys
     else
-      raise TypeError, "#{obj1.class} not expected (expected #{String})"
+      raise TypeError, "#{obj1.class} not expected (expected String)"
     end
 
     hash ||= Hash.new
@@ -114,6 +114,7 @@ class << Net::SSH
             fp = Tempfile.new("pk", dir)
             fp.write(k)
             fp.chmod(0400)
+            fp.flush
             fp # no close
           end
           k4 = k3.map {|i| File.expand_path(i.path) }
