@@ -3,6 +3,256 @@ class Tengine::Resource::Provider::Wakame < Tengine::Resource::Provider::Ec2
 
   field :connection_settings, :type => Hash
 
+  PHYSICAL_SERVER_STATES = [:online, :offline].freeze
+
+  VIRTUAL_SERVER_STATES = [
+    :scheduling, :pending, :starting, :running,
+    :failingover, :shuttingdown, :terminated].freeze
+
+  def update_virtual_server_images
+    connect do |conn|
+      hashs = conn.describe_images.map do |hash|
+        {
+          :provided_id => hash.delete(:aws_id),
+          :provided_description => hash.delete(:aws_description),
+        }
+      end
+      update_virtual_server_images_by(hashs)
+    end
+  end
+
+  # @param  [String]                                 name         Name template for created virtual servers
+  # @param  [Tengine::Resource::VirtualServerImage]  image        virtual server image object
+  # @param  [Tengine::Resource::VirtualServerType]   type         virtual server type object
+  # @param  [Tengine::Resource::PhysicalServer]      physical     physical server object
+  # @param  [String]                                 description  what this virtual server is
+  # @param  [Numeric]                                count        number of vortial servers to boot
+  # @return [Array<Tengine::Resource::VirtualServer>]
+  def create_virtual_servers name, image, type, physical, description = "", count = 1
+    return super(
+      name,
+      image,
+      type,
+      physical.provided_id,
+      description,
+      count,  # min
+      count,  # max
+      [],     # grouop id
+      self.properties[:key_name],
+      "",     # user data
+      nil,    # kernel id
+      nil     # ramdisk id
+    )
+  end
+
+  def terminate_virtual_servers servers
+    connect do |conn|
+      conn.terminate_instances(servers.map {|i| i.provided_id }).map do |hash|
+        serv = self.virtual_servers.where(:provided_id => hash[:aws_instance_id]).first
+        serv.update_attributes(:status => "shutdown in progress") if serv # <- ?
+        serv
+      end
+    end
+  end
+
+  def capacities
+    server_type_ids = virtual_server_types.map(&:provided_id)
+    server_type_to_cpu = virtual_server_types.inject({}) do |d, server_type|
+      d[server_type.provided_id] = server_type.cpu_cores
+      d
+    end
+    server_type_to_mem = virtual_server_types.inject({}) do |d, server_type|
+      d[server_type.provided_id] = server_type.memory_size
+      d
+    end
+    physical_servers.inject({}) do |result, physical_server|
+      if physical_server.status == 'online'
+        cpu_free = physical_server.cpu_cores - physical_server.guest_servers.map{|s| server_type_to_cpu[s.provided_type_id]}.sum
+        mem_free = physical_server.memory_size - physical_server.guest_servers.map{|s| server_type_to_mem[s.provided_type_id]}.sum
+        result[physical_server.provided_id] = server_type_ids.inject({}) do |dest, server_type_id|
+          dest[server_type_id] = [
+            cpu_free / server_type_to_cpu[server_type_id],
+            mem_free / server_type_to_mem[server_type_id]
+          ].min
+          dest
+        end
+      else
+        result[physical_server.provided_id] = server_type_ids.inject({}) do |dest, server_type_id|
+          dest[server_type_id] = 0; dest
+        end
+      end
+      result
+    end
+  end
+
+
+  # 仮想サーバタイプの監視
+  def virtual_server_type_watch
+    # APIからの仮想サーバタイプ情報を取得
+    instance_specs = instance_specs_from_api
+
+    create_instance_specs = []
+    update_instance_specs = []
+    destroy_server_types = []
+
+    # 仮想イメージタイプの取得
+    old_server_types = self.virtual_server_types
+    old_server_types.each do |old_server_type|
+      instance_spec = instance_specs.detect { |instance_spec| instance_spec[:id] == old_server_type.provided_id }
+      instance_spec = instance_spec.symbolize_keys if instance_spec
+
+      if instance_spec
+        # APIで取得したサーバタイプと一致するものがあれば更新対象
+        update_instance_specs << instance_spec
+      else
+        # APIで取得したサーバタイプと一致するものがなければ削除対象
+        destroy_server_types << old_server_type
+      end
+    end
+    # APIで取得したサーバタイプがTengine上に存在しないものであれば登録対象
+    create_instance_specs = instance_specs - update_instance_specs
+
+    # 更新
+    self.differential_update_virtual_server_type_hashs(update_instance_specs) unless update_instance_specs.empty?
+    # 登録
+    self.create_virtual_server_type_hashs(create_instance_specs) unless create_instance_specs.empty?
+    # 削除
+    destroy_server_types.each { |target| target.destroy }
+  end
+
+  # 物理サーバの監視
+  def physical_server_watch
+    # APIからの物理サーバ情報を取得
+    host_nodes = host_nodes_from_api
+
+    create_host_nodes = []
+    update_host_nodes = []
+    destroy_servers = []
+
+    # 物理サーバの取得
+    old_servers = self.physical_servers
+    old_servers.each do |old_server|
+      host_node = host_nodes.detect { |host_node| host_node[:id] == old_server.provided_id }
+      host_node = host_node.symbolize_keys if host_node
+
+      if host_node
+        update_host_nodes << host_node
+      else
+        destroy_servers << old_server
+      end
+    end
+    create_host_nodes = host_nodes - update_host_nodes
+
+    self.differential_update_physical_server_hashs(update_host_nodes) unless update_host_nodes.empty?
+    self.create_physical_server_hashs(create_host_nodes) unless create_host_nodes.empty?
+    destroy_servers.each { |target| target.destroy }
+  end
+
+  # 仮想サーバの監視
+  def virtual_server_watch
+    # APIからの仮想サーバ情報を取得
+    instances = instances_from_api
+
+    create_instances = []
+    update_instances = []
+    destroy_servers = []
+
+    # 仮想サーバの取得
+    old_servers = self.virtual_servers
+    old_servers.each do |old_server|
+      instance = instances.detect { |instance| instance[:aws_instance_id] == old_server.provided_id }
+      instance = instance.symbolize_keys if instance
+
+      if instance
+        update_instances << instance
+      else
+        destroy_servers << old_server
+      end
+    end
+    create_instances = instances - update_instances
+
+    self.differential_update_virtual_server_hashs(update_instances) unless update_instances.empty?
+    self.create_virtual_server_hashs(create_instances) unless create_instances.empty?
+    destroy_servers.each { |target| target.destroy }
+  end
+
+  # 仮想サーバイメージの監視
+  def virtual_server_image_watch
+    # APIからの仮想サーバイメージ情報を取得
+    images = images_from_api
+
+    create_images = []
+    update_images = []
+    destroy_server_images = []
+
+    # 仮想サーバの取得
+    old_images = self.virtual_server_images
+    old_images.each do |old_image|
+      image = images.detect { |image| image[:aws_id] == old_image.provided_id }
+      image = image.symbolize_keys if image
+
+      if image
+        update_images << image
+      else
+        destroy_server_images << old_image
+      end
+    end
+    create_images = images - update_images
+
+    self.differential_update_virtual_server_image_hashs(update_images) unless update_images.empty?
+    self.create_virtual_server_image_hashs(create_images) unless create_images.empty?
+    destroy_server_images.each { |target| target.destroy }
+  end
+
+
+  private
+
+  def address_order
+    @@address_order ||= ['private_ip_address'.freeze].freeze
+  end
+
+  def connect
+    h = [
+      :account, :host, :port, :protocol, :private_network_data,
+    ].inject({}) {|r, i|
+      r.update i => self.connection_settings[i] || self.connection_settings[i.to_s]
+    }
+    connection = ::Tama::Controllers::ControllerFactory.create_controller(
+      h[:account],
+      nil,
+      nil,
+      nil,
+      h[:host],
+      h[:port],
+      h[:protocol]
+    )
+    yield connection
+  end
+
+  def instance_specs_from_api(uuids = [])
+    connect do |conn|
+      conn.describe_instance_specs(uuids)
+    end
+  end
+
+  def host_nodes_from_api
+    connect do |conn|
+      conn.describe_host_nodes
+    end
+  end
+
+  def instances_from_api(uuids = [])
+    connect do |conn|
+      conn.describe_instances(uuids)
+    end
+  end
+
+  def images_from_api(uuids = [])
+    connect do |conn|
+      conn.describe_images(uuids)
+    end
+  end
+
   # virtual_server_type
   def differential_update_virtual_server_type_hash(hash)
     virtual_server_type = self.virtual_server_types.where(:provided_id => hash[:id]).first
@@ -139,18 +389,6 @@ class Tengine::Resource::Provider::Wakame < Tengine::Resource::Provider::Ec2
     created_ids
   end
 
-  def update_virtual_server_images
-    connect do |conn|
-      hashs = conn.describe_images.map do |hash|
-        {
-          :provided_id => hash.delete(:aws_id),
-          :provided_description => hash.delete(:aws_description),
-        }
-      end
-      update_virtual_server_images_by(hashs)
-    end
-  end
-
   # virtual_server
   def differential_update_virtual_server_hash(hash)
     virtual_server = self.virtual_servers.where(:provided_id => hash[:aws_instance_id]).first
@@ -201,208 +439,6 @@ class Tengine::Resource::Provider::Wakame < Tengine::Resource::Provider::Ec2
       created_ids << server.id
     end
     created_ids
-  end
-
-  def create_virtual_servers hash
-    #  0  (使用するAPI)   RightAws::Ec2#run_instances Tama::Tama#run_instances   
-    #  1  image_id  仮想サーバイメージ  仮想サーバイメージのprovided_id 仮想サーバイメージのprovided_id  
-    #  2  min_count 最小起動台数  指定された起動台数  指定された起動台数  max_countと同じ
-    #  3  max_count 最大起動台数  指定された起動台数  指定された起動台数  min_countと同じ
-    #  4  group_ids セキュリティグループの配列  (画面で入力)  (空の配列)   
-    #  5  key_name  起動した仮想サーバにrootでアクセスできるキー名  (画面で入力)  別途設定された文字列 例: “ssh-xxxxx”   
-    #  6  user_data 起動した仮想サーバから参照可能なデータ  (空の文字列)  (空の文字列)   
-    #  7  addressing_type (deprecatedなパラメータ)  nil nil  
-    #  8  instance_type 仮想サーバタイプ  (画面で入力した仮想サーバタイプのprovided_id) (画面で入力した仮想サーバタイプのprovided_id)  
-    #  9  kernel_id カーネル  (画面で入力)  nil  
-    # 10  ramdisk_id  カーネル  (画面で入力)  nil  
-    # 11  availability_zone 起動するデータセンター  (画面で入力)  仮想サーバを起動する物理サーバのprovided_id  
-    # 12  block_device_mappings   nil nil
-    count = hash.delete :count
-    ps    = hash.delete :physical_server
-    raise ArgumentError, "count missing, how many?" unless count
-    raise ArgumentError, "physical_server missing, where?" unless ps
-    hash[:min_count]         = count
-    hash[:max_count]         = count
-    hash[:group_ids]         = []
-    hash[:key_name]          = self.properties[:key_name]
-    hash[:kernel_id]         = nil
-    hash[:ramdisk_id]        = nil
-    hash[:availability_zone] = ps.provided_id
-
-    super
-  end
-
-  def terminate_virtual_servers servers
-    connect do |conn|
-      conn.terminate_instances(servers.map {|i| i.provided_id }).map do |hash|
-        serv = self.virtual_servers.where(:provided_id => hash[:aws_instance_id]).first
-        serv.update_attributes(:status => "shutdown in progress") if serv # <- ?
-        serv
-      end
-    end
-  end
-
-  # 仮想サーバタイプの監視
-  def virtual_server_type_watch
-    # APIからの仮想サーバタイプ情報を取得
-    instance_specs = instance_specs_from_api
-
-    create_instance_specs = []
-    update_instance_specs = []
-    destroy_server_types = []
-
-    # 仮想イメージタイプの取得
-    old_server_types = self.virtual_server_types
-    old_server_types.each do |old_server_type|
-      instance_spec = instance_specs.detect { |instance_spec| instance_spec[:id] == old_server_type.provided_id }
-      instance_spec = instance_spec.symbolize_keys if instance_spec
-
-      if instance_spec
-        # APIで取得したサーバタイプと一致するものがあれば更新対象
-        update_instance_specs << instance_spec
-      else
-        # APIで取得したサーバタイプと一致するものがなければ削除対象
-        destroy_server_types << old_server_type
-      end
-    end
-    # APIで取得したサーバタイプがTengine上に存在しないものであれば登録対象
-    create_instance_specs = instance_specs - update_instance_specs
-
-    # 更新
-    self.differential_update_virtual_server_type_hashs(update_instance_specs) unless update_instance_specs.empty?
-    # 登録
-    self.create_virtual_server_type_hashs(create_instance_specs) unless create_instance_specs.empty?
-    # 削除
-    destroy_server_types.each { |target| target.destroy }
-  end
-
-  # 物理サーバの監視
-  def physical_server_watch
-    # APIからの物理サーバ情報を取得
-    host_nodes = host_nodes_from_api
-
-    create_host_nodes = []
-    update_host_nodes = []
-    destroy_servers = []
-
-    # 物理サーバの取得
-    old_servers = self.physical_servers
-    old_servers.each do |old_server|
-      host_node = host_nodes.detect { |host_node| host_node[:id] == old_server.provided_id }
-      host_node = host_node.symbolize_keys if host_node
-
-      if host_node
-        update_host_nodes << host_node
-      else
-        destroy_servers << old_server
-      end
-    end
-    create_host_nodes = host_nodes - update_host_nodes
-
-    self.differential_update_physical_server_hashs(update_host_nodes) unless update_host_nodes.empty?
-    self.create_physical_server_hashs(create_host_nodes) unless create_host_nodes.empty?
-    destroy_servers.each { |target| target.destroy }
-  end
-
-  # 仮想サーバの監視
-  def virtual_server_watch
-    # APIからの仮想サーバ情報を取得
-    instances = instances_from_api
-
-    create_instances = []
-    update_instances = []
-    destroy_servers = []
-
-    # 仮想サーバの取得
-    old_servers = self.virtual_servers
-    old_servers.each do |old_server|
-      instance = instances.detect { |instance| instance[:aws_instance_id] == old_server.provided_id }
-      instance = instance.symbolize_keys if instance
-
-      if instance
-        update_instances << instance
-      else
-        destroy_servers << old_server
-      end
-    end
-    create_instances = instances - update_instances
-
-    self.differential_update_virtual_server_hashs(update_instances) unless update_instances.empty?
-    self.create_virtual_server_hashs(create_instances) unless create_instances.empty?
-    destroy_servers.each { |target| target.destroy }
-  end
-
-  # 仮想サーバイメージの監視
-  def virtual_server_image_watch
-    # APIからの仮想サーバイメージ情報を取得
-    images = images_from_api
-
-    create_images = []
-    update_images = []
-    destroy_server_images = []
-
-    # 仮想サーバの取得
-    old_images = self.virtual_server_images
-    old_images.each do |old_image|
-      image = images.detect { |image| image[:aws_id] == old_image.provided_id }
-      image = image.symbolize_keys if image
-
-      if image
-        update_images << image
-      else
-        destroy_server_images << old_image
-      end
-    end
-    create_images = images - update_images
-
-    self.differential_update_virtual_server_image_hashs(update_images) unless update_images.empty?
-    self.create_virtual_server_image_hashs(create_images) unless create_images.empty?
-    destroy_server_images.each { |target| target.destroy }
-  end
-
-
-  private
-
-  def instance_specs_from_api(uuids = [])
-    connect do |conn|
-      conn.describe_instance_specs(uuids)
-    end
-  end
-
-  def host_nodes_from_api
-    connect do |conn|
-      conn.describe_host_nodes
-    end
-  end
-
-  def instances_from_api(uuids = [])
-    connect do |conn|
-      conn.describe_instances(uuids)
-    end
-  end
-
-  def images_from_api(uuids = [])
-    connect do |conn|
-      conn.describe_images(uuids)
-    end
-  end
-
-  def connect
-    h = [
-      :account, :host, :port, :protocol, :private_network_data,
-    ].inject({}) {|r, i|
-      r.update i => self.connection_settings[i] || self.connection_settings[i.to_s]
-    }
-    connection = ::Tama::Controllers::ControllerFactory.create_controller(
-      h[:account],
-      nil,
-      nil,
-      nil,
-      h[:host],
-      h[:port],
-      h[:protocol]
-    )
-    yield connection
   end
 
 end

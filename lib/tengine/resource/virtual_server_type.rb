@@ -7,9 +7,12 @@ class Tengine::Resource::VirtualServerType
   include Tengine::Core::Validation
 
   field :provided_id, :type => String
+  field :caption, :type => String
+  field :cpu_cores, :type => Integer
+  field :memory_size, :type => Integer
   field :properties, :type => Hash
   map_yaml_accessor :properties
-  field :caption, :type => String
+
   referenced_in :provider, :inverse_of => :virtual_server_types, :index => true,
     :class_name => "Tengine::Resource::Provider"
 
