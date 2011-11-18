@@ -193,10 +193,10 @@ describe Tengine::Resource::Watcher do
             "Tengine::Resource::VirtualServerType.updated.tengine_resource_watchd",
             anything())
 
-          @watcher.start
-
           @virtual_server_type_wakame.cpu_cores.should == 2
           @virtual_server_type_wakame.memory_size.should == 512
+
+          @watcher.start
 
           @provider_wakame.reload
           new_server_type = @provider_wakame.virtual_server_types.first
@@ -211,10 +211,10 @@ describe Tengine::Resource::Watcher do
 
           Tengine::Event.default_sender.should_not_receive(:fire)
 
-          @watcher.start
-
           @virtual_server_type_wakame.cpu_cores.should == 2
           @virtual_server_type_wakame.memory_size.should == 512
+
+          @watcher.start
 
           @provider_wakame.reload
           new_server_type = @provider_wakame.virtual_server_types.first
@@ -288,6 +288,7 @@ describe Tengine::Resource::Watcher do
               :updated_at => "2011-10-18T03:53:24Z",
             }
           })
+
         @watcher.sender.should_receive(:wait_for_connection).and_yield
       end
 
@@ -314,10 +315,10 @@ describe Tengine::Resource::Watcher do
             "Tengine::Resource::PhysicalServer.updated.tengine_resource_watchd",
             anything())
 
-          @watcher.start
-
           @physical_server_wakame.cpu_cores.should == 100
           @physical_server_wakame.memory_size.should == 400000
+
+          @watcher.start
 
           @provider_wakame.reload
           new_server = @provider_wakame.physical_servers.first
@@ -331,10 +332,10 @@ describe Tengine::Resource::Watcher do
 
           Tengine::Event.default_sender.should_not_receive(:fire)
 
-          @watcher.start
-
           @physical_server_wakame.cpu_cores.should == 100
           @physical_server_wakame.memory_size.should == 400000
+
+          @watcher.start
 
           @provider_wakame.reload
           new_server = @provider_wakame.physical_servers.first
@@ -454,9 +455,9 @@ describe Tengine::Resource::Watcher do
             "Tengine::Resource::VirtualServer.updated.tengine_resource_watchd",
             anything())
 
-          @watcher.start
-
           @virtual_server_wakame.status.should == "running"
+
+          @watcher.start
 
           @provider_wakame.reload
           new_server = @provider_wakame.virtual_servers.first
@@ -501,6 +502,97 @@ describe Tengine::Resource::Watcher do
       end  # end to wakame
 
     end   # end to :virtual_server_watch
+
+    # 仮想サーバイメージ
+    describe :virtual_server_image_watch do
+      before do
+        Tengine::Event.default_sender.should_receive(:fire).with(
+          "Tengine::Resource::VirtualServerImage.created.tengine_resource_watchd",
+          anything())
+
+        Tengine::Resource::VirtualServerImage.delete_all
+        @virtual_server_image_wakame = @provider_wakame.virtual_server_images.create!({
+            :name => "vimage",
+            :description => "",
+            :provided_id => "wmi-lucid6",
+            :provided_description => "ubuntu-10.04_with-metadata_kvm_i386.raw volume",
+          })
+        @watcher.sender.should_receive(:wait_for_connection).and_yield
+      end
+
+      context "wakame" do
+        before do
+          Tengine::Resource::Provider.should_receive(:all).and_return([@provider_wakame])
+          @provider_wakame.should_receive(:virtual_server_type_watch)
+          EM.should_receive(:add_periodic_timer).with(@provider_wakame.polling_interval).and_yield
+          @provider_wakame.should_receive(:physical_server_watch)
+          @provider_wakame.should_receive(:virtual_server_watch)
+
+          @tama_controller_factory = mock(::Tama::Controllers::ControllerFactory.allocate)
+          ::Tama::Controllers::ControllerFactory.
+            should_receive(:create_controller).
+            with("test", nil, nil, nil, "192.168.0.10", 80, "http").
+            and_return(@tama_controller_factory)
+        end
+
+        it "更新対象があったら更新完了後イベントを発火する" do
+          @tama_controller_factory.
+            should_receive(:describe_images).with([]).
+            and_return(UPDATE_WAKAME_IMAGES)
+
+          Tengine::Event.default_sender.should_receive(:fire).with(
+            "Tengine::Resource::VirtualServerImage.updated.tengine_resource_watchd",
+            anything())
+
+          @virtual_server_image_wakame.provided_description.should ==
+            "ubuntu-10.04_with-metadata_kvm_i386.raw volume"
+
+          @watcher.start
+
+          @provider_wakame.reload
+          new_image = @provider_wakame.virtual_server_images.first
+          new_image.provided_description.should ==
+            "ubuntu-10.04_with-metadata_kvm_i386.raw"
+        end
+
+        it "更新対象がなかったらイベントは発火しない" do
+          @tama_controller_factory.
+            should_receive(:describe_images).with([]).
+            and_return(ORIGINAL_WAKAME_IMAGES)
+
+          Tengine::Event.default_sender.should_not_receive(:fire)
+
+          @watcher.start
+        end
+
+        it "登録対象があったら登録完了後イベントを発火する" do
+          @tama_controller_factory.
+            should_receive(:describe_images).with([]).
+            and_return(CREATE_WAKAME_IMAGES)
+
+          Tengine::Event.default_sender.should_receive(:fire).with(
+            "Tengine::Resource::VirtualServerImage.created.tengine_resource_watchd",
+            anything())
+
+          expect { @watcher.start }.should change(
+            @provider_wakame.virtual_server_images, :count).by(1)
+        end
+
+        it "削除対象があったら削除完了後イベントを発火する" do
+          @tama_controller_factory.
+            should_receive(:describe_images).with([]).
+            and_return([])
+
+          Tengine::Event.default_sender.should_receive(:fire).with(
+            "Tengine::Resource::VirtualServerImage.destroyed.tengine_resource_watchd",
+            anything())
+
+          expect { @watcher.start }.should change(
+            @provider_wakame.virtual_server_images, :size).by(-1)
+        end
+      end  # end to wakame
+
+    end   # end to :virtual_server_image_watch
 
   end   # end to :start
 
@@ -725,5 +817,78 @@ describe Tengine::Resource::Watcher do
       :private_dns_name => "jria302q.shpoolxx.vdc.local",
       :aws_reason => ""
     }] + ORIGINAL_WAKAME_INSTANCES
+
+  ORIGINAL_WAKAME_IMAGES = [{
+      :root_device_name => "",
+      :aws_ramdisk_id => "",
+      :block_device_mappings => [{
+          :ebs_snapshot_id => "",
+          :ebs_volume_size => 0,
+          :ebs_delete_on_termination => false,
+          :device_name => ""
+        }],
+      :aws_is_public => false,
+      :virtualization_type => "",
+      :image_owner_alias => "",
+      :aws_id => "wmi-lucid6",
+      :aws_architecture => "x86",
+      :root_device_type => "",
+      :aws_location => "--- \n:snapshot_id: snap-lucid6\n",
+      :aws_image_type => "",
+      :name => "",
+      :aws_state => "init",
+      :description => "ubuntu-10.04_with-metadata_kvm_i386.raw volume",
+      :aws_kernel_id => "",
+      :tags => {},
+      :aws_owner => "a-shpoolxx"
+    }]
+  UPDATE_WAKAME_IMAGES = [{
+      :root_device_name => "",
+      :aws_ramdisk_id => "",
+      :block_device_mappings => [{
+          :ebs_snapshot_id => "",
+          :ebs_volume_size => 0,
+          :ebs_delete_on_termination => false,
+          :device_name => ""
+        }],
+      :aws_is_public => true,
+      :virtualization_type => "",
+      :image_owner_alias => "",
+      :aws_id => "wmi-lucid6",
+      :aws_architecture => "x86",
+      :root_device_type => "",
+      :aws_location => "--- \n:snapshot_id: snap-lucid6\n",
+      :aws_image_type => "",
+      :name => "",
+      :aws_state => "init",
+      :description => "ubuntu-10.04_with-metadata_kvm_i386.raw",
+      :aws_kernel_id => "",
+      :tags => {},
+      :aws_owner => "a-shpoolxx"
+    }]
+  CREATE_WAKAME_IMAGES = [{
+      :root_device_name => "",
+      :aws_ramdisk_id => "",
+      :block_device_mappings => [{
+          :ebs_snapshot_id => "",
+          :ebs_volume_size => 0,
+          :ebs_delete_on_termination => false,
+          :device_name => ""
+        }],
+      :aws_is_public => false,
+      :virtualization_type => "",
+      :image_owner_alias => "",
+      :aws_id => "wmi-lucid7",
+      :aws_architecture => "x86",
+      :root_device_type => "",
+      :aws_location => "--- \n:snapshot_id: snap-lucid7\n",
+      :aws_image_type => "",
+      :name => "",
+      :aws_state => "init",
+      :description => "ubuntu-10.04_with-metadata_kvm_i386.raw volume",
+      :aws_kernel_id => "",
+      :tags => {},
+      :aws_owner => "a-shpoolxx"
+    }] + ORIGINAL_WAKAME_IMAGES
 
 end

@@ -104,6 +104,41 @@ class Tengine::Resource::Provider::Wakame < Tengine::Resource::Provider::Ec2
   end
 
   # virtual_server_image
+  def differential_update_virtual_server_image_hash(hash)
+    server_image = self.virtual_server_images.where(:provided_id => hash[:aws_id]).first
+    properties = hash.dup
+    server_image.provided_id = properties.delete(:aws_id)
+    server_image.provided_description = properties.delete(:description)
+    server_image.save! if server_image.changed?
+  end
+
+  def differential_update_virtual_server_image_hashs(hashs)
+    updated_images = []
+    hashs.each do |hash|
+      image = differential_update_virtual_server_image_hash(hash)
+      updated_images << image
+    end
+    updated_images
+  end
+
+  def create_virtual_server_image_hash(hash)
+    properties = hash.dup
+    self.virtual_server_images.create!(
+      # defaultをaws_idにして良いか検討
+      :name => properties[:aws_id],
+      :provided_id => properties.delete(:aws_id),
+      :provided_description => properties.delete(:description))
+  end
+
+  def create_virtual_server_image_hashs(hashs)
+    created_ids = []
+    hashs.each do |hash|
+      image = create_virtual_server_image_hash(hash)
+      created_ids << image.id
+    end
+    created_ids
+  end
+
   def update_virtual_server_images
     connect do |conn|
       hashs = conn.describe_images.map do |hash|
@@ -149,6 +184,7 @@ class Tengine::Resource::Provider::Wakame < Tengine::Resource::Provider::Ec2
   def create_virtual_server_hash(hash)
     properties = hash.dup
     self.virtual_servers.create!(
+      # defaultをインスタンスIDにして良いか検討
       :name => properties.delete(:aws_instance_id),
       :provided_image_id => properties.delete(:aws_image_id),
       :provided_type_id => properties.delete(:aws_instance_type),
@@ -299,6 +335,29 @@ class Tengine::Resource::Provider::Wakame < Tengine::Resource::Provider::Ec2
   # 仮想サーバイメージの監視
   def virtual_server_image_watch
     # APIからの仮想サーバイメージ情報を取得
+    images = images_from_api
+
+    create_images = []
+    update_images = []
+    destroy_server_images = []
+
+    # 仮想サーバの取得
+    old_images = self.virtual_server_images
+    old_images.each do |old_image|
+      image = images.detect { |image| image[:aws_id] == old_image.provided_id }
+      image = image.symbolize_keys if image
+
+      if image
+        update_images << image
+      else
+        destroy_server_images << old_image
+      end
+    end
+    create_images = images - update_images
+
+    self.differential_update_virtual_server_image_hashs(update_images) unless update_images.empty?
+    self.create_virtual_server_image_hashs(create_images) unless create_images.empty?
+    destroy_server_images.each { |target| target.destroy }
   end
 
 
@@ -319,6 +378,12 @@ class Tengine::Resource::Provider::Wakame < Tengine::Resource::Provider::Ec2
   def instances_from_api(uuids = [])
     connect do |conn|
       conn.describe_instances(uuids)
+    end
+  end
+
+  def images_from_api(uuids = [])
+    connect do |conn|
+      conn.describe_images(uuids)
     end
   end
 
