@@ -365,13 +365,13 @@ class Tengine::Resource::Provider::Wakame < Tengine::Resource::Provider::Ec2
 
   def instance_specs_from_api(uuids = [])
     connect do |conn|
-      conn.show_instance_specs(uuids)
+      conn.describe_instance_specs(uuids)
     end
   end
 
   def host_nodes_from_api
     connect do |conn|
-      conn.show_host_nodes
+      conn.describe_host_nodes
     end
   end
 

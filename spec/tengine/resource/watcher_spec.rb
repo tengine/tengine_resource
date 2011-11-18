@@ -186,7 +186,7 @@ describe Tengine::Resource::Watcher do
 
         it "更新対象があったら更新完了後イベントを発火する" do
           @tama_controller_factory.
-            should_receive(:show_instance_specs).with([]).
+            should_receive(:describe_instance_specs).with([]).
             and_return(UPDATE_WAKAME_INSTANCE_SPECS)
 
           Tengine::Event.default_sender.should_receive(:fire).with(
@@ -206,7 +206,7 @@ describe Tengine::Resource::Watcher do
 
         it "更新対象がなかったらイベントは発火しない" do
           @tama_controller_factory.
-            should_receive(:show_instance_specs).with([]).
+            should_receive(:describe_instance_specs).with([]).
             and_return(ORIGINAL_WAKAME_INSTANCE_SPECS)
 
           Tengine::Event.default_sender.should_not_receive(:fire)
@@ -224,7 +224,7 @@ describe Tengine::Resource::Watcher do
 
         it "登録対象があったら登録完了後イベントを発火する" do
           @tama_controller_factory.
-            should_receive(:show_instance_specs).with([]).
+            should_receive(:describe_instance_specs).with([]).
             and_return(CREATE_WAKAME_INSTANCE_SPECS)
 
           Tengine::Event.default_sender.should_receive(:fire).with(
@@ -237,7 +237,7 @@ describe Tengine::Resource::Watcher do
 
         it "削除対象があったら削除完了後イベントを発火する" do
           @tama_controller_factory.
-            should_receive(:show_instance_specs).with([]).
+            should_receive(:describe_instance_specs).with([]).
             and_return([])
 
           Tengine::Event.default_sender.should_receive(:fire).with(
@@ -309,7 +309,7 @@ describe Tengine::Resource::Watcher do
 
         it "更新対象があったら更新完了後イベントを発火する" do
           @tama_controller_factory.
-            should_receive(:show_host_nodes).and_return(UPDATE_WAKAME_HOST_NODES)
+            should_receive(:describe_host_nodes).and_return(UPDATE_WAKAME_HOST_NODES)
 
           Tengine::Event.default_sender.should_receive(:fire).with(
             "Tengine::Resource::PhysicalServer.updated.tengine_resource_watchd",
@@ -328,7 +328,7 @@ describe Tengine::Resource::Watcher do
 
         it "更新対象がなかったらイベントは発火しない" do
           @tama_controller_factory.
-            should_receive(:show_host_nodes).and_return(ORIGINAL_WAKAME_HOST_NODES)
+            should_receive(:describe_host_nodes).and_return(ORIGINAL_WAKAME_HOST_NODES)
 
           Tengine::Event.default_sender.should_not_receive(:fire)
 
@@ -345,7 +345,7 @@ describe Tengine::Resource::Watcher do
 
         it "登録対象があったら登録完了後イベントを発火する" do
           @tama_controller_factory.
-            should_receive(:show_host_nodes).and_return(CREATE_WAKAME_HOST_NODES)
+            should_receive(:describe_host_nodes).and_return(CREATE_WAKAME_HOST_NODES)
 
           Tengine::Event.default_sender.should_receive(:fire).with(
             "Tengine::Resource::PhysicalServer.created.tengine_resource_watchd",
@@ -357,7 +357,7 @@ describe Tengine::Resource::Watcher do
 
         it "削除対象があったら削除完了後イベントを発火する" do
           @tama_controller_factory.
-            should_receive(:show_host_nodes).and_return([])
+            should_receive(:describe_host_nodes).and_return([])
 
           Tengine::Event.default_sender.should_receive(:fire).with(
             "Tengine::Resource::PhysicalServer.destroyed.tengine_resource_watchd",
