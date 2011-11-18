@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+require 'daemons'
 require 'eventmachine'
 require 'mongoid'
 require 'tengine/core/config'

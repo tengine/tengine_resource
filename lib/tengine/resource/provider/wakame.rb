@@ -1,4 +1,6 @@
 # -*- coding: utf-8 -*-
+require 'tama'
+
 class Tengine::Resource::Provider::Wakame < Tengine::Resource::Provider::Ec2
 
   field :connection_settings, :type => Hash
@@ -98,8 +100,9 @@ class Tengine::Resource::Provider::Wakame < Tengine::Resource::Provider::Ec2
     # 仮想イメージタイプの取得
     old_server_types = self.virtual_server_types
     old_server_types.each do |old_server_type|
-      instance_spec = instance_specs.detect { |instance_spec| instance_spec[:id] == old_server_type.provided_id }
-      instance_spec = instance_spec.symbolize_keys if instance_spec
+      instance_spec = instance_specs.detect do |instance_spec|
+        (instance_spec[:id] || instance_spec["id"]) == old_server_type.provided_id
+      end
 
       if instance_spec
         # APIで取得したサーバタイプと一致するものがあれば更新対象
@@ -132,8 +135,9 @@ class Tengine::Resource::Provider::Wakame < Tengine::Resource::Provider::Ec2
     # 物理サーバの取得
     old_servers = self.physical_servers
     old_servers.each do |old_server|
-      host_node = host_nodes.detect { |host_node| host_node[:id] == old_server.provided_id }
-      host_node = host_node.symbolize_keys if host_node
+      host_node = host_nodes.detect do |host_node|
+        (host_node[:id] || host_node["id"]) == old_server.provided_id
+      end
 
       if host_node
         update_host_nodes << host_node
@@ -160,8 +164,9 @@ class Tengine::Resource::Provider::Wakame < Tengine::Resource::Provider::Ec2
     # 仮想サーバの取得
     old_servers = self.virtual_servers
     old_servers.each do |old_server|
-      instance = instances.detect { |instance| instance[:aws_instance_id] == old_server.provided_id }
-      instance = instance.symbolize_keys if instance
+      instance = instances.detect do |instance|
+        (instance[:aws_instance_id] || instance["aws_instance_id"]) == old_server.provided_id
+      end
 
       if instance
         update_instances << instance
@@ -188,8 +193,9 @@ class Tengine::Resource::Provider::Wakame < Tengine::Resource::Provider::Ec2
     # 仮想サーバの取得
     old_images = self.virtual_server_images
     old_images.each do |old_image|
-      image = images.detect { |image| image[:aws_id] == old_image.provided_id }
-      image = image.symbolize_keys if image
+      image = images.detect do |image|
+        (image[:aws_id] || image["aws_id"]) == old_image.provided_id
+      end
 
       if image
         update_images << image
@@ -206,8 +212,9 @@ class Tengine::Resource::Provider::Wakame < Tengine::Resource::Provider::Ec2
 
   # virtual_server_type
   def differential_update_virtual_server_type_hash(hash)
-    virtual_server_type = self.virtual_server_types.where(:provided_id => hash[:id]).first
     properties = hash.dup
+    properties.symbolize_keys!
+    virtual_server_type = self.virtual_server_types.where(:provided_id => properties[:id]).first
     virtual_server_type.provided_id = properties.delete(:id)
     virtual_server_type.caption = properties.delete(:uuid)
     virtual_server_type.cpu_cores = properties.delete(:cpu_cores)
@@ -236,6 +243,7 @@ class Tengine::Resource::Provider::Wakame < Tengine::Resource::Provider::Ec2
 
   def create_virtual_server_type_hash(hash)
     properties = hash.dup
+    properties.symbolize_keys!
     self.virtual_server_types.create!(
       :provided_id => properties.delete(:id),
       :caption => properties.delete(:uuid),
@@ -255,8 +263,9 @@ class Tengine::Resource::Provider::Wakame < Tengine::Resource::Provider::Ec2
 
   # physical_server
   def differential_update_physical_server_hash(hash)
-    physical_server = self.physical_servers.where(:provided_id => hash[:id]).first
     properties = hash.dup
+    properties.symbolize_keys!
+    physical_server = self.physical_servers.where(:provided_id => properties[:id]).first
     physical_server.name = properties.delete(:name)
     physical_server.provided_id = properties.delete(:id)
     physical_server.status = properties.delete(:status)
@@ -286,6 +295,7 @@ class Tengine::Resource::Provider::Wakame < Tengine::Resource::Provider::Ec2
 
   def create_physical_server_hash(hash)
     properties = hash.dup
+    properties.symbolize_keys!
     self.physical_servers.create!(
       :name => properties.delete(:name),
       :provided_id => properties.delete(:id),
@@ -306,8 +316,9 @@ class Tengine::Resource::Provider::Wakame < Tengine::Resource::Provider::Ec2
 
   # virtual_server_image
   def differential_update_virtual_server_image_hash(hash)
-    server_image = self.virtual_server_images.where(:provided_id => hash[:aws_id]).first
     properties = hash.dup
+    properties.symbolize_keys!
+    server_image = self.virtual_server_images.where(:provided_id => properties[:aws_id]).first
     server_image.provided_id = properties.delete(:aws_id)
     server_image.provided_description = properties.delete(:description)
     server_image.save! if server_image.changed?
@@ -324,6 +335,7 @@ class Tengine::Resource::Provider::Wakame < Tengine::Resource::Provider::Ec2
 
   def create_virtual_server_image_hash(hash)
     properties = hash.dup
+    properties.symbolize_keys!
     self.virtual_server_images.create!(
       # defaultをaws_idにして良いか検討
       :name => properties[:aws_id],
@@ -342,8 +354,9 @@ class Tengine::Resource::Provider::Wakame < Tengine::Resource::Provider::Ec2
 
   # virtual_server
   def differential_update_virtual_server_hash(hash)
-    virtual_server = self.virtual_servers.where(:provided_id => hash[:aws_instance_id]).first
-    properties = hash.dup
+    properties = hash.symbolize_keys.dup
+    properties.symbolize_keys!
+    virtual_server = self.virtual_servers.where(:provided_id => properties[:aws_instance_id]).first
     virtual_server.provided_id = properties.delete(:aws_instance_id)
     virtual_server.provided_image_id = properties.delete(:aws_image_id)
     virtual_server.provided_type_id = properties.delete(:aws_instance_type)
@@ -372,6 +385,7 @@ class Tengine::Resource::Provider::Wakame < Tengine::Resource::Provider::Ec2
 
   def create_virtual_server_hash(hash)
     properties = hash.dup
+    properties.symbolize_keys!
     self.virtual_servers.create!(
       # defaultをインスタンスIDにして良いか検討
       :name => properties.delete(:aws_instance_id),
@@ -386,6 +400,10 @@ class Tengine::Resource::Provider::Wakame < Tengine::Resource::Provider::Ec2
   def create_virtual_server_hashs(hashs)
     created_ids = []
     hashs.each do |hash|
+      puts
+      puts "#"*10
+      puts hash["aws_instance_id"]
+      puts hash[:aws_instance_id]
       server = create_virtual_server_hash(hash)
       created_ids << server.id
     end
@@ -420,12 +438,42 @@ class Tengine::Resource::Provider::Wakame < Tengine::Resource::Provider::Ec2
     connect do |conn|
       conn.describe_instance_specs(uuids)
     end
+#     # dummy
+#     dummy_ret = [{
+#         "cpu_cores"=>1,
+#         "memory_size"=>256,
+#         "arch"=>"x86_64",
+#         "hypervisor"=>"kvm",
+#         "updated_at"=>"2011-10-28T02:58:57Z",
+#         "account_id"=>"a-shpoolxx",
+#         "vifs"=>"--- \neth0: \n  :bandwidth: 100000\n  :index: 0\n",
+#         "quota_weight"=>1.0,
+#         "id"=>"is-demospec",
+#         "created_at"=>"2011-10-28T02:58:57Z",
+#         "drives"=>
+#         "--- \nephemeral1: \n  :type: :local\n  :size: 100\n  :index: 0\n",
+#         "uuid"=>"is-demospec"
+#       }]
   end
 
   def host_nodes_from_api
     connect do |conn|
       conn.describe_host_nodes
     end
+#     # dummy
+#     dummy_ret = [{
+#         "status"=>"online",
+#         "updated_at"=>"2011-10-18T03:53:24Z",
+#         "account_id"=>"a-shpoolxx",
+#         "offering_cpu_cores"=>100,
+#         "offering_memory_size"=>400000,
+#         "arch"=>"x86_64",
+#         "hypervisor"=>"kvm",
+#         "created_at"=>"2011-10-18T03:53:24Z",
+#         "name"=>"dummyhost",
+#         "uuid"=>"hp-demohost",
+#         "id"=>"hp-demohost"
+#       }]
   end
 
   def instances_from_api(uuids = [])

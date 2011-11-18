@@ -24,16 +24,7 @@ describe Tengine::Resource::Watcher do
 
   describe :sender do
     before do
-      @config = {
-        :event_queue => {
-          :connection => {
-            :host => "127.0.0.1",
-            :user => "tengine",
-            :pass => "tengine"
-          }
-        }
-      }
-      @watcher = Tengine::Resource::Watcher.new(@config)
+      @watcher = Tengine::Resource::Watcher.new
       EM.should_receive(:run).and_yield
 
       # コネクションの mock を生成

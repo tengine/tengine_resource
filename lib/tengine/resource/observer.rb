@@ -2,6 +2,7 @@
 require 'mongoid'
 
 require 'yaml'
+require 'tengine_event'
 require 'tengine/support/yaml_with_erb'
 
 # http://mongoid.org/docs/callbacks/observers.html
