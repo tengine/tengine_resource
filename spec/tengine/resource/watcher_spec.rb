@@ -7,12 +7,6 @@ require 'apis/wakame'
 require 'controllers/controller'
 
 describe Tengine::Resource::Watcher do
-  before do
-  end
-
-  after do
-    @watcher = nil
-  end
 
   describe :initialize do
     it "default" do
@@ -30,15 +24,21 @@ describe Tengine::Resource::Watcher do
 
   describe :sender do
     before do
-      @watcher = Tengine::Resource::Watcher.new
+      @config = {
+        :event_queue => {
+          :connection => {
+            :host => "127.0.0.1",
+            :user => "tengine",
+            :pass => "tengine"
+          }
+        }
+      }
+      @watcher = Tengine::Resource::Watcher.new(@config)
       EM.should_receive(:run).and_yield
 
       # コネクションの mock を生成
       mock_conn = mock(:connection)
-      AMQP.should_receive(:connect).with({
-          :user=>"guest", :pass=>"guest", :vhost=>"/",
-          :logging=>false, :insist=>false, :host=>"localhost", :port=>5672}).
-        and_return(mock_conn)
+      AMQP.should_receive(:connect).with(an_instance_of(Hash)).and_return(mock_conn)
       mock_conn.should_receive(:on_tcp_connection_loss)
       mock_conn.should_receive(:after_recovery)
       mock_conn.should_receive(:on_closed)
@@ -75,10 +75,7 @@ describe Tengine::Resource::Watcher do
 
       # コネクションの mock を生成
       mock_conn = mock(:connection)
-      AMQP.should_receive(:connect).with({
-          :user=>"guest", :pass=>"guest", :vhost=>"/",
-          :logging=>false, :insist=>false, :host=>"localhost", :port=>5672}).
-        and_return(mock_conn)
+      AMQP.should_receive(:connect).with(an_instance_of(Hash)).and_return(mock_conn)
       mock_conn.should_receive(:on_tcp_connection_loss)
       mock_conn.should_receive(:after_recovery)
       mock_conn.should_receive(:on_closed)

@@ -204,55 +204,6 @@ class Tengine::Resource::Provider::Wakame < Tengine::Resource::Provider::Ec2
     destroy_server_images.each { |target| target.destroy }
   end
 
-
-  private
-
-  def address_order
-    @@address_order ||= ['private_ip_address'.freeze].freeze
-  end
-
-  def connect
-    h = [
-      :account, :host, :port, :protocol, :private_network_data,
-    ].inject({}) {|r, i|
-      r.update i => self.connection_settings[i] || self.connection_settings[i.to_s]
-    }
-    connection = ::Tama::Controllers::ControllerFactory.create_controller(
-      h[:account],
-      nil,
-      nil,
-      nil,
-      h[:host],
-      h[:port],
-      h[:protocol]
-    )
-    yield connection
-  end
-
-  def instance_specs_from_api(uuids = [])
-    connect do |conn|
-      conn.describe_instance_specs(uuids)
-    end
-  end
-
-  def host_nodes_from_api
-    connect do |conn|
-      conn.describe_host_nodes
-    end
-  end
-
-  def instances_from_api(uuids = [])
-    connect do |conn|
-      conn.describe_instances(uuids)
-    end
-  end
-
-  def images_from_api(uuids = [])
-    connect do |conn|
-      conn.describe_images(uuids)
-    end
-  end
-
   # virtual_server_type
   def differential_update_virtual_server_type_hash(hash)
     virtual_server_type = self.virtual_server_types.where(:provided_id => hash[:id]).first
@@ -439,6 +390,54 @@ class Tengine::Resource::Provider::Wakame < Tengine::Resource::Provider::Ec2
       created_ids << server.id
     end
     created_ids
+  end
+
+  private
+
+  def address_order
+    @@address_order ||= ['private_ip_address'.freeze].freeze
+  end
+
+  def connect
+    h = [
+      :account, :host, :port, :protocol, :private_network_data,
+    ].inject({}) {|r, i|
+      r.update i => self.connection_settings[i] || self.connection_settings[i.to_s]
+    }
+    connection = ::Tama::Controllers::ControllerFactory.create_controller(
+      h[:account],
+      nil,
+      nil,
+      nil,
+      h[:host],
+      h[:port],
+      h[:protocol]
+    )
+    yield connection
+  end
+
+  def instance_specs_from_api(uuids = [])
+    connect do |conn|
+      conn.describe_instance_specs(uuids)
+    end
+  end
+
+  def host_nodes_from_api
+    connect do |conn|
+      conn.describe_host_nodes
+    end
+  end
+
+  def instances_from_api(uuids = [])
+    connect do |conn|
+      conn.describe_instances(uuids)
+    end
+  end
+
+  def images_from_api(uuids = [])
+    connect do |conn|
+      conn.describe_images(uuids)
+    end
   end
 
 end
