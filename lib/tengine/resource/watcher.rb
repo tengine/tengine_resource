@@ -1,7 +1,9 @@
 # -*- coding: utf-8 -*-
 require 'daemons'
-require 'eventmachine'
 require 'mongoid'
+require 'eventmachine'
+require 'tengine/event'
+require 'tengine/mq'
 require 'tengine/core/config'
 
 class Tengine::Resource::Watcher
@@ -10,7 +12,10 @@ class Tengine::Resource::Watcher
 
   def initialize(argv = [])
     @config = Tengine::Core::Config.parse(argv)
-    @config[:event_queue].update(:sender => { :keep_connection => true })
+    @config[:event_queue].update(
+      :sender => {
+        :keep_connection => true
+      })
     @pid = sprintf("process:%s/%d", ENV["MM_SERVER_NAME"], Process.pid)
     @daemonize_options = {
       :app_name => 'tengine_resource_watchd',
@@ -37,6 +42,14 @@ class Tengine::Resource::Watcher
     Tengine::Event.default_sender = @sender
   end
 
+  def start_daemon(__file__)
+    fname = File.basename __file__
+    cwd = Dir.getwd
+    Daemons.run_proc(fname, @daemonize_options) do
+      Dir.chdir(cwd) { self.start }
+    end
+  end
+
   def start
     # observerの登録
     Mongoid.observers = Tengine::Resource::Observer
@@ -44,9 +57,6 @@ class Tengine::Resource::Watcher
 
     Mongoid.config.from_hash(@config[:db])
     Mongoid.config.option(:persist_in_safe_mode, :default => true)
-    Mongoid::Document.module_eval do
-      include Tengine::Core::CollectionAccessible
-    end
 
     EM.run do
       sender.wait_for_connection do
@@ -55,12 +65,14 @@ class Tengine::Resource::Watcher
           # 仮想サーバタイプの監視
           provider.virtual_server_type_watch
           @periodic = EM.add_periodic_timer(provider.polling_interval) do
-            # 物理サーバの監視
-            provider.physical_server_watch
-            # 仮想サーバの監視
-            provider.virtual_server_watch
-            # 仮想サーバイメージの監視
-            provider.virtual_server_image_watch
+            EM.defer do
+              # 物理サーバの監視
+              provider.physical_server_watch
+              # 仮想サーバの監視
+              provider.virtual_server_watch
+              # 仮想サーバイメージの監視
+              provider.virtual_server_image_watch
+            end
           end
         end
       end

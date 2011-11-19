@@ -129,8 +129,20 @@ class Tengine::Resource::Provider::Ec2 < Tengine::Resource::Provider
         serv.update_attributes(:status => hash[:aws_current_state_name]) if serv
         serv
       end
-    end    
+    end
   end
+
+  # 仮想サーバタイプの監視
+  def virtual_server_type_watch
+    # ec2から取得する情報はありません
+  end
+
+  # 物理サーバの監視
+  def physical_server_watch        ; raise NotImplementedError end
+  # 仮想サーバの監視
+  def virtual_server_watch         ; raise NotImplementedError end
+  # 仮想サーバイメージの監視
+  def virtual_server_image_watch   ; raise NotImplementedError end
 
   private
   def address_order

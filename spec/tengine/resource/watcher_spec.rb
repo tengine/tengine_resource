@@ -119,6 +119,7 @@ describe Tengine::Resource::Watcher do
 
       @provider_wakame.should_receive(:virtual_server_type_watch)
       EM.should_receive(:add_periodic_timer).with(@provider_wakame.polling_interval).and_yield
+      EM.should_receive(:defer).twice.and_yield
       @provider_wakame.should_receive(:physical_server_watch)
       @provider_wakame.should_receive(:virtual_server_watch)
       @provider_wakame.should_receive(:virtual_server_image_watch)
@@ -240,7 +241,7 @@ describe Tengine::Resource::Watcher do
       context "ec2" do
         before do
           Tengine::Resource::Provider.should_receive(:all).and_return([@provider_ec2])
-          EM.should_receive(:add_periodic_timer).with(@provider_wakame.polling_interval)
+          EM.should_receive(:add_periodic_timer).with(@provider_ec2.polling_interval)
         end
 
         it "実行されない" do
@@ -285,6 +286,7 @@ describe Tengine::Resource::Watcher do
           Tengine::Resource::Provider.should_receive(:all).and_return([@provider_wakame])
           @provider_wakame.should_receive(:virtual_server_type_watch)
           EM.should_receive(:add_periodic_timer).with(@provider_wakame.polling_interval).and_yield
+          EM.should_receive(:defer).and_yield
           @provider_wakame.should_receive(:virtual_server_watch)
           @provider_wakame.should_receive(:virtual_server_image_watch)
 
@@ -355,6 +357,34 @@ describe Tengine::Resource::Watcher do
             @provider_wakame.physical_servers, :size).by(-1)
         end
       end   # end to :wakame
+
+      context "ec2" do
+        before do
+          Tengine::Resource::Provider.should_receive(:all).and_return([@provider_ec2])
+          @provider_ec2.should_receive(:virtual_server_type_watch)
+          EM.should_receive(:add_periodic_timer).with(@provider_ec2.polling_interval).and_yield
+          EM.should_receive(:defer).and_yield
+          # @provider_ec2.should_receive(:physical_server_watch)
+          # @provider_ec2.should_receive(:virtual_server_image_watch)
+        end
+
+        it "更新対象があったら更新完了後イベントを発火する" do
+          expect { @watcher.start }.should raise_error(NotImplementedError)
+          pending "未実装"
+        end
+        it "削除対象があったら削除完了後イベントを発火する" do
+          expect { @watcher.start }.should raise_error(NotImplementedError)
+          pending "未実装"
+        end
+        it "更新対象がなかったらイベントは発火しない" do
+          expect { @watcher.start }.should raise_error(NotImplementedError)
+          pending "未実装"
+        end
+        it "登録対象があったら登録完了後イベントを発火する" do
+          expect { @watcher.start }.should raise_error(NotImplementedError)
+          pending "未実装"
+        end
+      end   # end to ec2
     end   # end to :phyical_server_watch
 
     # 仮想サーバ
@@ -424,6 +454,7 @@ describe Tengine::Resource::Watcher do
           Tengine::Resource::Provider.should_receive(:all).and_return([@provider_wakame])
           @provider_wakame.should_receive(:virtual_server_type_watch)
           EM.should_receive(:add_periodic_timer).with(@provider_wakame.polling_interval).and_yield
+          EM.should_receive(:defer).and_yield
           @provider_wakame.should_receive(:physical_server_watch)
           @provider_wakame.should_receive(:virtual_server_image_watch)
 
@@ -489,6 +520,33 @@ describe Tengine::Resource::Watcher do
         end
       end  # end to wakame
 
+      context "ec2" do
+        before do
+          Tengine::Resource::Provider.should_receive(:all).and_return([@provider_ec2])
+          @provider_ec2.should_receive(:virtual_server_type_watch)
+          EM.should_receive(:add_periodic_timer).with(@provider_ec2.polling_interval).and_yield
+          EM.should_receive(:defer).and_yield
+          # @provider_ec2.should_receive(:virtual_server_watch)
+          # @provider_ec2.should_receive(:virtual_server_image_watch)
+        end
+
+        it "更新対象があったら更新完了後イベントを発火する" do
+          expect { @watcher.start }.should raise_error(NotImplementedError)
+          pending "未実装"
+        end
+        it "削除対象があったら削除完了後イベントを発火する" do
+          expect { @watcher.start }.should raise_error(NotImplementedError)
+          pending "未実装"
+        end
+        it "更新対象がなかったらイベントは発火しない" do
+          expect { @watcher.start }.should raise_error(NotImplementedError)
+          pending "未実装"
+        end
+        it "登録対象があったら登録完了後イベントを発火する" do
+          expect { @watcher.start }.should raise_error(NotImplementedError)
+          pending "未実装"
+        end
+      end   # end to ec2
     end   # end to :virtual_server_watch
 
     # 仮想サーバイメージ
@@ -513,6 +571,7 @@ describe Tengine::Resource::Watcher do
           Tengine::Resource::Provider.should_receive(:all).and_return([@provider_wakame])
           @provider_wakame.should_receive(:virtual_server_type_watch)
           EM.should_receive(:add_periodic_timer).with(@provider_wakame.polling_interval).and_yield
+          EM.should_receive(:defer).and_yield
           @provider_wakame.should_receive(:physical_server_watch)
           @provider_wakame.should_receive(:virtual_server_watch)
 
@@ -580,6 +639,33 @@ describe Tengine::Resource::Watcher do
         end
       end  # end to wakame
 
+      context "ec2" do
+        before do
+          Tengine::Resource::Provider.should_receive(:all).and_return([@provider_ec2])
+          @provider_ec2.should_receive(:virtual_server_type_watch)
+          EM.should_receive(:add_periodic_timer).with(@provider_ec2.polling_interval).and_yield
+          EM.should_receive(:defer).and_yield
+          # @provider_ec2.should_receive(:physical_server_watch)
+          # @provider_ec2.should_receive(:virtual_server_watch)
+        end
+
+        it "更新対象があったら更新完了後イベントを発火する" do
+          expect { @watcher.start }.should raise_error(NotImplementedError)
+          pending "未実装"
+        end
+        it "削除対象があったら削除完了後イベントを発火する" do
+          expect { @watcher.start }.should raise_error(NotImplementedError)
+          pending "未実装"
+        end
+        it "更新対象がなかったらイベントは発火しない" do
+          expect { @watcher.start }.should raise_error(NotImplementedError)
+          pending "未実装"
+        end
+        it "登録対象があったら登録完了後イベントを発火する" do
+          expect { @watcher.start }.should raise_error(NotImplementedError)
+          pending "未実装"
+        end
+      end   # end to ec2
     end   # end to :virtual_server_image_watch
 
   end   # end to :start
