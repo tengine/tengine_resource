@@ -483,6 +483,18 @@ class Tengine::Resource::Provider::Wakame < Tengine::Resource::Provider::Ec2
     end
   end
 
+  def run_instances_for_api(uuids = [])
+    connect do |conn|
+      conn.run_instances(uuids)
+    end
+  end
+
+  def terminate_instances_for_api(uuids = [])
+    connect do |conn|
+      conn.terminate_instances(uuids)
+    end
+  end
+
   private
 
   def address_order
@@ -490,20 +502,39 @@ class Tengine::Resource::Provider::Wakame < Tengine::Resource::Provider::Ec2
   end
 
   def connect
-    h = [
-      :account, :host, :port, :protocol, :private_network_data,
-    ].inject({}) {|r, i|
-      r.update i => self.connection_settings[i] || self.connection_settings[i.to_s]
-    }
-    connection = ::Tama::Controllers::ControllerFactory.create_controller(
-      h[:account],
-      nil,
-      nil,
-      nil,
-      h[:host],
-      h[:port],
-      h[:protocol]
-    )
+    connection = nil
+    if self.connection_settings[:test] || self.connection_settings["test"]
+      options = self.connection_settings[:options].symbolize_keys
+      connection = ::Tama::Controllers::ControllerFactory.create_controller(:test)
+
+      connection.describe_instances_file =
+        File.expand_path(options[:describe_instances_file]) if options[:describe_instances_file]
+      connection.describe_images_file =
+        File.expand_path(options[:describe_images_file]) if options[:describe_images_file]
+      connection.run_instances_file =
+        File.expand_path(options[:run_instances_file]) if options[:run_instances_file]
+      connection.terminate_instances_file =
+        File.expand_path(options[:terminate_instances_file]) if options[:terminate_instances_file]
+      connection.describe_host_nodes_file  =
+        File.expand_path(options[:describe_host_nodes_file]) if options[:describe_host_nodes_file]
+      connection.describe_instance_specs_file =
+        File.expand_path(options[:describe_instance_specs_file]) if options[:describe_instance_specs_file]
+    else
+      h = [
+        :account, :host, :port, :protocol, :private_network_data,
+      ].inject({}) {|r, i|
+        r.update i => self.connection_settings[i] || self.connection_settings[i.to_s]
+      }
+      connection = ::Tama::Controllers::ControllerFactory.create_controller(
+        h[:account],
+        nil,
+        nil,
+        nil,
+        h[:host],
+        h[:port],
+        h[:protocol]
+        )
+    end
     yield connection
   end
 
