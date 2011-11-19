@@ -71,7 +71,7 @@ Gem::Specification.new do |s|
     s.specification_version = 3
 
     if Gem::Version.new(Gem::VERSION) >= Gem::Version.new('1.2.0') then
-      s.add_runtime_dependency(%q<tengine_support>, ["~> 0.3.0"])
+      s.add_runtime_dependency(%q<tengine_support>, ["~> 0.3.12"])
       s.add_runtime_dependency(%q<tengine_core>, ["~> 0.4.0"])
       s.add_runtime_dependency(%q<right_aws>, ["~> 2.1.0"])
       s.add_runtime_dependency(%q<net-ssh>, ["~> 2.2.1"])
@@ -84,7 +84,7 @@ Gem::Specification.new do |s|
       s.add_development_dependency(%q<ZenTest>, ["~> 4.6.2"])
       s.add_development_dependency(%q<wakame-adapters-tengine>, ["~> 0.0.0"])
     else
-      s.add_dependency(%q<tengine_support>, ["~> 0.3.0"])
+      s.add_dependency(%q<tengine_support>, ["~> 0.3.12"])
       s.add_dependency(%q<tengine_core>, ["~> 0.4.0"])
       s.add_dependency(%q<right_aws>, ["~> 2.1.0"])
       s.add_dependency(%q<net-ssh>, ["~> 2.2.1"])
@@ -98,7 +98,7 @@ Gem::Specification.new do |s|
       s.add_dependency(%q<wakame-adapters-tengine>, ["~> 0.0.0"])
     end
   else
-    s.add_dependency(%q<tengine_support>, ["~> 0.3.0"])
+    s.add_dependency(%q<tengine_support>, ["~> 0.3.12"])
     s.add_dependency(%q<tengine_core>, ["~> 0.4.0"])
     s.add_dependency(%q<right_aws>, ["~> 2.1.0"])
     s.add_dependency(%q<net-ssh>, ["~> 2.2.1"])
