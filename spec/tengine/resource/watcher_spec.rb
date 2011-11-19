@@ -245,7 +245,7 @@ describe Tengine::Resource::Watcher do
         end
 
         it "実行されない" do
-          @provider_ec2.should_not_receive(:instance_specs_from_api)
+          @provider_ec2.should_not_receive(:describe_instance_specs_for_api)
           @watcher.start
         end
       end   # end to ec2

@@ -93,7 +93,7 @@ class Tengine::Resource::Provider::Wakame < Tengine::Resource::Provider::Ec2
     log_prefix = "#{self.class.name}#virtual_server_type_watch (provider:#{self.name}):"
 
     # APIからの仮想サーバタイプ情報を取得
-    instance_specs = instance_specs_from_api
+    instance_specs = describe_instance_specs_for_api
     Tengine.logger.debug "#{log_prefix} describe_instance_specs for api (wakame)"
     Tengine.logger.debug "#{log_prefix} #{instance_specs.inspect}"
 
@@ -140,7 +140,7 @@ class Tengine::Resource::Provider::Wakame < Tengine::Resource::Provider::Ec2
     log_prefix = "#{self.class.name}#physical_server_watch (provider:#{self.name}):"
 
     # APIからの物理サーバ情報を取得
-    host_nodes = host_nodes_from_api
+    host_nodes = describe_host_nodes_for_api
     Tengine.logger.debug "#{log_prefix} describe_host_nodes for api (wakame)"
     Tengine.logger.debug "#{log_prefix} #{host_nodes.inspect}"
 
@@ -181,7 +181,7 @@ class Tengine::Resource::Provider::Wakame < Tengine::Resource::Provider::Ec2
     log_prefix = "#{self.class.name}#virtual_server_watch (provider:#{self.name}):"
 
     # APIからの仮想サーバ情報を取得
-    instances = instances_from_api
+    instances = describe_instances_for_api
     Tengine.logger.debug "#{log_prefix} describe_instances for api (wakame)"
     Tengine.logger.debug "#{log_prefix} #{instances.inspect}"
 
@@ -222,7 +222,7 @@ class Tengine::Resource::Provider::Wakame < Tengine::Resource::Provider::Ec2
     log_prefix = "#{self.class.name}#virtual_server_image_watch (provider:#{self.name}):"
 
     # APIからの仮想サーバイメージ情報を取得
-    images = images_from_api
+    images = describe_images_for_api
     Tengine.logger.debug "#{log_prefix} describe_images for api (wakame)"
     Tengine.logger.debug "#{log_prefix} #{images.inspect}"
 
@@ -457,6 +457,32 @@ class Tengine::Resource::Provider::Wakame < Tengine::Resource::Provider::Ec2
     created_ids
   end
 
+  # wakame api for tama
+
+  def describe_instance_specs_for_api(uuids = [])
+    connect do |conn|
+      conn.describe_instance_specs(uuids)
+    end
+  end
+
+  def describe_host_nodes_for_api
+    connect do |conn|
+      conn.describe_host_nodes
+    end
+  end
+
+  def describe_instances_for_api(uuids = [])
+    connect do |conn|
+      conn.describe_instances(uuids)
+    end
+  end
+
+  def describe_images_for_api(uuids = [])
+    connect do |conn|
+      conn.describe_images(uuids)
+    end
+  end
+
   private
 
   def address_order
@@ -479,30 +505,6 @@ class Tengine::Resource::Provider::Wakame < Tengine::Resource::Provider::Ec2
       h[:protocol]
     )
     yield connection
-  end
-
-  def instance_specs_from_api(uuids = [])
-    connect do |conn|
-      conn.describe_instance_specs(uuids)
-    end
-  end
-
-  def host_nodes_from_api
-    connect do |conn|
-      conn.describe_host_nodes
-    end
-  end
-
-  def instances_from_api(uuids = [])
-    connect do |conn|
-      conn.describe_instances(uuids)
-    end
-  end
-
-  def images_from_api(uuids = [])
-    connect do |conn|
-      conn.describe_images(uuids)
-    end
   end
 
 end
