@@ -1,0 +1,56 @@
+[
+  {
+    "owner_total": 1,
+    "start": 0,
+    "results": [
+      {
+        "vif": [
+          {
+            "ipv4": {
+              "nat_address": "172.16.0.234",
+              "address": "192.168.2.188"
+            },
+            "vif_id": "vif-aspojqs4"
+          }
+        ],
+        "status": "online",
+        "memory_size": 512,
+        "ha_enabled": 0,
+        "network": [
+          {
+            "nat_ipaddr": [
+              "172.16.0.234"
+            ],
+            "nat_dns_name": "jria301q.shpoolxx.vdc.public",
+            "dns_name": "jria301q.shpoolxx.vdc.local",
+            "ipaddr": [
+              "192.168.2.188"
+            ],
+            "nat_network_name": "nw-outside",
+            "network_name": "nw-data"
+          }
+        ],
+        "state": "running",
+        "image_id": "wmi-lucid4",
+        "arch": "x86_64",
+        "hostname": "jria301q",
+        "host_node": "hp-testhost",
+        "created_at": "2011-10-18T06:51:16Z",
+        "instance_spec_id": "is-testspec",
+        "netfilter_group_id": [
+          "ng-demofgr"
+        ],
+        "ssh_key_pair": null,
+        "volume": [
+
+        ],
+        "netfilter_group": [
+          "default"
+        ],
+        "id": "i-jria301q",
+        "cpu_cores": 2
+      },
+    ],
+    "limit": null
+  }
+]
