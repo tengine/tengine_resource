@@ -10,6 +10,7 @@ class Tengine::Resource::Watcher
 
   def initialize(argv = [])
     @config = Tengine::Core::Config.parse(argv)
+    @config[:event_queue].update(:sender => { :keep_connection => true })
     @pid = sprintf("process:%s/%d", ENV["MM_SERVER_NAME"], Process.pid)
     @daemonize_options = {
       :app_name => 'tengine_resource_watchd',
@@ -20,7 +21,6 @@ class Tengine::Resource::Watcher
       :dir_mode => :normal,
       :dir => File.expand_path(@config[:tengined][:pid_dir]),
     }
-    @daemonize_options.update(:ARGV => ['start'])
     Tengine::Core::MethodTraceable.disabled = !@config[:verbose]
   rescue Exception
     puts "[#{$!.class.name}] #{$!.message}\n  " << $!.backtrace.join("\n  ")
@@ -54,7 +54,6 @@ class Tengine::Resource::Watcher
         providers.each do |provider|
           # 仮想サーバタイプの監視
           provider.virtual_server_type_watch
-
           @periodic = EM.add_periodic_timer(provider.polling_interval) do
             # 物理サーバの監視
             provider.physical_server_watch
@@ -63,7 +62,6 @@ class Tengine::Resource::Watcher
             # 仮想サーバイメージの監視
             provider.virtual_server_image_watch
           end
-
         end
       end
     end

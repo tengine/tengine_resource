@@ -1,9 +1,64 @@
 #!/usr/bin/env ruby
 # -*- coding: utf-8 -*-
 $LOAD_PATH << File.expand_path("../lib", File.dirname(__FILE__))
+
 require "tengine_resource"
 
-watcher = Tengine::Resource::Watcher.new(ARGV)
-watcher.start
+@__watcher__ = Tengine::Resource::Watcher.new(ARGV)
+Signal.trap(:INT) { @__watcher__.shutdown }
 
-Signal.trap(:INT) { watcher.shutdown }
+## test data (provider)
+def make_test_data
+  require 'tengine/core/config'
+  require "mongoid"
+
+  config = Tengine::Core::Config.parse(ARGV)
+
+  Mongoid.config.from_hash(config[:db])
+  Mongoid.config.option(:persist_in_safe_mode, :default => true)
+
+  Tengine::Resource::VirtualServerType.delete_all
+  Tengine::Resource::PhysicalServer.delete_all
+  Tengine::Resource::VirtualServer.delete_all
+  Tengine::Resource::VirtualServerImage.delete_all
+  Tengine::Resource::Provider.delete_all
+
+  Tengine::Resource::Provider::Ec2.create!({
+      :name => "amazon-ec2",
+      :description => "",
+      :properties => {
+      },
+      :polling_interval => 5,
+      :connection_settings => {
+        :access_key => "",
+        :secret_access_key => "",
+        :options => {
+          :server => "ec2.amazonaws.com",
+          :port => 443,
+          :protocol => "https",
+          :multi_thread => false,
+          :logger => nil,
+          :signature_version => '1',
+          :cache => false,
+        }
+      }
+    })
+  Tengine::Resource::Provider::Wakame.create!({
+      :name => "wakame-vdc",
+      :description => "",
+      :properties => {
+        :key_name => "ssh-xxxxx"
+      },
+      :polling_interval => 5,
+      :connection_settings => {
+        :account => "test",
+        :host => "192.168.0.10",
+        :port => 80,
+        :protocol => "http",
+        :private_network_data => "",
+      },
+    })
+end
+
+#make_test_data
+@__watcher__.start

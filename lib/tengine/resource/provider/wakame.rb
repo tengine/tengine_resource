@@ -90,8 +90,12 @@ class Tengine::Resource::Provider::Wakame < Tengine::Resource::Provider::Ec2
 
   # 仮想サーバタイプの監視
   def virtual_server_type_watch
+    log_prefix = "#{self.class.name}#virtual_server_type_watch (provider:#{self.name}):"
+
     # APIからの仮想サーバタイプ情報を取得
     instance_specs = instance_specs_from_api
+    Tengine.logger.debug "#{log_prefix} describe_instance_specs for api (wakame)"
+    Tengine.logger.debug "#{log_prefix} #{instance_specs.inspect}"
 
     create_instance_specs = []
     update_instance_specs = []
@@ -99,6 +103,9 @@ class Tengine::Resource::Provider::Wakame < Tengine::Resource::Provider::Ec2
 
     # 仮想イメージタイプの取得
     old_server_types = self.virtual_server_types
+    Tengine.logger.debug "#{log_prefix} virtual_server_types on provider (#{self.name})"
+    Tengine.logger.debug "#{log_prefix} #{old_server_types.inspect}"
+
     old_server_types.each do |old_server_type|
       instance_spec = instance_specs.detect do |instance_spec|
         (instance_spec[:id] || instance_spec["id"]) == old_server_type.provided_id
@@ -106,14 +113,19 @@ class Tengine::Resource::Provider::Wakame < Tengine::Resource::Provider::Ec2
 
       if instance_spec
         # APIで取得したサーバタイプと一致するものがあれば更新対象
+        Tengine.logger.debug "#{log_prefix} registed virtual_server_type % <update> (#{old_server_type.provided_id})"
         update_instance_specs << instance_spec
       else
         # APIで取得したサーバタイプと一致するものがなければ削除対象
+        Tengine.logger.debug "#{log_prefix} removed virtual_server_type % <destroy> (#{old_server_type.provided_id})"
         destroy_server_types << old_server_type
       end
     end
     # APIで取得したサーバタイプがTengine上に存在しないものであれば登録対象
     create_instance_specs = instance_specs - update_instance_specs
+    create_instance_specs.each do |spec|
+      Tengine.logger.debug "#{log_prefix} new virtual_server_type % <create> (#{spec['id']})"
+    end
 
     # 更新
     self.differential_update_virtual_server_type_hashs(update_instance_specs) unless update_instance_specs.empty?
@@ -125,8 +137,12 @@ class Tengine::Resource::Provider::Wakame < Tengine::Resource::Provider::Ec2
 
   # 物理サーバの監視
   def physical_server_watch
+    log_prefix = "#{self.class.name}#physical_server_watch (provider:#{self.name}):"
+
     # APIからの物理サーバ情報を取得
     host_nodes = host_nodes_from_api
+    Tengine.logger.debug "#{log_prefix} describe_host_nodes for api (wakame)"
+    Tengine.logger.debug "#{log_prefix} #{host_nodes.inspect}"
 
     create_host_nodes = []
     update_host_nodes = []
@@ -134,18 +150,26 @@ class Tengine::Resource::Provider::Wakame < Tengine::Resource::Provider::Ec2
 
     # 物理サーバの取得
     old_servers = self.physical_servers
+    Tengine.logger.debug "#{log_prefix} physical_server on provider (#{self.name})"
+    Tengine.logger.debug "#{log_prefix} #{old_servers.inspect}"
+
     old_servers.each do |old_server|
       host_node = host_nodes.detect do |host_node|
         (host_node[:id] || host_node["id"]) == old_server.provided_id
       end
 
       if host_node
+        Tengine.logger.debug "#{log_prefix} registed physical_server % <update> (#{old_server.provided_id})"
         update_host_nodes << host_node
       else
+        Tengine.logger.debug "#{log_prefix} removed physical_server % <destroy> (#{old_server.provided_id})"
         destroy_servers << old_server
       end
     end
     create_host_nodes = host_nodes - update_host_nodes
+    create_host_nodes.each do |host_node|
+      Tengine.logger.debug "#{log_prefix} new physical_server% <create> (#{host_node['id']})"
+    end
 
     self.differential_update_physical_server_hashs(update_host_nodes) unless update_host_nodes.empty?
     self.create_physical_server_hashs(create_host_nodes) unless create_host_nodes.empty?
@@ -154,8 +178,12 @@ class Tengine::Resource::Provider::Wakame < Tengine::Resource::Provider::Ec2
 
   # 仮想サーバの監視
   def virtual_server_watch
+    log_prefix = "#{self.class.name}#virtual_server_watch (provider:#{self.name}):"
+
     # APIからの仮想サーバ情報を取得
     instances = instances_from_api
+    Tengine.logger.debug "#{log_prefix} describe_instances for api (wakame)"
+    Tengine.logger.debug "#{log_prefix} #{instances.inspect}"
 
     create_instances = []
     update_instances = []
@@ -163,18 +191,26 @@ class Tengine::Resource::Provider::Wakame < Tengine::Resource::Provider::Ec2
 
     # 仮想サーバの取得
     old_servers = self.virtual_servers
+    Tengine.logger.debug "#{log_prefix} virtual_servers on provider (#{self.name})"
+    Tengine.logger.debug "#{log_prefix} #{old_servers.inspect}"
+
     old_servers.each do |old_server|
       instance = instances.detect do |instance|
         (instance[:aws_instance_id] || instance["aws_instance_id"]) == old_server.provided_id
       end
 
       if instance
+        Tengine.logger.debug "#{log_prefix} registed virtual_server % <update> (#{old_server.provided_id})"
         update_instances << instance
       else
+        Tengine.logger.debug "#{log_prefix} removed virtual_server % <destroy> (#{old_server.provided_id})"
         destroy_servers << old_server
       end
     end
     create_instances = instances - update_instances
+    create_instances.each do |instance|
+      Tengine.logger.debug "#{log_prefix} new virtual_server % <create> (#{instance[:aws_instance_id]})"
+    end
 
     self.differential_update_virtual_server_hashs(update_instances) unless update_instances.empty?
     self.create_virtual_server_hashs(create_instances) unless create_instances.empty?
@@ -183,27 +219,39 @@ class Tengine::Resource::Provider::Wakame < Tengine::Resource::Provider::Ec2
 
   # 仮想サーバイメージの監視
   def virtual_server_image_watch
+    log_prefix = "#{self.class.name}#virtual_server_image_watch (provider:#{self.name}):"
+
     # APIからの仮想サーバイメージ情報を取得
     images = images_from_api
+    Tengine.logger.debug "#{log_prefix} describe_images for api (wakame)"
+    Tengine.logger.debug "#{log_prefix} #{images.inspect}"
 
     create_images = []
     update_images = []
     destroy_server_images = []
 
-    # 仮想サーバの取得
+    # 仮想サーバイメージの取得
     old_images = self.virtual_server_images
+    Tengine.logger.debug "#{log_prefix} virtual_server_images on provider (#{self.name})"
+    Tengine.logger.debug "#{log_prefix} #{old_images.inspect}"
+
     old_images.each do |old_image|
       image = images.detect do |image|
         (image[:aws_id] || image["aws_id"]) == old_image.provided_id
       end
 
       if image
+        Tengine.logger.debug "#{log_prefix} registed virtualserver_image % <update> (#{old_image.provided_id})"
         update_images << image
       else
+        Tengine.logger.debug "#{log_prefix} removed virtual_server_image % <destroy> (#{old_image.provided_id})"
         destroy_server_images << old_image
       end
     end
     create_images = images - update_images
+    create_images.each do |image|
+      Tengine.logger.debug "#{log_prefix} new server_image % <create> (#{image[:aws_id]})"
+    end
 
     self.differential_update_virtual_server_image_hashs(update_images) unless update_images.empty?
     self.create_virtual_server_image_hashs(create_images) unless create_images.empty?
@@ -266,7 +314,8 @@ class Tengine::Resource::Provider::Wakame < Tengine::Resource::Provider::Ec2
     properties = hash.dup
     properties.symbolize_keys!
     physical_server = self.physical_servers.where(:provided_id => properties[:id]).first
-    physical_server.name = properties.delete(:name)
+    # wakame-adapters-tengine が name を返さない仕様の場合は、provided_id を name に登録します
+    physical_server.name = properties.delete(:name) || properties[:id]
     physical_server.provided_id = properties.delete(:id)
     physical_server.status = properties.delete(:status)
     physical_server.cpu_cores = properties.delete(:offering_cpu_cores)
@@ -297,7 +346,8 @@ class Tengine::Resource::Provider::Wakame < Tengine::Resource::Provider::Ec2
     properties = hash.dup
     properties.symbolize_keys!
     self.physical_servers.create!(
-      :name => properties.delete(:name),
+      # wakame-adapters-tengine が name を返さない仕様の場合は、provided_id を name に登録します
+      :name => properties.delete(:name) || properties[:id],
       :provided_id => properties.delete(:id),
       :status => properties.delete(:status),
       :cpu_cores => properties.delete(:offering_cpu_cores),
@@ -337,7 +387,7 @@ class Tengine::Resource::Provider::Wakame < Tengine::Resource::Provider::Ec2
     properties = hash.dup
     properties.symbolize_keys!
     self.virtual_server_images.create!(
-      # defaultをaws_idにして良いか検討
+      # 初期登録時、default 値として name には一意な provided_id を name へ登録します
       :name => properties[:aws_id],
       :provided_id => properties.delete(:aws_id),
       :provided_description => properties.delete(:description))
@@ -387,8 +437,9 @@ class Tengine::Resource::Provider::Wakame < Tengine::Resource::Provider::Ec2
     properties = hash.dup
     properties.symbolize_keys!
     self.virtual_servers.create!(
-      # defaultをインスタンスIDにして良いか検討
-      :name => properties.delete(:aws_instance_id),
+      # 初期登録時、default 値として name には一意な provided_id を name へ登録します
+      :name => properties[:aws_instance_id],
+      :provided_id => properties.delete(:aws_instance_id),
       :provided_image_id => properties.delete(:aws_image_id),
       :provided_type_id => properties.delete(:aws_instance_type),
       :status => properties.delete(:aws_state),
@@ -400,10 +451,6 @@ class Tengine::Resource::Provider::Wakame < Tengine::Resource::Provider::Ec2
   def create_virtual_server_hashs(hashs)
     created_ids = []
     hashs.each do |hash|
-      puts
-      puts "#"*10
-      puts hash["aws_instance_id"]
-      puts hash[:aws_instance_id]
       server = create_virtual_server_hash(hash)
       created_ids << server.id
     end
@@ -438,42 +485,12 @@ class Tengine::Resource::Provider::Wakame < Tengine::Resource::Provider::Ec2
     connect do |conn|
       conn.describe_instance_specs(uuids)
     end
-#     # dummy
-#     dummy_ret = [{
-#         "cpu_cores"=>1,
-#         "memory_size"=>256,
-#         "arch"=>"x86_64",
-#         "hypervisor"=>"kvm",
-#         "updated_at"=>"2011-10-28T02:58:57Z",
-#         "account_id"=>"a-shpoolxx",
-#         "vifs"=>"--- \neth0: \n  :bandwidth: 100000\n  :index: 0\n",
-#         "quota_weight"=>1.0,
-#         "id"=>"is-demospec",
-#         "created_at"=>"2011-10-28T02:58:57Z",
-#         "drives"=>
-#         "--- \nephemeral1: \n  :type: :local\n  :size: 100\n  :index: 0\n",
-#         "uuid"=>"is-demospec"
-#       }]
   end
 
   def host_nodes_from_api
     connect do |conn|
       conn.describe_host_nodes
     end
-#     # dummy
-#     dummy_ret = [{
-#         "status"=>"online",
-#         "updated_at"=>"2011-10-18T03:53:24Z",
-#         "account_id"=>"a-shpoolxx",
-#         "offering_cpu_cores"=>100,
-#         "offering_memory_size"=>400000,
-#         "arch"=>"x86_64",
-#         "hypervisor"=>"kvm",
-#         "created_at"=>"2011-10-18T03:53:24Z",
-#         "name"=>"dummyhost",
-#         "uuid"=>"hp-demohost",
-#         "id"=>"hp-demohost"
-#       }]
   end
 
   def instances_from_api(uuids = [])
