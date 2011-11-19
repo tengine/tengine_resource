@@ -67,6 +67,13 @@ class Tengine::Resource::Watcher
     end
   end
 
+  def shutdown
+    EM.run do
+      EM.cancel_timer @periodic if @periodic
+      sender.stop
+    end
+  end
+
   extend Tengine::Core::MethodTraceable
   method_trace(*instance_methods(false))
 
