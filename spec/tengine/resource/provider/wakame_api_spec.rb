@@ -38,42 +38,49 @@ describe Tengine::Resource::Provider::Wakame do
     it "仮想サーバの状態" do
       subject.describe_instances_for_api.should == [{
           "aws_kernel_id" => "",
-          "aws_launch_time" => "2011-10-18T06:51:16Z",
+          "aws_launch_time" => "2011-10-18T06:48:47Z",
           "tags" => {},
           "aws_reservation_id" => "",
           "aws_owner" => "a-shpoolxx",
           "instance_lifecycle" => "",
           "block_device_mappings" => [{
-              "ebs_volume_id" => "",
-              "ebs_status" => "",
-              "ebs_attach_time" => "",
-              "ebs_delete_on_termination" => false,
-              "device_name" => ""
+# wakame api 側での修正が必要
+#               "ebs_volume_id" => "",
+#               "ebs_status" => "",
+#               "ebs_attach_time" => "",
+#               "ebs_delete_on_termination" => false,
+#               "device_name" => ""
+              :ebs_volume_id => "",
+              :ebs_status => "",
+              :ebs_attach_time => "",
+              :ebs_delete_on_termination => false,
+              :device_name => ""
             }],
           "ami_launch_index" => "",
           "root_device_name" => "",
           "aws_ramdisk_id" => "",
-          "aws_availability_zone" => "hp-demohost",
-          #"aws_groups" => nil,
+          "aws_availability_zone" => "hp-testhost",
+          "aws_groups" => nil,
           "spot_instance_request_id" => "",
-          #"ssh_key_name" => nil,
+          "ssh_key_name" => nil,
           "virtualization_type" => "",
           "placement_group_name" => "",
           "requester_id" => "",
-          "aws_instance_id" => "i-jria301q",
+          "aws_instance_id" => "i-9pia8e7p",
           "aws_product_codes" => [],
           "client_token" => "",
-          "private_ip_address" => ["192.168.2.188"],
+          "private_ip_address" => ["192.168.2.95"],
           "architecture" => "x86_64",
           "aws_state_code" => 0,
-          "aws_image_id" => "wmi-lucid5",
+          "aws_image_id" => "wmi-lucid4",
           "root_device_type" => "",
-          "ip_address" => "nw-data=192.168.2.188",
-          "dns_name" => "nw-data=jria301q.shpoolxx.vdc.local",
+          # bug for api
+          "ip_address" => "nw-data=[\"192.168.2.95\"]",
+          "dns_name" => "nw-data=9pia8e7p.shpoolzz.vdc.local",
           "monitoring_state" => "",
-          "aws_instance_type" => "is-demospec",
+          "aws_instance_type" => "is-testspec",
           "aws_state" => "running",
-          "private_dns_name" => "jria301q.shpoolxx.vdc.local",
+          "private_dns_name" => "9pia8e7p.shpoolzz.vdc.local",
           "aws_reason" => ""
         }]
     end
@@ -83,10 +90,15 @@ describe Tengine::Resource::Provider::Wakame do
           "root_device_name" => "",
           "aws_ramdisk_id" => "",
           "block_device_mappings" => [{
-              "ebs_snapshot_id" => "",
-              "ebs_volume_size" => 0,
-              "ebs_delete_on_termination" => false,
-              "device_name" => ""
+# wakame api 側での修正が必要
+#               "ebs_snapshot_id" => "",
+#               "ebs_volume_size" => 0,
+#               "ebs_delete_on_termination" => false,
+#               "device_name" => ""
+              :ebs_snapshot_id => "",
+              :ebs_volume_size => 0,
+              :ebs_delete_on_termination => false,
+              :device_name => ""
             }],
           "aws_is_public" => false,
           "virtualization_type" => "",
@@ -107,23 +119,26 @@ describe Tengine::Resource::Provider::Wakame do
 
     it "仮想サーバの起動" do
       subject.run_instances_for_api.should == [{
-          "aws_image_id" => "wmi-lucid4",
-          "aws_reason" => "",
-          "aws_state_code" => "0",
-          "aws_owner" => "a-shopoolzz",
-          "aws_instance_id" => "i-9pia8e7g",
-          "aws_reservation_id" => "r-aabbccdd",
-          "aws_state" => "init",
-          "dns_name" => "",
-          "ssh_key_name" => "ssh-xxxxxx",
-          "aws_groups" => [""],
-          "private_dns_name" => "",
-          "aws_instance_type" => "is-small",
-          "aws_launch_time" => "2008-1-1T00:00:00.000Z",
-          "aws_ramdisk_id" => "",
-          "aws_kernel_id" => "",
-          "ami_launch_index" => "0",
+          "aws_launch_time" => "2011-10-18T06:48:47Z",
+          "tags" => {},
+          "aws_reservation_id" => "",
+          "aws_owner" => "a-shpoolxx",
+          "ami_launch_index" => "",
           "aws_availability_zone" => "",
+          "aws_groups" => ["ng-demofgr"],
+          "ssh_key_name" => nil,
+          "virtualization_type" => "",
+          "placement_group_name" => "",
+          "aws_instance_id" => "i-9pia8e7g",
+          "aws_product_codes" => [],
+          "client_token" => "",
+          "aws_state_code" => 0,
+          "aws_image_id" => "wmi-lucid4",
+          "dns_name" => nil,
+          "aws_instance_type" => "is-testspec",
+          "aws_state" => "scheduling",
+          "private_dns_name" => nil,
+          "aws_reason" => ""
         }]
     end
 

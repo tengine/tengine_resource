@@ -459,39 +459,43 @@ class Tengine::Resource::Provider::Wakame < Tengine::Resource::Provider::Ec2
 
   # wakame api for tama
 
+  # wakame api からの戻り値がのキーが文字列だったりシンボルだったりで統一されてないので暫定対応で
+  # stringify_keys してます
+
   def describe_instance_specs_for_api(uuids = [])
     connect do |conn|
-      conn.describe_instance_specs(uuids)
+      conn.describe_instance_specs(uuids).map(&:stringify_keys)
     end
   end
 
   def describe_host_nodes_for_api
     connect do |conn|
-      conn.describe_host_nodes
+      conn.describe_host_nodes.map(&:stringify_keys)
     end
   end
 
   def describe_instances_for_api(uuids = [])
     connect do |conn|
-      conn.describe_instances(uuids)
+      conn.describe_instances(uuids).map(&:stringify_keys)
     end
   end
 
   def describe_images_for_api(uuids = [])
     connect do |conn|
-      conn.describe_images(uuids)
+      conn.describe_images(uuids).map(&:stringify_keys)
     end
   end
 
   def run_instances_for_api(uuids = [])
     connect do |conn|
-      conn.run_instances(uuids)
+      conn.run_instances(uuids).map(&:stringify_keys)
     end
   end
 
   def terminate_instances_for_api(uuids = [])
     connect do |conn|
-      conn.terminate_instances(uuids)
+      # wakame api からの戻り値がのキーが文字列だったりシンボルだったりで統一されてないので暫定対応
+      conn.terminate_instances(uuids).map(&:stringify_keys)
     end
   end
 
