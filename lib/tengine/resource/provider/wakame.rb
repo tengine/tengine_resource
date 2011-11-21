@@ -262,7 +262,7 @@ class Tengine::Resource::Provider::Wakame < Tengine::Resource::Provider::Ec2
   # virtual_server_type
   def differential_update_virtual_server_type_hash(hash)
     properties = hash.dup
-    properties.symbolize_keys!
+    properties.deep_symbolize_keys!
     virtual_server_type = self.virtual_server_types.where(:provided_id => properties[:id]).first
     virtual_server_type.provided_id = properties.delete(:id)
     virtual_server_type.caption = properties.delete(:uuid)
@@ -292,7 +292,7 @@ class Tengine::Resource::Provider::Wakame < Tengine::Resource::Provider::Ec2
 
   def create_virtual_server_type_hash(hash)
     properties = hash.dup
-    properties.symbolize_keys!
+    properties.deep_symbolize_keys!
     self.virtual_server_types.create!(
       :provided_id => properties.delete(:id),
       :caption => properties.delete(:uuid),
@@ -313,7 +313,7 @@ class Tengine::Resource::Provider::Wakame < Tengine::Resource::Provider::Ec2
   # physical_server
   def differential_update_physical_server_hash(hash)
     properties = hash.dup
-    properties.symbolize_keys!
+    properties.deep_symbolize_keys!
     physical_server = self.physical_servers.where(:provided_id => properties[:id]).first
     # wakame-adapters-tengine が name を返さない仕様の場合は、provided_id を name に登録します
     physical_server.name = properties.delete(:name) || properties[:id]
@@ -345,7 +345,7 @@ class Tengine::Resource::Provider::Wakame < Tengine::Resource::Provider::Ec2
 
   def create_physical_server_hash(hash)
     properties = hash.dup
-    properties.symbolize_keys!
+    properties.deep_symbolize_keys!
     self.physical_servers.create!(
       # wakame-adapters-tengine が name を返さない仕様の場合は、provided_id を name に登録します
       :name => properties.delete(:name) || properties[:id],
@@ -368,7 +368,7 @@ class Tengine::Resource::Provider::Wakame < Tengine::Resource::Provider::Ec2
   # virtual_server_image
   def differential_update_virtual_server_image_hash(hash)
     properties = hash.dup
-    properties.symbolize_keys!
+    properties.deep_symbolize_keys!
     server_image = self.virtual_server_images.where(:provided_id => properties[:aws_id]).first
     server_image.provided_id = properties.delete(:aws_id)
     server_image.provided_description = properties.delete(:description)
@@ -386,7 +386,7 @@ class Tengine::Resource::Provider::Wakame < Tengine::Resource::Provider::Ec2
 
   def create_virtual_server_image_hash(hash)
     properties = hash.dup
-    properties.symbolize_keys!
+    properties.deep_symbolize_keys!
     self.virtual_server_images.create!(
       # 初期登録時、default 値として name には一意な provided_id を name へ登録します
       :name => properties[:aws_id],
@@ -406,14 +406,18 @@ class Tengine::Resource::Provider::Wakame < Tengine::Resource::Provider::Ec2
   # virtual_server
   def differential_update_virtual_server_hash(hash)
     properties = hash.symbolize_keys.dup
-    properties.symbolize_keys!
+    properties.deep_symbolize_keys!
     host_server = self.physical_servers.where(:provided_id => properties[:aws_availability_zone]).first
     virtual_server = self.virtual_servers.where(:provided_id => properties[:aws_instance_id]).first
     virtual_server.provided_id = properties.delete(:aws_instance_id)
     virtual_server.provided_image_id = properties.delete(:aws_image_id)
     virtual_server.provided_type_id = properties.delete(:aws_instance_type)
-    virtual_server.host_server = host_server
     virtual_server.status = properties.delete(:aws_state)
+    virtual_server.host_server = host_server
+    virtual_server.address_order = [properties[:private_ip_address]]
+    %w[private_ip_address private_dns_name ip_address dns_name].each do |key|
+      virtual_server.addresses[key] = properties.delete(key.to_sym) || properties.delete(key.to_s)
+    end
     properties.each do |key, val|
       value =  properties.delete(key)
       unless val.to_s == value.to_s
@@ -424,7 +428,8 @@ class Tengine::Resource::Provider::Wakame < Tengine::Resource::Provider::Ec2
         end
       end
     end
-    virtual_server.save! if virtual_server.changed?
+    # address 暫定対応（見直しすべし）
+    virtual_server.save! if virtual_server.changed? && virtual_server.changes.values.all?{|v| !v.nil?}
   end
 
   def differential_update_virtual_server_hashs(hashs)
@@ -438,18 +443,22 @@ class Tengine::Resource::Provider::Wakame < Tengine::Resource::Provider::Ec2
 
   def create_virtual_server_hash(hash)
     properties = hash.dup
-    properties.symbolize_keys!
+    properties.deep_symbolize_keys!
     host_server = self.physical_servers.where(:provided_id => properties[:aws_availability_zone]).first
+    addresses = {}
+    %w[private_ip_address private_dns_name ip_address dns_name].each do |key|
+      addresses[key] = properties.delete(key.to_sym)
+    end
     self.virtual_servers.create!(
       # 初期登録時、default 値として name には一意な provided_id を name へ登録します
       :name => properties[:aws_instance_id],
       :provided_id => properties.delete(:aws_instance_id),
       :provided_image_id => properties.delete(:aws_image_id),
       :provided_type_id => properties.delete(:aws_instance_type),
-      :host_server => host_server,
       :status => properties.delete(:aws_state),
-      :addresses => properties.delete(:ip_address),
-      :address_order => properties.delete(:private_ip_address),
+      :host_server => host_server,
+      :address_order => [properties[:private_ip_address]],
+      :addresses => addresses,
       :properties => properties)
   end
 

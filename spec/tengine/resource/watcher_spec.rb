@@ -443,8 +443,10 @@ describe Tengine::Resource::Watcher do
             :host_server => @physical_server_wakame,
             :status => "running",
             :addresses => {
-              "nw-data" => ["192.168.2.188"],
-              "nw-outside" => ["172.16.0.234"]
+              :private_ip_address => "192.168.2.188",
+              :private_dns_name => "jria301q.shpoolxx.vdc.local",
+              :ip_address => "nw-data=192.168.2.188",
+              :dns_name => "nw-data=jria301q.shpoolxx.vdc.local",
             },
             :address_order => ["192.168.2.188"],
             :properties => {
@@ -476,12 +478,7 @@ describe Tengine::Resource::Watcher do
               :architecture => "x86_64",
               :aws_state_code => 0,
               :root_device_type => "",
-              :dns_name => {
-                "nw-data" => "jria301q.shpoolxx.vdc.local",
-                "nw-outside" => "jria301q.shpoolxx.vdc.public"
-              },
               :monitoring_state => "",
-              :private_dns_name => "jria301q.shpoolxx.vdc.local",
               :aws_reason => ""
             }
           })
@@ -825,19 +822,13 @@ describe Tengine::Resource::Watcher do
       :aws_instance_id => "i-jria301q",
       :aws_product_codes => [],
       :client_token => "",
-      :private_ip_address => ["192.168.2.188"],
+      :private_ip_address => "192.168.2.188",
       :architecture => "x86_64",
       :aws_state_code => 0,
       :aws_image_id => "wmi-lucid5",
       :root_device_type => "",
-      :ip_address => {
-        "nw-data" => ["192.168.2.188"],
-        "nw-outside" => ["172.16.0.234"]
-      },
-      :dns_name => {
-        "nw-data" => "jria301q.shpoolxx.vdc.local",
-        "nw-outside" => "jria301q.shpoolxx.vdc.public"
-      },
+      :ip_address => "nw-data=192.168.2.188",
+      :dns_name => "nw-data=jria301q.shpoolxx.vdc.local",
       :monitoring_state => "",
       :aws_instance_type => "is-demospec",
       :aws_state => "running",
@@ -871,19 +862,13 @@ describe Tengine::Resource::Watcher do
       :aws_instance_id => "i-jria301q",
       :aws_product_codes => [],
       :client_token => "",
-      :private_ip_address => ["192.168.2.188"],
+      :private_ip_address => "192.168.2.188",
       :architecture => "x86_64",
       :aws_state_code => 1,
       :aws_image_id => "wmi-lucid5",
       :root_device_type => "",
-      :ip_address => {
-        "nw-data" => ["192.168.2.188"],
-        "nw-outside" => ["172.16.0.234"]
-      },
-      :dns_name => {
-        "nw-data" => "jria301q.shpoolxx.vdc.local",
-        "nw-outside" => "jria301q.shpoolxx.vdc.public"
-      },
+      :ip_address => "nw-data192.168.2.188",
+      :dns_name => "nw-data=jria301q.shpoolxx.vdc.local",
       :monitoring_state => "",
       :aws_instance_type => "is-demospec",
       :aws_state => "terminated",
@@ -917,19 +902,13 @@ describe Tengine::Resource::Watcher do
       :aws_instance_id => "i-jria302q",
       :aws_product_codes => [],
       :client_token => "",
-      :private_ip_address => ["192.168.2.189"],
+      :private_ip_address => "192.168.2.189",
       :architecture => "x86_64",
       :aws_state_code => 0,
       :aws_image_id => "wmi-lucid5",
       :root_device_type => "",
-      :ip_address => {
-        "nw-data" => ["192.168.2.189"],
-        "nw-outside" => ["172.16.0.235"]
-      },
-      :dns_name => {
-        "nw-data" => "jria302q.shpoolxx.vdc.local",
-        "nw-outside" => "jria302q.shpoolxx.vdc.public"
-      },
+      :ip_address => "nw-data=192.168.2.189",
+      :dns_name => "nw-data=jria302q.shpoolxx.vdc.local",
       :monitoring_state => "",
       :aws_instance_type => "is-demospec",
       :aws_state => "running",
