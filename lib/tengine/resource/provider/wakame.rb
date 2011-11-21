@@ -466,11 +466,11 @@ class Tengine::Resource::Provider::Wakame < Tengine::Resource::Provider::Ec2
     case convert
     when :string
       hash = hash.map do |h|
-        h = stringify_deep_keys(h)
+        stringify_deep_keys(h)
       end
     when :symbol
       hash = hash.map do |h|
-        h = symbolize_deep_keys(h)
+        symbolize_deep_keys(h)
       end
     end
     hash
