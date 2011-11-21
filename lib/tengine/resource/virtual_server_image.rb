@@ -9,6 +9,8 @@ class Tengine::Resource::VirtualServerImage
   field :name, :type => String
   field :description, :type => String
   field :provided_id, :type => String
+  field :provided_description, :type => String
+
   belongs_to :provider, :inverse_of => :virtual_server_images, :index => true,
     :class_name => "Tengine::Resource::Provider"
 
