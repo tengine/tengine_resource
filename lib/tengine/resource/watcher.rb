@@ -11,29 +11,27 @@ class Tengine::Resource::Watcher
   attr_reader :config, :pid
 
   def initialize(argv = [])
-    @config = Tengine::Core::Config.parse(argv)
-    @config[:event_queue].update(
-      :sender => {
-        :keep_connection => true
-      })
+    @config = Tengine::Core::Config::Core.parse(argv)
     @pid = sprintf("process:%s/%d", ENV["MM_SERVER_NAME"], Process.pid)
+    @mq_config = config[:event_queue].to_hash
+    @mq_config[:sender] = { :keep_connection => true }
     @daemonize_options = {
       :app_name => 'tengine_resource_watchd',
       :ARGV => argv,
-      :ontop => !@config[:tengined][:daemon],
-      :monitor => !@config[:tengined][:monitor],
+      :ontop => !config[:process][:daemon],
+      # :monitor => true,
       :multiple => true,
       :dir_mode => :normal,
-      :dir => File.expand_path(@config[:tengined][:pid_dir]),
+      :dir => File.expand_path(config[:process][:pid_dir]),
     }
-    Tengine::Core::MethodTraceable.disabled = !@config[:verbose]
+    Tengine::Core::MethodTraceable.disabled = !config[:verbose]
   rescue Exception
     puts "[#{$!.class.name}] #{$!.message}\n  " << $!.backtrace.join("\n  ")
     raise
   end
 
   def mq_suite
-    @mq_suite ||= Tengine::Mq::Suite.new(config[:event_queue])
+    @mq_suite ||= Tengine::Mq::Suite.new(@mq_config)
     Tengine::Event.mq_suite = @mq_suite
   end
 
@@ -43,9 +41,7 @@ class Tengine::Resource::Watcher
   end
 
   def run(__file__)
-    action = (@daemonize_options[:ARGV][0] || :start).to_sym
-
-    case action
+    case config[:action].to_sym
     when :start
       start_daemon(__file__)
     when :stop
@@ -77,7 +73,7 @@ class Tengine::Resource::Watcher
     Mongoid.observers = Tengine::Resource::Observer
     Mongoid.instantiate_observers
 
-    Mongoid.config.from_hash(@config[:db])
+    Mongoid.config.from_hash(config[:db])
     Mongoid.config.option(:persist_in_safe_mode, :default => true)
 
     EM.run do

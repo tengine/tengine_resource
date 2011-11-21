@@ -7,18 +7,35 @@ require 'apis/wakame'
 require 'controllers/controller'
 
 describe Tengine::Resource::Watcher do
+  before do
+    @mq_config = {
+      :connection => {
+        :host => "localhost", :port => 5672, :vhost => "/",
+        :user => "guest", :pass => "guest", :logging => false,
+        :insist => false, :auto_reconnect_delay => 1
+      },
+      :exchange => {
+        :name => "tengine_event_exchange", :type => "direct", :durable => true
+      },
+      :queue => {
+        :name => "tengine_event_queue", :durable => true
+      },
+      :sender => {
+        :keep_connection => true
+        }
+    }
+  end
 
   describe :initialize do
     it "default" do
       Tengine::Core::MethodTraceable.stub(:disabled=)
       watcher = Tengine::Resource::Watcher.new
-      watcher.config[:tengined]['daemon'].should == false
-      watcher.config[:tengined][:daemon].should == false
+      watcher.config[:process]['daemon'].should == false
+      watcher.config[:process][:daemon].should == false
       watcher.config[:event_queue][:connection][:host].should == "localhost"
       watcher.config['event_queue']['connection']['host'].should == "localhost"
       watcher.config[:event_queue][:queue][:name].should == "tengine_event_queue"
       watcher.config['event_queue']['queue']['name'].should == "tengine_event_queue"
-      watcher.config['heartbeat']['resourcew'].should == {"interval"=>30, "expire"=>120}
     end
   end
 
@@ -36,9 +53,9 @@ describe Tengine::Resource::Watcher do
     end
 
     it "生成したmq_suiteが設定されている" do
-      mock_mq = Tengine::Mq::Suite.new(@watcher.config[:event_queue])
+      mock_mq = Tengine::Mq::Suite.new(@mq_config)
       Tengine::Mq::Suite.should_receive(:new).
-        with(@watcher.config[:event_queue]).and_return(mock_mq)
+        with(@mq_config).and_return(mock_mq)
 
       @watcher.sender.should_receive(:wait_for_connection)
       @watcher.start
@@ -46,9 +63,9 @@ describe Tengine::Resource::Watcher do
     end
 
     it "生成したsenderが設定されている" do
-      mock_mq = Tengine::Mq::Suite.new(@watcher.config[:event_queue])
+      mock_mq = Tengine::Mq::Suite.new(@mq_config)
       Tengine::Mq::Suite.should_receive(:new).
-        with(@watcher.config[:event_queue]).and_return(mock_mq)
+        with(@mq_config).and_return(mock_mq)
 
       mock_sender = mock(:sender)
       Tengine::Event::Sender.should_receive(:new).with(mock_mq).and_return(mock_sender)
@@ -71,9 +88,9 @@ describe Tengine::Resource::Watcher do
       mock_conn.should_receive(:after_recovery)
       mock_conn.should_receive(:on_closed)
 
-      @mock_mq = Tengine::Mq::Suite.new(@watcher.config[:event_queue])
+      @mock_mq = Tengine::Mq::Suite.new(@mq_config)
       Tengine::Mq::Suite.should_receive(:new).
-        with(@watcher.config[:event_queue]).and_return(@mock_mq)
+        with(@mq_config).and_return(@mock_mq)
 
       Tengine::Resource::Provider.delete_all
       @provider_ec2 = Tengine::Resource::Provider::Ec2.create!({
