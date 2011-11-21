@@ -460,15 +460,71 @@ class Tengine::Resource::Provider::Wakame < Tengine::Resource::Provider::Ec2
   # wakame api for tama
 
   # wakame api からの戻り値がのキーが文字列だったりシンボルだったりで統一されてないので暫定対応で
-  # stringify_keys してます
+  # 戻り値のkeyをstringかsymbolかのどちらかに指定できるようにしています
 
   def hash_key_convert(hash, convert)
     case convert
     when :string
-      hash.map(&:stringify_keys!)
+      hash = hash.map do |h|
+        h = stringify_deep_keys(h)
+      end
     when :symbol
-      hash.map(&:symbolize_keys!)
+      hash = hash.map do |h|
+        h = symbolize_deep_keys(h)
+      end
     end
+    hash
+  end
+
+  # TODO: tengine_support の Hash で置き換え予定
+  def symbolize_deep_keys(hash)
+    hash = hash.symbolize_keys!
+    hash.each {|k, v|
+      case v.class.name
+      when 'Hash'
+        hash[k] = symbolize_deep_keys(v)
+      when 'Array'
+        rec = Proc.new {|list|
+          list.map {|item|
+            case item.class.name
+            when 'Hash'
+              symbolize_deep_keys(item)
+            when 'Array'
+              rec.call(item)
+            else
+              item
+            end
+          }
+        }
+        hash[k] = rec.call(v)
+      end
+    }
+    hash
+  end
+
+  # TODO: tengine_support の Hash で置き換え予定
+  def stringify_deep_keys(hash)
+    hash = hash.stringify_keys!
+    hash.each {|k, v|
+      case v.class.name
+      when 'Hash'
+        hash[k] = stringify_deep_keys(v)
+      when 'Array'
+        rec = Proc.new {|list|
+          list.map {|item|
+            case item.class.name
+            when 'Hash'
+              stringify_deep_keys(item)
+            when 'Array'
+              rec.call(item)
+            else
+              item
+            end
+          }
+        }
+        hash[k] = rec.call(v)
+      end
+    }
     hash
   end
 

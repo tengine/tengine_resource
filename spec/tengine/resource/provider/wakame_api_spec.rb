@@ -45,17 +45,11 @@ describe Tengine::Resource::Provider::Wakame do
             "aws_owner" => "a-shpoolxx",
             "instance_lifecycle" => "",
             "block_device_mappings" => [{
-# wakame api 側での修正が必要
-#               "ebs_volume_id" => "",
-#               "ebs_status" => "",
-#               "ebs_attach_time" => "",
-#               "ebs_delete_on_termination" => false,
-#               "device_name" => ""
-                :ebs_volume_id => "",
-                :ebs_status => "",
-                :ebs_attach_time => "",
-                :ebs_delete_on_termination => false,
-                :device_name => ""
+                "ebs_volume_id" => "",
+                "ebs_status" => "",
+                "ebs_attach_time" => "",
+                "ebs_delete_on_termination" => false,
+                "device_name" => ""
               }],
             "ami_launch_index" => "",
             "root_device_name" => "",
@@ -91,15 +85,10 @@ describe Tengine::Resource::Provider::Wakame do
             "root_device_name" => "",
             "aws_ramdisk_id" => "",
             "block_device_mappings" => [{
-# wakame api 側での修正が必要
-#               "ebs_snapshot_id" => "",
-#               "ebs_volume_size" => 0,
-#               "ebs_delete_on_termination" => false,
-#               "device_name" => ""
-                :ebs_snapshot_id => "",
-                :ebs_volume_size => 0,
-                :ebs_delete_on_termination => false,
-                :device_name => ""
+                "ebs_snapshot_id" => "",
+                "ebs_volume_size" => 0,
+                "ebs_delete_on_termination" => false,
+                "device_name" => ""
               }],
             "aws_is_public" => false,
             "virtualization_type" => "",
