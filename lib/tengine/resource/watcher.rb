@@ -4,26 +4,30 @@ require 'mongoid'
 require 'eventmachine'
 require 'tengine/event'
 require 'tengine/mq'
-require 'tengine/core/config'
+require 'tengine/resource/config'
 
 class Tengine::Resource::Watcher
 
   attr_reader :config, :pid
 
   def initialize(argv = [])
-    @config = Tengine::Core::Config::Core.parse(argv)
+    @config = Tengine::Resource::Config::Resource.parse(argv)
     @pid = sprintf("process:%s/%d", ENV["MM_SERVER_NAME"], Process.pid)
     @mq_config = config[:event_queue].to_hash
     @mq_config[:sender] = { :keep_connection => true }
     @daemonize_options = {
       :app_name => 'tengine_resource_watchd',
-      :ARGV => argv,
+      :ARGV => [config[:action]],
       :ontop => !config[:process][:daemon],
       # :monitor => true,
       :multiple => true,
       :dir_mode => :normal,
       :dir => File.expand_path(config[:process][:pid_dir]),
     }
+
+    # 必要なディレクトリの生成
+    FileUtils.mkdir_p(File.expand_path(config[:process][:pid_dir]))
+
     Tengine::Core::MethodTraceable.disabled = !config[:verbose]
   rescue Exception
     puts "[#{$!.class.name}] #{$!.message}\n  " << $!.backtrace.join("\n  ")
@@ -49,9 +53,6 @@ class Tengine::Resource::Watcher
     when :restart
       stop_daemon(__file__)
       start_daemon(__file__)
-    else
-      puts "[#{$!.class.name}] invalid option: #{action}"
-      raise
     end
   end
 

@@ -15,6 +15,7 @@ module Tengine::Resource
   autoload :Observer          , 'tengine/resource/observer'
 
   autoload :Watcher           , 'tengine/resource/watcher'
+  autoload :Config            , 'tengine/resource/config'
 
   def self.notify ctx, msg
     # called from tengine_core/lib/tengine/core/plugins.rb
