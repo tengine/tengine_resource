@@ -76,12 +76,12 @@ GEM
       activesupport (>= 3.0.0)
       amqp (~> 0.8.0)
       uuid (~> 2.3.4)
-    tengine_support (0.3.14)
+    tengine_support (0.3.15)
       activesupport (>= 3.0.0)
     tzinfo (0.3.31)
     uuid (2.3.4)
       macaddr (~> 1.0)
-    wakame-adapters-tengine (0.0.1)
+    wakame-adapters-tengine (0.0.2)
       json
       right_aws
     yard (0.7.3)

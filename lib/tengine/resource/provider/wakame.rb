@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 require 'tama'
+require 'tengine/support/core_ext/hash/keys'
 
 class Tengine::Resource::Provider::Wakame < Tengine::Resource::Provider::Ec2
 
@@ -462,70 +463,18 @@ class Tengine::Resource::Provider::Wakame < Tengine::Resource::Provider::Ec2
   # wakame api からの戻り値がのキーが文字列だったりシンボルだったりで統一されてないので暫定対応で
   # 戻り値のkeyをstringかsymbolかのどちらかに指定できるようにしています
 
-  def hash_key_convert(hash, convert)
+  def hash_key_convert(hash_list, convert)
     case convert
     when :string
-      hash = hash.map do |h|
-        stringify_deep_keys(h)
+      hash_list = hash_list.map do |hash|
+        hash.deep_stringify_keys!
       end
     when :symbol
-      hash = hash.map do |h|
-        symbolize_deep_keys(h)
+      hash_list = hash_list.map do |hash|
+        hash.deep_symbolize_keys!
       end
     end
-    hash
-  end
-
-  # TODO: tengine_support の Hash で置き換え予定
-  def symbolize_deep_keys(hash)
-    hash = hash.symbolize_keys!
-    hash.each {|k, v|
-      case v.class.name
-      when 'Hash'
-        hash[k] = symbolize_deep_keys(v)
-      when 'Array'
-        rec = Proc.new {|list|
-          list.map {|item|
-            case item.class.name
-            when 'Hash'
-              symbolize_deep_keys(item)
-            when 'Array'
-              rec.call(item)
-            else
-              item
-            end
-          }
-        }
-        hash[k] = rec.call(v)
-      end
-    }
-    hash
-  end
-
-  # TODO: tengine_support の Hash で置き換え予定
-  def stringify_deep_keys(hash)
-    hash = hash.stringify_keys!
-    hash.each {|k, v|
-      case v.class.name
-      when 'Hash'
-        hash[k] = stringify_deep_keys(v)
-      when 'Array'
-        rec = Proc.new {|list|
-          list.map {|item|
-            case item.class.name
-            when 'Hash'
-              stringify_deep_keys(item)
-            when 'Array'
-              rec.call(item)
-            else
-              item
-            end
-          }
-        }
-        hash[k] = rec.call(v)
-      end
-    }
-    hash
+    hash_list
   end
 
   def describe_instance_specs_for_api(uuids = [], option = {})
