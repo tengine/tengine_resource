@@ -408,9 +408,31 @@ describe Tengine::Resource::Watcher do
     describe :virtual_server_watch do
       before do
         Tengine::Event.default_sender.should_receive(:fire).with(
+          "Tengine::Resource::PhysicalServer.created.tengine_resource_watchd",
+          anything())
+        Tengine::Event.default_sender.should_receive(:fire).with(
           "Tengine::Resource::VirtualServer.created.tengine_resource_watchd",
           anything())
 
+        Tengine::Resource::PhysicalServer.delete_all
+        @physical_server_wakame = @provider_wakame.physical_servers.create!({
+            :name => "demohost",
+            :description => "",
+            :provided_id => "hp-demohost",
+            :status => "online",
+            :addresses => {},
+            :address_order => [],
+            :cpu_cores => 100,
+            :memory_size => 400000,
+            :properties => {
+              :uuid => "hp-demohost",
+              :account_id => "a-shpoolxx",
+              :arch => "x86_64",
+              :hypervisor => "kvm",
+              :created_at => "2011-10-18T03:53:24Z",
+              :updated_at => "2011-10-18T03:53:24Z",
+            }
+          })
         Tengine::Resource::VirtualServer.delete_all
         @virtual_server_wakame = @provider_wakame.virtual_servers.create!({
             :name => "vhost",
@@ -418,6 +440,7 @@ describe Tengine::Resource::Watcher do
             :provided_id => "i-jria301q",
             :provided_image_id => "wmi-lucid5",
             :provided_type_id => "is-demospec",
+            :host_server => @physical_server_wakame,
             :status => "running",
             :addresses => {
               "nw-data" => ["192.168.2.188"],
@@ -519,8 +542,13 @@ describe Tengine::Resource::Watcher do
             "Tengine::Resource::VirtualServer.created.tengine_resource_watchd",
             anything())
 
-          expect { @watcher.start }.should change(
-            @provider_wakame.virtual_servers, :count).by(1)
+          expect {
+            @watcher.start
+            new_virtual_server = (@provider_wakame.virtual_servers - [@virtual_server_wakame]).first
+            new_virtual_server.host_server.provided_id.should == CREATE_WAKAME_INSTANCES[0][:aws_availability_zone]
+            new_virtual_server.host_server.provided_id.should == "hp-demohost"
+            new_virtual_server.host_server.should == @physical_server_wakame
+          }.should change(@provider_wakame.virtual_servers, :count).by(1)
         end
 
         it "削除対象があったら削除完了後イベントを発火する" do

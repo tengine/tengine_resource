@@ -407,10 +407,12 @@ class Tengine::Resource::Provider::Wakame < Tengine::Resource::Provider::Ec2
   def differential_update_virtual_server_hash(hash)
     properties = hash.symbolize_keys.dup
     properties.symbolize_keys!
+    host_server = self.physical_servers.where(:provided_id => properties[:aws_availability_zone]).first
     virtual_server = self.virtual_servers.where(:provided_id => properties[:aws_instance_id]).first
     virtual_server.provided_id = properties.delete(:aws_instance_id)
     virtual_server.provided_image_id = properties.delete(:aws_image_id)
     virtual_server.provided_type_id = properties.delete(:aws_instance_type)
+    virtual_server.host_server = host_server
     virtual_server.status = properties.delete(:aws_state)
     properties.each do |key, val|
       value =  properties.delete(key)
@@ -437,12 +439,14 @@ class Tengine::Resource::Provider::Wakame < Tengine::Resource::Provider::Ec2
   def create_virtual_server_hash(hash)
     properties = hash.dup
     properties.symbolize_keys!
+    host_server = self.physical_servers.where(:provided_id => properties[:aws_availability_zone]).first
     self.virtual_servers.create!(
       # 初期登録時、default 値として name には一意な provided_id を name へ登録します
       :name => properties[:aws_instance_id],
       :provided_id => properties.delete(:aws_instance_id),
       :provided_image_id => properties.delete(:aws_image_id),
       :provided_type_id => properties.delete(:aws_instance_type),
+      :host_server => host_server,
       :status => properties.delete(:aws_state),
       :addresses => properties.delete(:ip_address),
       :address_order => properties.delete(:private_ip_address),
