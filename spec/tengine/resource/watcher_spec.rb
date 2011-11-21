@@ -119,7 +119,7 @@ describe Tengine::Resource::Watcher do
 
       @provider_wakame.should_receive(:virtual_server_type_watch)
       EM.should_receive(:add_periodic_timer).with(@provider_wakame.polling_interval).and_yield
-      EM.should_receive(:defer).twice.and_yield
+#       EM.should_receive(:defer).twice.and_yield
       @provider_wakame.should_receive(:physical_server_watch)
       @provider_wakame.should_receive(:virtual_server_watch)
       @provider_wakame.should_receive(:virtual_server_image_watch)
@@ -286,7 +286,7 @@ describe Tengine::Resource::Watcher do
           Tengine::Resource::Provider.should_receive(:all).and_return([@provider_wakame])
           @provider_wakame.should_receive(:virtual_server_type_watch)
           EM.should_receive(:add_periodic_timer).with(@provider_wakame.polling_interval).and_yield
-          EM.should_receive(:defer).and_yield
+#           EM.should_receive(:defer).and_yield
           @provider_wakame.should_receive(:virtual_server_watch)
           @provider_wakame.should_receive(:virtual_server_image_watch)
 
@@ -363,7 +363,7 @@ describe Tengine::Resource::Watcher do
           Tengine::Resource::Provider.should_receive(:all).and_return([@provider_ec2])
           @provider_ec2.should_receive(:virtual_server_type_watch)
           EM.should_receive(:add_periodic_timer).with(@provider_ec2.polling_interval).and_yield
-          EM.should_receive(:defer).and_yield
+#           EM.should_receive(:defer).and_yield
           # @provider_ec2.should_receive(:physical_server_watch)
           # @provider_ec2.should_receive(:virtual_server_image_watch)
         end
@@ -454,7 +454,7 @@ describe Tengine::Resource::Watcher do
           Tengine::Resource::Provider.should_receive(:all).and_return([@provider_wakame])
           @provider_wakame.should_receive(:virtual_server_type_watch)
           EM.should_receive(:add_periodic_timer).with(@provider_wakame.polling_interval).and_yield
-          EM.should_receive(:defer).and_yield
+#           EM.should_receive(:defer).and_yield
           @provider_wakame.should_receive(:physical_server_watch)
           @provider_wakame.should_receive(:virtual_server_image_watch)
 
@@ -525,7 +525,7 @@ describe Tengine::Resource::Watcher do
           Tengine::Resource::Provider.should_receive(:all).and_return([@provider_ec2])
           @provider_ec2.should_receive(:virtual_server_type_watch)
           EM.should_receive(:add_periodic_timer).with(@provider_ec2.polling_interval).and_yield
-          EM.should_receive(:defer).and_yield
+#           EM.should_receive(:defer).and_yield
           # @provider_ec2.should_receive(:virtual_server_watch)
           # @provider_ec2.should_receive(:virtual_server_image_watch)
         end
@@ -571,7 +571,7 @@ describe Tengine::Resource::Watcher do
           Tengine::Resource::Provider.should_receive(:all).and_return([@provider_wakame])
           @provider_wakame.should_receive(:virtual_server_type_watch)
           EM.should_receive(:add_periodic_timer).with(@provider_wakame.polling_interval).and_yield
-          EM.should_receive(:defer).and_yield
+#           EM.should_receive(:defer).and_yield
           @provider_wakame.should_receive(:physical_server_watch)
           @provider_wakame.should_receive(:virtual_server_watch)
 
@@ -644,7 +644,7 @@ describe Tengine::Resource::Watcher do
           Tengine::Resource::Provider.should_receive(:all).and_return([@provider_ec2])
           @provider_ec2.should_receive(:virtual_server_type_watch)
           EM.should_receive(:add_periodic_timer).with(@provider_ec2.polling_interval).and_yield
-          EM.should_receive(:defer).and_yield
+#          EM.should_receive(:defer).and_yield
           # @provider_ec2.should_receive(:physical_server_watch)
           # @provider_ec2.should_receive(:virtual_server_watch)
         end

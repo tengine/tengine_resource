@@ -1,10 +1,13 @@
 #!/usr/bin/env ruby
 # -*- coding: utf-8 -*-
 $LOAD_PATH << File.expand_path("../lib", File.dirname(__FILE__))
-
 require "tengine_resource"
 
 @__watcher__ = Tengine::Resource::Watcher.new(ARGV)
-Signal.trap(:INT) { @__watcher__.shutdown }
 
-@__watcher__.start_daemon(__FILE__)
+require 'tengine/core/config'
+require "mongoid"
+
+config = Tengine::Core::Config.parse(ARGV)
+@__watcher__.run(__FILE__)
+Signal.trap(:INT) { @__watcher__.shutdown }

@@ -19,7 +19,7 @@ class Tengine::Resource::Watcher
     @pid = sprintf("process:%s/%d", ENV["MM_SERVER_NAME"], Process.pid)
     @daemonize_options = {
       :app_name => 'tengine_resource_watchd',
-      :ARGV => ['start'],
+      :ARGV => argv,
       :ontop => !@config[:tengined][:daemon],
       :monitor => !@config[:tengined][:monitor],
       :multiple => true,
@@ -42,12 +42,34 @@ class Tengine::Resource::Watcher
     Tengine::Event.default_sender = @sender
   end
 
+  def run(__file__)
+    action = (@daemonize_options[:ARGV][0] || :start).to_sym
+
+    case action
+    when :start
+      start_daemon(__file__)
+    when :stop
+      stop_daemon(__file__)
+    when :restart
+      stop_daemon(__file__)
+      start_daemon(__file__)
+    else
+      puts "[#{$!.class.name}] invalid option: #{action}"
+      raise
+    end
+  end
+
   def start_daemon(__file__)
     fname = File.basename __file__
     cwd = Dir.getwd
     Daemons.run_proc(fname, @daemonize_options) do
       Dir.chdir(cwd) { self.start }
     end
+  end
+
+  def stop_daemon(__file__)
+    fname = File.basename __file__
+    Daemons.run_proc(fname, @daemonize_options)
   end
 
   def start
@@ -65,14 +87,12 @@ class Tengine::Resource::Watcher
           # 仮想サーバタイプの監視
           provider.virtual_server_type_watch
           @periodic = EM.add_periodic_timer(provider.polling_interval) do
-            EM.defer do
-              # 物理サーバの監視
-              provider.physical_server_watch
-              # 仮想サーバの監視
-              provider.virtual_server_watch
-              # 仮想サーバイメージの監視
-              provider.virtual_server_image_watch
-            end
+            # 物理サーバの監視
+            provider.physical_server_watch
+            # 仮想サーバの監視
+            provider.virtual_server_watch
+            # 仮想サーバイメージの監視
+            provider.virtual_server_image_watch
           end
         end
       end
