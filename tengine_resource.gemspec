@@ -5,11 +5,11 @@
 
 Gem::Specification.new do |s|
   s.name = "tengine_resource"
-  s.version = "0.3.11"
+  s.version = "0.3.12"
 
   s.required_rubygems_version = Gem::Requirement.new(">= 0") if s.respond_to? :required_rubygems_version=
   s.authors = ["saishu", "w-irie", "taigou", "totty", "hiroshinakao", "g-morita", "guemon", "aoetk", "hattori-at-nt", "t-yamada", "y-karashima", "akm"]
-  s.date = "2011-11-20"
+  s.date = "2011-11-21"
   s.description = "tengine_resource provides physical/virtual server management"
   s.email = "tengine@nautilus-technologies.com"
   s.executables = ["tengine_resource_watchd"]
@@ -41,6 +41,7 @@ Gem::Specification.new do |s|
     "lib/tengine/resource/virtual_server.rb",
     "lib/tengine/resource/virtual_server_image.rb",
     "lib/tengine/resource/virtual_server_type.rb",
+    "lib/tengine/resource/watcher.rb",
     "lib/tengine_resource.rb",
     "spec/fixtures/goku_at_ec2_ap_northeast.rb",
     "spec/mongoid.yml",
@@ -51,12 +52,20 @@ Gem::Specification.new do |s|
     "spec/tengine/resource/net_ssh_spec.rb",
     "spec/tengine/resource/physical_server_spec.rb",
     "spec/tengine/resource/provider/ec2_spec.rb",
+    "spec/tengine/resource/provider/test_files/describe_host_nodes.json",
+    "spec/tengine/resource/provider/test_files/describe_images.json",
+    "spec/tengine/resource/provider/test_files/describe_instance_specs.json",
+    "spec/tengine/resource/provider/test_files/describe_instances.json",
+    "spec/tengine/resource/provider/test_files/run_instances.json",
+    "spec/tengine/resource/provider/test_files/terminate_instances.json",
+    "spec/tengine/resource/provider/wakame_api_spec.rb",
     "spec/tengine/resource/provider/wakame_spec.rb",
     "spec/tengine/resource/provider_spec.rb",
     "spec/tengine/resource/server_spec.rb",
     "spec/tengine/resource/virtual_server_image_spec.rb",
     "spec/tengine/resource/virtual_server_spec.rb",
     "spec/tengine/resource/virtual_server_type_spec.rb",
+    "spec/tengine/resource/watcher_spec.rb",
     "spec/tengine_resource_spec.rb",
     "tengine_resource.gemspec",
     "tmp/log/.gitignore"
