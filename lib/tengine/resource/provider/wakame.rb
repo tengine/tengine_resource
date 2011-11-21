@@ -462,41 +462,56 @@ class Tengine::Resource::Provider::Wakame < Tengine::Resource::Provider::Ec2
   # wakame api からの戻り値がのキーが文字列だったりシンボルだったりで統一されてないので暫定対応で
   # stringify_keys してます
 
-  def describe_instance_specs_for_api(uuids = [])
-    connect do |conn|
-      conn.describe_instance_specs(uuids).map(&:stringify_keys)
+  def hash_key_convert(hash, convert)
+    case convert
+    when :string
+      hash.map(&:stringify_keys!)
+    when :symbol
+      hash.map(&:symbolize_keys!)
     end
+    hash
   end
 
-  def describe_host_nodes_for_api
-    connect do |conn|
-      conn.describe_host_nodes.map(&:stringify_keys)
+  def describe_instance_specs_for_api(uuids = [], option = {})
+    result = connect do |conn|
+      conn.describe_instance_specs(uuids)
     end
+    hash_key_convert(result, option[:convert])
   end
 
-  def describe_instances_for_api(uuids = [])
-    connect do |conn|
-      conn.describe_instances(uuids).map(&:stringify_keys)
+  def describe_host_nodes_for_api(uuids = [], option = {})
+    result = connect do |conn|
+      conn.describe_host_nodes(uuids)
     end
+    hash_key_convert(result, option[:convert])
   end
 
-  def describe_images_for_api(uuids = [])
-    connect do |conn|
-      conn.describe_images(uuids).map(&:stringify_keys)
+  def describe_instances_for_api(uuids = [], option = {})
+    result = connect do |conn|
+      conn.describe_instances(uuids)
     end
+    hash_key_convert(result, option[:convert])
   end
 
-  def run_instances_for_api(uuids = [])
-    connect do |conn|
-      conn.run_instances(uuids).map(&:stringify_keys)
+  def describe_images_for_api(uuids = [], option = {})
+    result = connect do |conn|
+      conn.describe_images(uuids)
     end
+    hash_key_convert(result, option[:convert])
   end
 
-  def terminate_instances_for_api(uuids = [])
-    connect do |conn|
-      # wakame api からの戻り値がのキーが文字列だったりシンボルだったりで統一されてないので暫定対応
-      conn.terminate_instances(uuids).map(&:stringify_keys)
+  def run_instances_for_api(uuids = [], option = {})
+    result = connect do |conn|
+      conn.run_instances(uuids)
     end
+    hash_key_convert(result, option[:convert])
+  end
+
+  def terminate_instances_for_api(uuids = [], option = {})
+    result = connect do |conn|
+      conn.terminate_instances(uuids)
+    end
+    hash_key_convert(result, option[:convert])
   end
 
   private
