@@ -16,9 +16,6 @@ describe Tengine::Resource::Provider::Wakame do
         :port => 9001,
         :protocol => "https",
       },
-      :properties => {
-        :key_name => "ssh-xxxxx"
-      }
     )
   }
 
@@ -50,9 +47,33 @@ describe Tengine::Resource::Provider::Wakame do
           :ami_launch_index   => "0",
           :aws_availability_zone => "",
         }])
+      c.stub(:run_instances).
+        with("wmi-lucid6", 1, 1, [], nil, "", nil, "is-micro", nil, nil, "foo-server", nil).
+        and_return([{
+          :aws_image_id       => "wmi-lucid6",
+          :aws_reason         => "",
+          :aws_state_code     => "0",
+          :aws_owner          => "000000000888",
+          :aws_instance_id    => "i-123f1234",
+          :aws_reservation_id => "r-aabbccdd",
+          :aws_state          => "pending",
+          :dns_name           => "",
+          :aws_groups         => [""],
+          :private_dns_name   => "",
+          :aws_instance_type  => "is-micro",
+          :aws_launch_time    => "2008-1-1T00:00:00.000Z",
+          :aws_ramdisk_id     => "",
+          :aws_kernel_id      => "",
+          :ami_launch_index   => "0",
+          :aws_availability_zone => "",
+        }])
     end
 
     it "1台の起動" do
+      # キーを指定
+      subject.update_attributes(:properties => {
+        :key_name => "ssh-xxxxx"
+      })
       vi = subject.virtual_server_images.create(:provided_id => "wmi-lucid5")
       vt = subject.virtual_server_types.create(:provided_id => "is-small")
       ps = subject.physical_servers.create(:provided_id => "foo-dc")
@@ -60,6 +81,16 @@ describe Tengine::Resource::Provider::Wakame do
       vs.count.should == 1
       v = vs.first
       v.should be_valid
+      v.name.should == "name001"
+    end
+
+    it "keyがない場合の起動" do
+      vi = subject.virtual_server_images.create(:provided_id => "wmi-lucid6")
+      vt = subject.virtual_server_types.create(:provided_id => "is-micro")
+      ps = subject.physical_servers.create(:provided_id => "foo-server")
+      vs = subject.create_virtual_servers("name", vi, vt, ps, "description", 1)
+      vs.count.should == 1
+      v = vs.first
       v.name.should == "name001"
     end
   end

@@ -12,8 +12,8 @@ class Tengine::Resource::Provider
 
   field :name, :type => String
   field :description, :type => String
-  field :polling_interval, :type => Integer
-  field :properties, :type => Hash
+  field :polling_interval, :type => Integer, :default => 10
+  field :properties,       :type => Hash,    :default => {}
 
   validates :name, :presence => true, :uniqueness => true, :format => BASE_NAME.options
   index :name, :unique => true
