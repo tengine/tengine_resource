@@ -5,7 +5,7 @@
 
 Gem::Specification.new do |s|
   s.name = "tengine_resource"
-  s.version = "0.4.1"
+  s.version = "0.4.2"
 
   s.required_rubygems_version = Gem::Requirement.new(">= 0") if s.respond_to? :required_rubygems_version=
   s.authors = ["saishu", "w-irie", "taigou", "totty", "hiroshinakao", "g-morita", "guemon", "aoetk", "hattori-at-nt", "t-yamada", "y-karashima", "akm"]
@@ -26,6 +26,8 @@ Gem::Specification.new do |s|
     "VERSION",
     "bin/tengine_resource_watchd",
     "lib/tengine/resource.rb",
+    "lib/tengine/resource/config.rb",
+    "lib/tengine/resource/config/resource.rb",
     "lib/tengine/resource/credential.rb",
     "lib/tengine/resource/credential/ec2.rb",
     "lib/tengine/resource/credential/ec2/dummy.rb",
