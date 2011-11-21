@@ -528,21 +528,24 @@ class Tengine::Resource::Provider::Wakame < Tengine::Resource::Provider::Ec2
   def connect
     connection = nil
     if self.connection_settings[:test] || self.connection_settings["test"]
-      options = self.connection_settings[:options].symbolize_keys
       connection = ::Tama::Controllers::ControllerFactory.create_controller(:test)
 
-      connection.describe_instances_file =
-        File.expand_path(options[:describe_instances_file]) if options[:describe_instances_file]
-      connection.describe_images_file =
-        File.expand_path(options[:describe_images_file]) if options[:describe_images_file]
-      connection.run_instances_file =
-        File.expand_path(options[:run_instances_file]) if options[:run_instances_file]
-      connection.terminate_instances_file =
-        File.expand_path(options[:terminate_instances_file]) if options[:terminate_instances_file]
-      connection.describe_host_nodes_file  =
-        File.expand_path(options[:describe_host_nodes_file]) if options[:describe_host_nodes_file]
-      connection.describe_instance_specs_file =
-        File.expand_path(options[:describe_instance_specs_file]) if options[:describe_instance_specs_file]
+      options = self.connection_settings[:options] || self.connection_settings["options"]
+      if options
+        options.symbolize_keys!
+        connection.describe_instances_file =
+          File.expand_path(options[:describe_instances_file]) if options[:describe_instances_file]
+        connection.describe_images_file =
+          File.expand_path(options[:describe_images_file]) if options[:describe_images_file]
+        connection.run_instances_file =
+          File.expand_path(options[:run_instances_file]) if options[:run_instances_file]
+        connection.terminate_instances_file =
+          File.expand_path(options[:terminate_instances_file]) if options[:terminate_instances_file]
+        connection.describe_host_nodes_file  =
+          File.expand_path(options[:describe_host_nodes_file]) if options[:describe_host_nodes_file]
+        connection.describe_instance_specs_file =
+          File.expand_path(options[:describe_instance_specs_file]) if options[:describe_instance_specs_file]
+      end
     else
       h = [
         :account, :host, :port, :protocol, :private_network_data,
