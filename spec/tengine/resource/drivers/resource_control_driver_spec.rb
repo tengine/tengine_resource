@@ -9,8 +9,8 @@ describe 'resource_control_driver' do
   driver :resource_control_driver
 
   before(:all) do
-    Mongoid.observer_instances.clear
-    Mongoid.observers.clear
+    # モデルの更新などでObserverがイベントを発火しないように無効にしておきます
+    Tengine::Resource::Observer.disabled = true
   end
 
   before do
