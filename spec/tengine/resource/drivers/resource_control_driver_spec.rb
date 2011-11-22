@@ -63,5 +63,19 @@ describe 'resource_control_driver' do
         :provider_id => @provider._id,
         :virtual_servers => [v1._id, v2._id] })
     end
+
+    it "存在しない仮想サーバを停止しようとすると例外がraiseされる" do
+      v1 = @provider.virtual_servers.create!(:provided_id => 'i-f222222d', :name => 'i-f222222d')
+      v2 = @provider.virtual_servers.create!(:provided_id => 'i-f222222e', :name => 'i-f222222e')
+
+      # 存在するはずの仮想サーバのデータを削除して例外を起こします
+      Tengine::Resource::VirtualServer.delete_all
+
+      expect{
+        tengine.receive('仮想サーバ停止リクエストイベント', :properties => {
+            :provider_id => @provider._id,
+            :virtual_servers => [v1._id, v2._id] })
+      }.to raise_error(Mongoid::Errors::DocumentNotFound)
+    end
   end
 end
