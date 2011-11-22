@@ -5,11 +5,11 @@
 
 Gem::Specification.new do |s|
   s.name = "tengine_resource"
-  s.version = "0.4.7"
+  s.version = "0.4.8"
 
   s.required_rubygems_version = Gem::Requirement.new(">= 0") if s.respond_to? :required_rubygems_version=
   s.authors = ["saishu", "w-irie", "taigou", "totty", "hiroshinakao", "g-morita", "guemon", "aoetk", "hattori-at-nt", "t-yamada", "y-karashima", "akm"]
-  s.date = "2011-11-21"
+  s.date = "2011-11-22"
   s.description = "tengine_resource provides physical/virtual server management"
   s.email = "tengine@nautilus-technologies.com"
   s.executables = ["tengine_resource_watchd"]
@@ -62,6 +62,27 @@ Gem::Specification.new do |s|
     "spec/tengine/resource/provider/test_files/describe_instances.json",
     "spec/tengine/resource/provider/test_files/run_instances.json",
     "spec/tengine/resource/provider/test_files/terminate_instances.json",
+    "spec/tengine/resource/provider/wakame/00_describe_host_nodes_0_physical_servers.json",
+    "spec/tengine/resource/provider/wakame/01_describe_host_nodes_10_physical_servers.json",
+    "spec/tengine/resource/provider/wakame/02_describe_host_nodes_60_physical_servers.json",
+    "spec/tengine/resource/provider/wakame/10_describe_instances_0_virtual_servers.json",
+    "spec/tengine/resource/provider/wakame/11_describe_instances_10_virtual_servers.json",
+    "spec/tengine/resource/provider/wakame/12_describe_instances_after_run_instances.json",
+    "spec/tengine/resource/provider/wakame/13_describe_instances_after_terminate_instances.json",
+    "spec/tengine/resource/provider/wakame/20_describe_images_0_virtual_server_images.json",
+    "spec/tengine/resource/provider/wakame/21_describe_images_5_virtual_server_images.json",
+    "spec/tengine/resource/provider/wakame/22_describe_images_60_virtual_server_images.json",
+    "spec/tengine/resource/provider/wakame/30_describe_instance_specs_0_virtual_server_specs.json",
+    "spec/tengine/resource/provider/wakame/31_describe_instance_specs_4_virtual_server_specs.json",
+    "spec/tengine/resource/provider/wakame/40_run_instances_0_virtual_servers.json",
+    "spec/tengine/resource/provider/wakame/41_run_instances_1_virtual_servers.json",
+    "spec/tengine/resource/provider/wakame/42_run_instances_5_virtual_servers.json",
+    "spec/tengine/resource/provider/wakame/50_terminate_instances_0_virtual_servers.json",
+    "spec/tengine/resource/provider/wakame/51_terminate_instances_3_virtual_servers.json",
+    "spec/tengine/resource/provider/wakame/sync_physical_servers_spec.rb",
+    "spec/tengine/resource/provider/wakame/sync_virtual_server_images_spec.rb",
+    "spec/tengine/resource/provider/wakame/sync_virtual_server_types_spec.rb",
+    "spec/tengine/resource/provider/wakame/sync_virtual_servers_spec.rb",
     "spec/tengine/resource/provider/wakame_api_spec.rb",
     "spec/tengine/resource/provider/wakame_spec.rb",
     "spec/tengine/resource/provider_spec.rb",
@@ -77,7 +98,7 @@ Gem::Specification.new do |s|
   s.homepage = "http://github.com/tengine/tengine_resource"
   s.licenses = ["MPL/LGPL"]
   s.require_paths = ["lib"]
-  s.rubygems_version = "1.8.10"
+  s.rubygems_version = "1.8.11"
   s.summary = "tengine_resource provides physical/virtual server management"
 
   if s.respond_to? :specification_version then
