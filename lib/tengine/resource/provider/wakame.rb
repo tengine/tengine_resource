@@ -405,7 +405,7 @@ class Tengine::Resource::Provider::Wakame < Tengine::Resource::Provider::Ec2
 
   # virtual_server
   def differential_update_virtual_server_hash(hash)
-    properties = hash.symbolize_keys.dup
+    properties = hash.dup
     properties.deep_symbolize_keys!
     host_server = self.physical_servers.where(:provided_id => properties[:aws_availability_zone]).first
     virtual_server = self.virtual_servers.where(:provided_id => properties[:aws_instance_id]).first
@@ -414,9 +414,10 @@ class Tengine::Resource::Provider::Wakame < Tengine::Resource::Provider::Ec2
     virtual_server.provided_type_id = properties.delete(:aws_instance_type)
     virtual_server.status = properties.delete(:aws_state)
     virtual_server.host_server = host_server
-    virtual_server.address_order = [properties[:private_ip_address]]
-    %w[private_ip_address private_dns_name ip_address dns_name].each do |key|
-      virtual_server.addresses[key] = properties.delete(key.to_sym) || properties.delete(key.to_s)
+    virtual_server.address_order = [properties.delete(:private_ip_address)]
+    properties.delete(:ip_address).split(",").map do |i|
+      k, v = i.split("=")
+      virtual_server.addresses[k] = v
     end
     properties.each do |key, val|
       value =  properties.delete(key)
@@ -428,8 +429,7 @@ class Tengine::Resource::Provider::Wakame < Tengine::Resource::Provider::Ec2
         end
       end
     end
-    # address 暫定対応（見直しすべし）
-    virtual_server.save! if virtual_server.changed? && virtual_server.changes.values.all?{|v| !v.nil?}
+    virtual_server.save! if virtual_server.changed? && !virtual_server.changes.values.all?{|v| v.nil?}
   end
 
   def differential_update_virtual_server_hashs(hashs)
@@ -446,8 +446,9 @@ class Tengine::Resource::Provider::Wakame < Tengine::Resource::Provider::Ec2
     properties.deep_symbolize_keys!
     host_server = self.physical_servers.where(:provided_id => properties[:aws_availability_zone]).first
     addresses = {}
-    %w[private_ip_address private_dns_name ip_address dns_name].each do |key|
-      addresses[key] = properties.delete(key.to_sym)
+    properties.delete(:ip_address).split(",").map do |i|
+      k, v = i.split("=")
+      addresses[k] = v
     end
     self.virtual_servers.create!(
       # 初期登録時、default 値として name には一意な provided_id を name へ登録します
@@ -457,8 +458,8 @@ class Tengine::Resource::Provider::Wakame < Tengine::Resource::Provider::Ec2
       :provided_type_id => properties.delete(:aws_instance_type),
       :status => properties.delete(:aws_state),
       :host_server => host_server,
-      :address_order => [properties[:private_ip_address]],
       :addresses => addresses,
+      :address_order => [properties.delete(:private_ip_address)],
       :properties => properties)
   end
 

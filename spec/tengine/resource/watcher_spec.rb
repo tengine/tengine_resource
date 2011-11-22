@@ -439,12 +439,7 @@ describe Tengine::Resource::Watcher do
             :provided_type_id => "is-demospec",
             :host_server => @physical_server_wakame,
             :status => "running",
-            :addresses => {
-              :private_ip_address => "192.168.2.188",
-              :private_dns_name => "jria301q.shpoolxx.vdc.local",
-              :ip_address => "nw-data=192.168.2.188",
-              :dns_name => "nw-data=jria301q.shpoolxx.vdc.local",
-            },
+            :addresses => "nw-data=192.168.2.188",
             :address_order => ["192.168.2.188"],
             :properties => {
               :aws_kernel_id => "",
@@ -856,7 +851,7 @@ describe Tengine::Resource::Watcher do
       :aws_state_code => 1,
       :aws_image_id => "wmi-lucid5",
       :root_device_type => "",
-      :ip_address => "nw-data192.168.2.188",
+      :ip_address => "nw-data=192.168.2.188",
       :dns_name => "nw-data=jria301q.shpoolxx.vdc.local",
       :monitoring_state => "",
       :aws_instance_type => "is-demospec",
