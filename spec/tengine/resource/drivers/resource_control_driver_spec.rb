@@ -8,6 +8,11 @@ describe 'resource_control_driver' do
   target_dsl File.expand_path("../../../../lib/tengine/resource/drivers/resource_control_driver.rb", File.dirname(__FILE__))
   driver :resource_control_driver
 
+  before(:all) do
+    Mongoid.observer_instances.clear
+    Mongoid.observers.clear
+  end
+
   before do
     Tengine::Resource::Provider::Wakame.delete_all(:name => 'tama0001')
     @provider = Tengine::Resource::Provider::Wakame.create(
