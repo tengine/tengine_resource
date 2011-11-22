@@ -4,7 +4,7 @@ require 'tengine/support/core_ext/hash/keys'
 
 class Tengine::Resource::Provider::Wakame < Tengine::Resource::Provider::Ec2
 
-  field :connection_settings, :type => Hash
+  # field :connection_settings, :type => Hash # 継承元のTengine::Resource::Provider::Ec2で定義されているので不要
 
   PHYSICAL_SERVER_STATES = [:online, :offline].freeze
 
