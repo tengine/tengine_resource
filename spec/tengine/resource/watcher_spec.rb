@@ -388,19 +388,15 @@ describe Tengine::Resource::Watcher do
 
         it "更新対象があったら更新完了後イベントを発火する" do
           expect { @watcher.start }.should raise_error(NotImplementedError)
-          pending "未実装"
         end
         it "削除対象があったら削除完了後イベントを発火する" do
           expect { @watcher.start }.should raise_error(NotImplementedError)
-          pending "未実装"
         end
         it "更新対象がなかったらイベントは発火しない" do
           expect { @watcher.start }.should raise_error(NotImplementedError)
-          pending "未実装"
         end
         it "登録対象があったら登録完了後イベントを発火する" do
           expect { @watcher.start }.should raise_error(NotImplementedError)
-          pending "未実装"
         end
       end   # end to ec2
     end   # end to :phyical_server_watch
@@ -575,19 +571,15 @@ describe Tengine::Resource::Watcher do
 
         it "更新対象があったら更新完了後イベントを発火する" do
           expect { @watcher.start }.should raise_error(NotImplementedError)
-          pending "未実装"
         end
         it "削除対象があったら削除完了後イベントを発火する" do
           expect { @watcher.start }.should raise_error(NotImplementedError)
-          pending "未実装"
         end
         it "更新対象がなかったらイベントは発火しない" do
           expect { @watcher.start }.should raise_error(NotImplementedError)
-          pending "未実装"
         end
         it "登録対象があったら登録完了後イベントを発火する" do
           expect { @watcher.start }.should raise_error(NotImplementedError)
-          pending "未実装"
         end
       end   # end to ec2
     end   # end to :virtual_server_watch
@@ -694,19 +686,15 @@ describe Tengine::Resource::Watcher do
 
         it "更新対象があったら更新完了後イベントを発火する" do
           expect { @watcher.start }.should raise_error(NotImplementedError)
-          pending "未実装"
         end
         it "削除対象があったら削除完了後イベントを発火する" do
           expect { @watcher.start }.should raise_error(NotImplementedError)
-          pending "未実装"
         end
         it "更新対象がなかったらイベントは発火しない" do
           expect { @watcher.start }.should raise_error(NotImplementedError)
-          pending "未実装"
         end
         it "登録対象があったら登録完了後イベントを発火する" do
           expect { @watcher.start }.should raise_error(NotImplementedError)
-          pending "未実装"
         end
       end   # end to ec2
     end   # end to :virtual_server_image_watch
