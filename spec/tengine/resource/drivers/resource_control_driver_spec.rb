@@ -71,11 +71,13 @@ describe 'resource_control_driver' do
       # 存在するはずの仮想サーバのデータを削除して例外を起こします
       Tengine::Resource::VirtualServer.delete_all
 
-      expect{
+      begin
         tengine.receive('仮想サーバ停止リクエストイベント', :properties => {
             :provider_id => @provider._id,
             :virtual_servers => [v1._id, v2._id] })
-      }.to raise_error(Mongoid::Errors::DocumentNotFound)
+        fail
+      rescue Mongoid::Errors::DocumentNotFound => e
+      end
     end
   end
 end
