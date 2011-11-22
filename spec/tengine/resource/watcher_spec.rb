@@ -8,11 +8,6 @@ require 'controllers/controller'
 
 describe Tengine::Resource::Watcher do
 
-  before(:all) do
-    # モデルの更新などでObserverがイベントを発火するテストを行うので、有効にする
-    Tengine::Resource::Observer.disabled = false
-  end
-
   before do
     @mq_config = {
       :connection => {
