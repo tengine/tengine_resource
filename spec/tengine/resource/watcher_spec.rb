@@ -26,6 +26,11 @@ describe Tengine::Resource::Watcher do
     }
   end
 
+  after(:all) do
+    Mongoid.observer_instances.clear
+    Mongoid.observers.clear
+  end
+
   describe :initialize do
     it "default" do
       Tengine::Core::MethodTraceable.stub(:disabled=)
