@@ -12,6 +12,7 @@ class Tengine::Resource::Watcher
 
   def initialize(argv = [])
     @config = Tengine::Resource::Config::Resource.parse(argv)
+    @config.setup_loggers
     @pid = sprintf("process:%s/%d", ENV["MM_SERVER_NAME"], Process.pid)
     @mq_config = config[:event_queue].to_hash
     @mq_config[:sender] = { :keep_connection => true }

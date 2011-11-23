@@ -23,14 +23,14 @@ describe Tengine::Resource::Watcher do
       },
       :sender => {
         :keep_connection => true
-        }
+        },
     }
   end
 
   describe :initialize do
     it "default" do
       Tengine::Core::MethodTraceable.stub(:disabled=)
-      watcher = Tengine::Resource::Watcher.new
+      watcher = Tengine::Resource::Watcher.new(%w[--log-common-level warn])
       watcher.config[:process]['daemon'].should == false
       watcher.config[:process][:daemon].should == false
       watcher.config[:event_queue][:connection][:host].should == "localhost"
@@ -42,7 +42,7 @@ describe Tengine::Resource::Watcher do
 
   describe :sender do
     before do
-      @watcher = Tengine::Resource::Watcher.new
+      @watcher = Tengine::Resource::Watcher.new(%w[--log-common-level warn])
       EM.should_receive(:run).and_yield
 
       # コネクションの mock を生成
@@ -79,7 +79,7 @@ describe Tengine::Resource::Watcher do
 
   describe :start do
     before do
-      @watcher = Tengine::Resource::Watcher.new
+      @watcher = Tengine::Resource::Watcher.new(%w[--log-common-level warn])
       EM.should_receive(:run).and_yield
 
       # コネクションの mock を生成
