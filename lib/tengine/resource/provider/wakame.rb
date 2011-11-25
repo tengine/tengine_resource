@@ -41,7 +41,7 @@ class Tengine::Resource::Provider::Wakame < Tengine::Resource::Provider::Ec2
       count,  # min
       count,  # max
       [],     # grouop id
-      self.properties[:key_name],
+      self.properties['key_name'] || self.properties[:key_name],
       "",     # user data
       nil,    # kernel id
       nil     # ramdisk id
@@ -561,20 +561,9 @@ class Tengine::Resource::Provider::Wakame < Tengine::Resource::Provider::Ec2
           File.expand_path(options[:describe_instance_specs_file]) if options[:describe_instance_specs_file]
       end
     else
-      h = [
-        :account, :host, :port, :protocol, :private_network_data,
-      ].inject({}) {|r, i|
-        r.update i => self.connection_settings[i] || self.connection_settings[i.to_s]
-      }
-      connection = ::Tama::Controllers::ControllerFactory.create_controller(
-        h[:account],
-        nil,
-        nil,
-        nil,
-        h[:host],
-        h[:port],
-        h[:protocol]
-        )
+      options = self.connection_settings.symbolize_keys
+      args = [:account, :ec2_host, :ec2_port, :ec2_protocol, :wakame_host, :wakame_port, :wakame_protocol].map{|key| options[key]}
+      connection = ::Tama::Controllers::ControllerFactory.create_controller(*args)
     end
     yield connection
   end
