@@ -122,11 +122,13 @@ describe Tengine::Resource::Watcher do
           },
           :polling_interval => 5,
           :connection_settings => {
-            :account => "test",
-            :host => "192.168.0.10",
-            :port => 80,
-            :protocol => "http",
-            :private_network_data => "",
+            :account => "tama_account1",
+            :ec2_host => "10.10.10.10",
+            :ec2_port => 80,
+            :ec2_protocol => "https",
+            :wakame_host => "192.168.0.10",
+            :wakame_port => 8080,
+            :wakame_protocol => "http",
           },
         })
     end
@@ -187,7 +189,7 @@ describe Tengine::Resource::Watcher do
           @tama_controller_factory = mock(::Tama::Controllers::ControllerFactory.allocate)
           ::Tama::Controllers::ControllerFactory.
             should_receive(:create_controller).
-            with("test", nil, nil, nil, "192.168.0.10", 80, "http").
+            with("tama_account1", "10.10.10.10", 80, "https", "192.168.0.10", 8080, "http").
             and_return(@tama_controller_factory)
         end
 
@@ -311,7 +313,7 @@ describe Tengine::Resource::Watcher do
           @tama_controller_factory = mock(::Tama::Controllers::ControllerFactory.allocate)
           ::Tama::Controllers::ControllerFactory.
             should_receive(:create_controller).
-            with("test", nil, nil, nil, "192.168.0.10", 80, "http").
+            with("tama_account1", "10.10.10.10", 80, "https", "192.168.0.10", 8080, "http").
             and_return(@tama_controller_factory)
         end
 
@@ -490,7 +492,7 @@ describe Tengine::Resource::Watcher do
           @tama_controller_factory = mock(::Tama::Controllers::ControllerFactory.allocate)
           ::Tama::Controllers::ControllerFactory.
             should_receive(:create_controller).
-            with("test", nil, nil, nil, "192.168.0.10", 80, "http").
+            with("tama_account1", "10.10.10.10", 80, "https", "192.168.0.10", 8080, "http").
             and_return(@tama_controller_factory)
         end
 
@@ -608,7 +610,7 @@ describe Tengine::Resource::Watcher do
           @tama_controller_factory = mock(::Tama::Controllers::ControllerFactory.allocate)
           ::Tama::Controllers::ControllerFactory.
             should_receive(:create_controller).
-            with("test", nil, nil, nil, "192.168.0.10", 80, "http").
+            with("tama_account1", "10.10.10.10", 80, "https", "192.168.0.10", 8080, "http").
             and_return(@tama_controller_factory)
         end
 
