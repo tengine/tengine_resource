@@ -50,7 +50,7 @@ class Tengine::Resource::Config::Resource < Tengine::Support::Config::Definition
   def load_file(filepath)
     super
   rescue Exception => e
-    raise Tengine::Core::ConfigError, "Exception occurred when loading configuration file: #{filepath}."
+    raise Tengine::Core::ConfigError, "[#{e.class.name}] #{e.message} when loading configuration file: #{filepath}."
   end
 
 
@@ -74,7 +74,7 @@ EOS
         'database' => 'tengine_production',
       })
 
-    group(:event_queue, :hidden => true) do
+    group(:event_queue) do
       add(:connection, Tengine::Core::Config::Core::AmqpConnection)
       add(:exchange  , Tengine::Support::Config::Amqp::Exchange, :defaults => {:name => 'tengine_event_exchange'})
       add(:queue     , Tengine::Support::Config::Amqp::Queue   , :defaults => {:name => 'tengine_event_queue'})
