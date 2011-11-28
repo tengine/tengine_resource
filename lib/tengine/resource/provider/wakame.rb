@@ -404,6 +404,8 @@ class Tengine::Resource::Provider::Wakame < Tengine::Resource::Provider::Ec2
   end
 
   # virtual_server
+  PRIVATE_IP_ADDRESS = "private_ip_address".freeze
+
   def differential_update_virtual_server_hash(hash)
     properties = hash.dup
     properties.deep_symbolize_keys!
@@ -414,7 +416,7 @@ class Tengine::Resource::Provider::Wakame < Tengine::Resource::Provider::Ec2
     virtual_server.provided_type_id = properties.delete(:aws_instance_type)
     virtual_server.status = properties.delete(:aws_state)
     virtual_server.host_server = host_server
-    virtual_server.address_order = [properties.delete(:private_ip_address)]
+    virtual_server.addresses[PRIVATE_IP_ADDRESS] = properties.delete(:private_ip_address)
     properties.delete(:ip_address).split(",").map do |i|
       k, v = i.split("=")
       virtual_server.addresses[k] = v
@@ -445,7 +447,7 @@ class Tengine::Resource::Provider::Wakame < Tengine::Resource::Provider::Ec2
     properties = hash.dup
     properties.deep_symbolize_keys!
     host_server = self.physical_servers.where(:provided_id => properties[:aws_availability_zone]).first
-    addresses = {}
+    addresses = {PRIVATE_IP_ADDRESS => properties.delete(:private_ip_address)}
     properties.delete(:ip_address).split(",").map do |i|
       k, v = i.split("=")
       addresses[k] = v
@@ -459,7 +461,7 @@ class Tengine::Resource::Provider::Wakame < Tengine::Resource::Provider::Ec2
       :status => properties.delete(:aws_state),
       :host_server => host_server,
       :addresses => addresses,
-      :address_order => [properties.delete(:private_ip_address)],
+      :address_order => [PRIVATE_IP_ADDRESS],
       :properties => properties)
   end
 
