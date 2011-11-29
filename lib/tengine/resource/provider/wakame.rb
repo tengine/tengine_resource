@@ -31,7 +31,7 @@ class Tengine::Resource::Provider::Wakame < Tengine::Resource::Provider::Ec2
   # @param  [String]                                 description  what this virtual server is
   # @param  [Numeric]                                count        number of vortial servers to boot
   # @return [Array<Tengine::Resource::VirtualServer>]
-  def create_virtual_servers name, image, type, physical, description = "", count = 1
+  def create_virtual_servers(name, image, type, physical, description = "", count = 1, &block)
     return super(
       name,
       image,
@@ -44,7 +44,8 @@ class Tengine::Resource::Provider::Wakame < Tengine::Resource::Provider::Ec2
       self.properties['key_name'] || self.properties[:key_name],
       "",     # user data
       nil,    # kernel id
-      nil     # ramdisk id
+      nil,     # ramdisk id
+      &block
     )
   end
 

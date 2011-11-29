@@ -86,7 +86,7 @@ class Tengine::Resource::Provider::Ec2 < Tengine::Resource::Provider
   # @return [Array<Tengine::Resource::VirtualServer>]
   def create_virtual_servers name, image, type, physical, description, min_count, max_count, group_ids, key_name, user_data = "", kernel_id, ramdisk_id
     connect {|conn|
-      conn.run_instances(
+      results = conn.run_instances(
         image.provided_id,
         min_count,
         max_count,
@@ -99,12 +99,16 @@ class Tengine::Resource::Provider::Ec2 < Tengine::Resource::Provider
         ramdisk_id,
         physical,
         nil  # <- block_device_mappings
-      ).map.with_index {|hash, idx|
-        self.virtual_servers.create(
+      )
+      yield if block_given? # テスト用のブロックの呼び出し
+      results.map.with_index {|hash, idx|
+        provided_id = hash.delete(:aws_instance_id)
+        next if self.virtual_servers.count(:conditions => {:provided_id => provided_id}) > 0
+        self.virtual_servers.create!(
           :name                 => sprintf("%s%03d", name, idx + 1), # 1 origin
           :address_order        => address_order,
           :description          => description,
-          :provided_id          => hash.delete(:aws_instance_id),
+          :provided_id          => provided_id,
           :provided_image_id    => hash.delete(:aws_image_id),
           :provided_type_id     => hash.delete(:aws_type_id),
           :status               => hash.delete(:aws_state),

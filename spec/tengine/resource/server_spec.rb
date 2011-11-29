@@ -42,7 +42,7 @@ describe Tengine::Resource::Server do
   end
 
   context "nameはユニーク" do
-    [Tengine::Resource::Server, Tengine::Resource::PhysicalServer, Tengine::Resource::VirtualServer].each do |klass|
+    [Tengine::Resource::PhysicalServer, Tengine::Resource::VirtualServer].each do |klass|
       context "#{klass.name}#name はユニーク" do
         before do
           Tengine::Resource::Server.delete_all
