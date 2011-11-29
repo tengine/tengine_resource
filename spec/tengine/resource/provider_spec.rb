@@ -129,6 +129,28 @@ describe Tengine::Resource::Provider do
         }.to_not raise_error
       }.to change(Tengine::Resource::VirtualServer, :count).by(1) # 1台だけ起動される
     end
+
+    context "重複チェックを行った後に、別のプロセスなどとほとんど同時に書き込んだ場合は、バリデーションエラー／一意制約違反となるがエラーとしては扱わない" do
+      [:ja, :en, nil].each do |locale|
+        it "localeが#{locale.inspect}" do
+          I18n.locale = locale
+          expect{
+            expect{
+              @provider.virtual_servers.should_receive(:count).with(any_args).and_return do
+                @provider.virtual_server_watch
+                0 # 「重複するものは見つからなかった」
+              end
+              @provider.create_virtual_servers(
+                "test",
+                mock(:server_image1, :provided_id => "img-aaaa"),
+                mock(:server_type1, :provided_id => "type1"),
+                mock(:physical1, :provided_id => "server1"),
+                "", 1)
+            }.to_not raise_error
+          }.to change(Tengine::Resource::VirtualServer, :count).by(1) # 1台だけ起動される
+        end
+      end
+    end
   end
 
 

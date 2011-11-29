@@ -104,22 +104,27 @@ class Tengine::Resource::Provider::Ec2 < Tengine::Resource::Provider
       results.map.with_index {|hash, idx|
         provided_id = hash.delete(:aws_instance_id)
         next if self.virtual_servers.count(:conditions => {:provided_id => provided_id}) > 0
-        self.virtual_servers.create!(
-          :name                 => sprintf("%s%03d", name, idx + 1), # 1 origin
-          :address_order        => address_order,
-          :description          => description,
-          :provided_id          => provided_id,
-          :provided_image_id    => hash.delete(:aws_image_id),
-          :provided_type_id     => hash.delete(:aws_type_id),
-          :status               => hash.delete(:aws_state),
-          :properties           => hash,
-          :addresses            => {
-#             :dns_name           => hash.delete(:dns_name),
-#             :ip_address         => hash.delete(:ip_address),
-#             :private_dns_name   => hash.delete(:private_dns_name),
-#             :private_ip_address => hash.delete(:private_ip_address),
-          }
-        )
+        begin
+          self.virtual_servers.create!(
+            :name                 => sprintf("%s%03d", name, idx + 1), # 1 origin
+            :address_order        => address_order,
+            :description          => description,
+            :provided_id          => provided_id,
+            :provided_image_id    => hash.delete(:aws_image_id),
+            :provided_type_id     => hash.delete(:aws_type_id),
+            :status               => hash.delete(:aws_state),
+            :properties           => hash,
+            :addresses            => {
+  #             :dns_name           => hash.delete(:dns_name),
+  #             :ip_address         => hash.delete(:ip_address),
+  #             :private_dns_name   => hash.delete(:private_dns_name),
+  #             :private_ip_address => hash.delete(:private_ip_address),
+            })
+        rescue Mongo::OperationFailure => e
+          raise e unless e.message =~ /E11000 duplicate key error/
+        rescue Mongoid::Errors::Validations => e
+          raise e unless e.document.errors[:provided_id].any?{|s| s =~ /taken/}
+        end
       }
     }
   end
