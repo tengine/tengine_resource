@@ -124,7 +124,7 @@ describe Tengine::Resource::Provider do
             mock(:physical1, :provided_id => "server1"),
             "", 1) do
             # このブロックはテスト用に使われるもので、リクエストを送った直後、データを登録する前に呼び出されます。
-            @provider.virtual_server_watch
+            @provider.virtual_server_watch # 先にtengine_resource_watchdが更新してしまう
           end
         }.to_not raise_error
       }.to change(Tengine::Resource::VirtualServer, :count).by(1) # 1台だけ起動される
@@ -137,7 +137,7 @@ describe Tengine::Resource::Provider do
           expect{
             expect{
               @provider.virtual_servers.should_receive(:count).with(any_args).and_return do
-                @provider.virtual_server_watch
+                @provider.virtual_server_watch # 先にtengine_resource_watchdが更新してしまう
                 0 # 「重複するものは見つからなかった」
               end
               @provider.create_virtual_servers(
@@ -151,6 +151,72 @@ describe Tengine::Resource::Provider do
         end
       end
     end
+
+    context "重複チェックを行った後に、別のプロセスなどとほとんど同時に書き込んだ場合は、バリデーションエラー／一意制約違反となるがエラーとしては扱わない" do
+
+      instance_hash = {
+        :aws_kernel_id=>"",
+        :aws_launch_time=>"2011-10-18T06:51:16Z",
+        :tags=>{},
+        :aws_reservation_id=>"",
+        :aws_owner=>"a-shpoolxx",
+        :instance_lifecycle=>"",
+        :block_device_mappings=>
+         [{:ebs_volume_id=>"",
+           :ebs_status=>"",
+           :ebs_attach_time=>"",
+           :ebs_delete_on_termination=>false,
+           :device_name=>""}],
+        :ami_launch_index=>"",
+        :root_device_name=>"",
+        :aws_ramdisk_id=>"",
+        :aws_availability_zone=>"physical_server_uuid_01",
+        :aws_groups=>nil,
+        :spot_instance_request_id=>"",
+        :ssh_key_name=>nil,
+        :virtualization_type=>"",
+        :placement_group_name=>"",
+        :requester_id=>"",
+        :aws_instance_id=>"virtual_server_uuid_91",
+        :aws_product_codes=>[],
+        :client_token=>"",
+        :private_ip_address=>"192.168.2.91",
+        :architecture=>"x86_64",
+        :aws_state_code=>0,
+        :aws_image_id=>"virtual_server_image_uuid_01",
+        :root_device_type=>"",
+        :ip_address=>
+         "nw-data=192.168.2.91,nw-outside=172.16.0.91,nw-data_2=192.168.3.91,nw-outside_2=172.16.1.91",
+        :dns_name=>
+         "nw-data=jria301q.shpoolxx.vdc.local,nw-outside=jria301q.shpoolxx.vdc.public,nw-data_2=jria301q.shpoolxx.vdc.local,nw-outside_2=jria301q.shpoolxx.vdc.public",
+        :monitoring_state=>"",
+        :aws_instance_type=>"virtual_server_spec_uuid_01",
+        :aws_state=>"running",
+        :private_dns_name=>"jria301q.shpoolxx.vdc.local",
+        :aws_reason=>""
+      }
+
+      [:ja, :en, nil].each do |locale|
+        it "localeが#{locale.inspect}" do
+          I18n.locale = locale
+          @provider.stub(:partion_instances).and_return([
+              [instance_hash], [], []
+            ])
+          expect{
+            # expect{
+              @provider.create_virtual_servers(
+                "test",
+                mock(:server_image1, :provided_id => "img-aaaa"),
+                mock(:server_type1, :provided_id => "type1"),
+                mock(:physical1, :provided_id => "server1"),
+                "", 1)
+              @provider.virtual_server_watch # 後からtengine_resource_watchdが更新しようとする
+            # }.to_not raise_error
+          }.to change(Tengine::Resource::VirtualServer, :count).by(1) # 1台だけ起動される
+        end
+      end
+    end
+
   end
 
 
