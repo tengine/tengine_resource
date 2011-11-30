@@ -11,7 +11,7 @@
     "ha_enabled": 0,
     "network": [],
     "arch": "x86_64",
-    "host_node": "physical_server_uuid_01",
+    "host_node": "",
     "created_at": "2011-10-18T06:48:47Z",
     "netfilter_group_id": ["ng-demofgr"],
     "ssh_key_pair": null,

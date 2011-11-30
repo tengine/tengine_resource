@@ -106,6 +106,12 @@ class Tengine::Resource::Provider::Ec2 < Tengine::Resource::Provider
         if server = self.virtual_servers.find(:first, :conditions => {:provided_id => provided_id})
           server
         else
+          host_server_provided_id = hash[:aws_availability_zone]
+          host_server_provided_id = physical if host_server_provided_id.nil? || host_server_provided_id.blank?
+          # findではなくfirstで検索しているので、もしhost_server_provided_idで指定されるサーバが見つからなくても
+          # host_serverがnilとして扱われるが、仮想サーバ自身の登録は行われます
+          host_server = (host_server_provided_id && !host_server_provided_id.blank?) ?
+            Tengine::Resource::PhysicalServer.first(:conditions => {:provided_id => host_server_provided_id}) : nil
           begin
             self.virtual_servers.create!(
               :name                 => sprintf("%s%03d", name, idx + 1), # 1 origin
@@ -114,6 +120,7 @@ class Tengine::Resource::Provider::Ec2 < Tengine::Resource::Provider
               :provided_id          => provided_id,
               :provided_image_id    => hash.delete(:aws_image_id),
               :provided_type_id     => hash.delete(:aws_type_id),
+              :host_server_id       => host_server ? host_server.id : nil,
               :status               => hash.delete(:aws_state),
               :properties           => hash,
               :addresses            => {
