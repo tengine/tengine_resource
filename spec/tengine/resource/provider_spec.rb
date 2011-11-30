@@ -117,7 +117,7 @@ describe Tengine::Resource::Provider do
     it "プロバイダへのリクエスト送信直後、登録処理を行う前に、tengine_resource_watchdが登録を行ってしまうと、二重登録される" do
       expect{
         expect{
-          @provider.create_virtual_servers(
+          results = @provider.create_virtual_servers(
             "test",
             mock(:server_image1, :provided_id => "img-aaaa"),
             mock(:server_type1, :provided_id => "type1"),
@@ -126,6 +126,7 @@ describe Tengine::Resource::Provider do
             # このブロックはテスト用に使われるもので、リクエストを送った直後、データを登録する前に呼び出されます。
             @provider.virtual_server_watch # 先にtengine_resource_watchdが更新してしまう
           end
+          results.each{|result| result.should_not == nil}
         }.to_not raise_error
       }.to change(Tengine::Resource::VirtualServer, :count).by(1) # 1台だけ起動される
     end
@@ -136,16 +137,18 @@ describe Tengine::Resource::Provider do
           I18n.locale = locale
           expect{
             expect{
-              @provider.virtual_servers.should_receive(:count).with(any_args).and_return do
+              @provider.virtual_servers.should_receive(:find).with(any_args).and_return do
                 @provider.virtual_server_watch # 先にtengine_resource_watchdが更新してしまう
                 0 # 「重複するものは見つからなかった」
               end
-              @provider.create_virtual_servers(
+              results = @provider.create_virtual_servers(
                 "test",
                 mock(:server_image1, :provided_id => "img-aaaa"),
                 mock(:server_type1, :provided_id => "type1"),
                 mock(:physical1, :provided_id => "server1"),
-                "", 1)
+                "", 1
+                )
+              results.each{|result| result.should_not == nil}
             }.to_not raise_error
           }.to change(Tengine::Resource::VirtualServer, :count).by(1) # 1台だけ起動される
         end
@@ -204,14 +207,15 @@ describe Tengine::Resource::Provider do
             ])
           expect{
             # expect{
-              @provider.create_virtual_servers(
+              results = @provider.create_virtual_servers(
                 "test",
                 mock(:server_image1, :provided_id => "img-aaaa"),
                 mock(:server_type1, :provided_id => "type1"),
                 mock(:physical1, :provided_id => "server1"),
                 "", 1)
+              results.each{|result| result.should_not == nil}
               @provider.virtual_server_watch # 後からtengine_resource_watchdが更新しようとする
-            # }.to_not raise_error
+             # }.to_not raise_error
           }.to change(Tengine::Resource::VirtualServer, :count).by(1) # 1台だけ起動される
         end
       end
