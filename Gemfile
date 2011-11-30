@@ -16,8 +16,6 @@ gem "right_aws", "~> 2.1.0"
 
 gem "net-ssh", "~> 2.2.1"
 
-gem "mongoid", "~> 2.3.3"
-
 # Add dependencies to develop your gem here.
 # Include everything needed to run rake, tests, features, etc.
 group :development do
