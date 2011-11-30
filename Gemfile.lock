@@ -95,7 +95,7 @@ DEPENDENCIES
   bundler (~> 1.0.18)
   factory_girl (~> 2.1.2)
   jeweler (~> 1.6.4)
-  mongoid (= 2.3.3)
+  mongoid (~> 2.3.3)
   net-ssh (~> 2.2.1)
   right_aws (~> 2.1.0)
   rspec (~> 2.6.0)
