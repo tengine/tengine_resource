@@ -83,14 +83,14 @@ class Tengine::Resource::Watcher
         providers = Tengine::Resource::Provider.all
         providers.each do |provider|
           # 仮想サーバタイプの監視
-          provider.virtual_server_type_watch
+          provider.sync_virtual_server_types
           @periodic = EM.add_periodic_timer(provider.polling_interval) do
             # 物理サーバの監視
-            provider.physical_server_watch
+            provider.sync_physical_servers
             # 仮想サーバの監視
-            provider.virtual_server_watch
+            provider.sync_virtual_servers
             # 仮想サーバイメージの監視
-            provider.virtual_server_image_watch
+            provider.sync_virtual_server_images
           end
         end
       end

@@ -91,8 +91,8 @@ class Tengine::Resource::Provider::Wakame < Tengine::Resource::Provider::Ec2
 
 
   # 仮想サーバタイプの監視
-  def virtual_server_type_watch
-    log_prefix = "#{self.class.name}#virtual_server_type_watch (provider:#{self.name}):"
+  def sync_virtual_server_types
+    log_prefix = "#{self.class.name}#sync_virtual_server_types (provider:#{self.name}):"
 
     # APIからの仮想サーバタイプ情報を取得
     instance_specs = describe_instance_specs_for_api
@@ -138,8 +138,8 @@ class Tengine::Resource::Provider::Wakame < Tengine::Resource::Provider::Ec2
   end
 
   # 物理サーバの監視
-  def physical_server_watch
-    log_prefix = "#{self.class.name}#physical_server_watch (provider:#{self.name}):"
+  def sync_physical_servers
+    log_prefix = "#{self.class.name}#sync_physical_servers (provider:#{self.name}):"
 
     # APIからの物理サーバ情報を取得
     host_nodes = describe_host_nodes_for_api
@@ -179,8 +179,8 @@ class Tengine::Resource::Provider::Wakame < Tengine::Resource::Provider::Ec2
   end
 
   # 仮想サーバの監視
-  def virtual_server_watch
-    log_prefix = "#{self.class.name}#virtual_server_watch (provider:#{self.name}):"
+  def sync_virtual_servers
+    log_prefix = "#{self.class.name}#sync_virtual_servers (provider:#{self.name}):"
 
     # APIからの仮想サーバ情報を取得
     instances = describe_instances_for_api
@@ -201,7 +201,7 @@ class Tengine::Resource::Provider::Wakame < Tengine::Resource::Provider::Ec2
   private
 
   def partion_instances(instances)
-    log_prefix = "#{self.class.name}#virtual_server_watch (provider:#{self.name}):"
+    log_prefix = "#{self.class.name}#sync_virtual_servers (provider:#{self.name}):"
     create_instances, update_instances, destroy_servers = [], [], []
     old_servers = self.virtual_servers
     Tengine.logger.debug "#{log_prefix} #{old_servers.inspect}"
@@ -225,8 +225,8 @@ class Tengine::Resource::Provider::Wakame < Tengine::Resource::Provider::Ec2
   public
 
   # 仮想サーバイメージの監視
-  def virtual_server_image_watch
-    log_prefix = "#{self.class.name}#virtual_server_image_watch (provider:#{self.name}):"
+  def sync_virtual_server_images
+    log_prefix = "#{self.class.name}#sync_virtual_server_images (provider:#{self.name}):"
 
     # APIからの仮想サーバイメージ情報を取得
     images = describe_images_for_api
