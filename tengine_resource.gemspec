@@ -5,7 +5,7 @@
 
 Gem::Specification.new do |s|
   s.name = "tengine_resource"
-  s.version = "0.4.18"
+  s.version = "0.4.19"
 
   s.required_rubygems_version = Gem::Requirement.new(">= 0") if s.respond_to? :required_rubygems_version=
   s.authors = ["saishu", "w-irie", "taigou", "totty", "hiroshinakao", "g-morita", "guemon", "aoetk", "hattori-at-nt", "t-yamada", "y-karashima", "akm"]
@@ -104,6 +104,7 @@ Gem::Specification.new do |s|
     "spec/tengine/resource/test_files/40_run_instances_0_virtual_servers.json",
     "spec/tengine/resource/test_files/41_run_instances_1_virtual_servers.json",
     "spec/tengine/resource/test_files/42_run_instances_5_virtual_servers.json",
+    "spec/tengine/resource/test_files/43_run_instances_1_virtual_servers_without_aws_availability_zone.json",
     "spec/tengine/resource/test_files/50_terminate_instances_0_virtual_servers.json",
     "spec/tengine/resource/test_files/51_terminate_instances_3_virtual_servers.json",
     "spec/tengine/resource/virtual_server_image_spec.rb",
