@@ -6,4 +6,8 @@ class Tengine::Resource::VirtualServer < Tengine::Resource::Server
     :class_name => "Tengine::Resource::Server"
   belongs_to :provider, :index => true, :inverse_of => :virtual_servers,
     :class_name => "Tengine::Resource::Provider"
+
+  validates_uniqueness_of :provided_id, :scope => :provider_id
+  index [[:provided_id,  Mongo::ASCENDING], [:provider_id,  Mongo::ASCENDING], ], :unique => true
+
 end

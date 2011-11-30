@@ -5,6 +5,7 @@ describe Tengine::Resource::Server do
 
   valid_attributes1 = {
     :name => "server1",
+    :provided_id => "server_id1"
   }.freeze
 
   [Tengine::Resource::Server, Tengine::Resource::PhysicalServer, Tengine::Resource::VirtualServer].each do |klass|
@@ -42,7 +43,7 @@ describe Tengine::Resource::Server do
   end
 
   context "nameはユニーク" do
-    [Tengine::Resource::Server, Tengine::Resource::PhysicalServer, Tengine::Resource::VirtualServer].each do |klass|
+    [Tengine::Resource::PhysicalServer, Tengine::Resource::VirtualServer].each do |klass|
       context "#{klass.name}#name はユニーク" do
         before do
           Tengine::Resource::Server.delete_all
@@ -50,9 +51,11 @@ describe Tengine::Resource::Server do
         end
 
         it "同じ名前で登録されているものが存在する場合エラー" do
-          expect{
+          begin
             @credential1 = klass.create!(valid_attributes1)
-          }.to raise_error(Mongoid::Errors::Validations, "Validation failed - Name is already taken.")
+          rescue Mongoid::Errors::Validations => e
+            e.message.should =~ /Name is already taken/
+          end
         end
       end
     end

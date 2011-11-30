@@ -31,7 +31,7 @@ class Tengine::Resource::Provider::Wakame < Tengine::Resource::Provider::Ec2
   # @param  [String]                                 description  what this virtual server is
   # @param  [Numeric]                                count        number of vortial servers to boot
   # @return [Array<Tengine::Resource::VirtualServer>]
-  def create_virtual_servers name, image, type, physical, description = "", count = 1
+  def create_virtual_servers(name, image, type, physical, description = "", count = 1, &block)
     return super(
       name,
       image,
@@ -44,7 +44,8 @@ class Tengine::Resource::Provider::Wakame < Tengine::Resource::Provider::Ec2
       self.properties['key_name'] || self.properties[:key_name],
       "",     # user data
       nil,    # kernel id
-      nil     # ramdisk id
+      nil,     # ramdisk id
+      &block
     )
   end
 
@@ -186,20 +187,28 @@ class Tengine::Resource::Provider::Wakame < Tengine::Resource::Provider::Ec2
     Tengine.logger.debug "#{log_prefix} describe_instances for api (wakame)"
     Tengine.logger.debug "#{log_prefix} #{instances.inspect}"
 
-    create_instances = []
-    update_instances = []
-    destroy_servers = []
-
-    # 仮想サーバの取得
-    old_servers = self.virtual_servers
     Tengine.logger.debug "#{log_prefix} virtual_servers on provider (#{self.name})"
-    Tengine.logger.debug "#{log_prefix} #{old_servers.inspect}"
+    create_instances, update_instances, destroy_servers = partion_instances(instances)
+    create_instances.each do |instance|
+      Tengine.logger.debug "#{log_prefix} new virtual_server % <create> (#{instance[:aws_instance_id]})"
+    end
 
+    self.differential_update_virtual_server_hashs(update_instances) unless update_instances.empty?
+    self.create_virtual_server_hashs(create_instances) unless create_instances.empty?
+    destroy_servers.each { |target| target.destroy }
+  end
+
+  private
+
+  def partion_instances(instances)
+    log_prefix = "#{self.class.name}#virtual_server_watch (provider:#{self.name}):"
+    create_instances, update_instances, destroy_servers = [], [], []
+    old_servers = self.virtual_servers
+    Tengine.logger.debug "#{log_prefix} #{old_servers.inspect}"
     old_servers.each do |old_server|
       instance = instances.detect do |instance|
         (instance[:aws_instance_id] || instance["aws_instance_id"]) == old_server.provided_id
       end
-
       if instance
         Tengine.logger.debug "#{log_prefix} registed virtual_server % <update> (#{old_server.provided_id})"
         update_instances << instance
@@ -209,14 +218,11 @@ class Tengine::Resource::Provider::Wakame < Tengine::Resource::Provider::Ec2
       end
     end
     create_instances = instances - update_instances
-    create_instances.each do |instance|
-      Tengine.logger.debug "#{log_prefix} new virtual_server % <create> (#{instance[:aws_instance_id]})"
-    end
-
-    self.differential_update_virtual_server_hashs(update_instances) unless update_instances.empty?
-    self.create_virtual_server_hashs(create_instances) unless create_instances.empty?
-    destroy_servers.each { |target| target.destroy }
+    return create_instances, update_instances, destroy_servers
   end
+
+
+  public
 
   # 仮想サーバイメージの監視
   def virtual_server_image_watch
@@ -404,6 +410,8 @@ class Tengine::Resource::Provider::Wakame < Tengine::Resource::Provider::Ec2
   end
 
   # virtual_server
+  PRIVATE_IP_ADDRESS = "private_ip_address".freeze
+
   def differential_update_virtual_server_hash(hash)
     properties = hash.dup
     properties.deep_symbolize_keys!
@@ -414,7 +422,7 @@ class Tengine::Resource::Provider::Wakame < Tengine::Resource::Provider::Ec2
     virtual_server.provided_type_id = properties.delete(:aws_instance_type)
     virtual_server.status = properties.delete(:aws_state)
     virtual_server.host_server = host_server
-    virtual_server.address_order = [properties.delete(:private_ip_address)]
+    virtual_server.addresses[PRIVATE_IP_ADDRESS] = properties.delete(:private_ip_address)
     properties.delete(:ip_address).split(",").map do |i|
       k, v = i.split("=")
       virtual_server.addresses[k] = v
@@ -445,7 +453,7 @@ class Tengine::Resource::Provider::Wakame < Tengine::Resource::Provider::Ec2
     properties = hash.dup
     properties.deep_symbolize_keys!
     host_server = self.physical_servers.where(:provided_id => properties[:aws_availability_zone]).first
-    addresses = {}
+    addresses = {PRIVATE_IP_ADDRESS => properties.delete(:private_ip_address)}
     properties.delete(:ip_address).split(",").map do |i|
       k, v = i.split("=")
       addresses[k] = v
@@ -459,15 +467,20 @@ class Tengine::Resource::Provider::Wakame < Tengine::Resource::Provider::Ec2
       :status => properties.delete(:aws_state),
       :host_server => host_server,
       :addresses => addresses,
-      :address_order => [properties.delete(:private_ip_address)],
+      :address_order => [PRIVATE_IP_ADDRESS],
       :properties => properties)
+  rescue Mongo::OperationFailure => e
+    raise e unless e.message =~ /E11000 duplicate key error/
+  rescue Mongoid::Errors::Validations => e
+    raise e unless e.document.errors[:provided_id].any?{|s| s =~ /taken/}
   end
 
   def create_virtual_server_hashs(hashs)
     created_ids = []
     hashs.each do |hash|
-      server = create_virtual_server_hash(hash)
-      created_ids << server.id
+      if server = create_virtual_server_hash(hash)
+        created_ids << server.id
+      end
     end
     created_ids
   end

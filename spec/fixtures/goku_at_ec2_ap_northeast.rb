@@ -43,6 +43,7 @@ class GokuAtEc2ApNortheast
   def availability_zone(idx)
     name = "ap-notrheast-1" + ("a".ord - 1 + idx).chr
     Tengine::Resource::PhysicalServer.find_or_create_by_name!(
+      :provider_id => provider.id,
       :name => name, :provided_id => name, :status => "available")
   end
 
@@ -74,6 +75,36 @@ class GokuAtEc2ApNortheast
       :name => "rails_image1",
       :provided_id => "ami-10000003")
   end
+
+  def virtual_server_types
+    [
+      m1_small,
+      m1_large,
+      m1_xlarge,
+      t1_micro,
+    ]
+  end
+
+  def m1_small
+    Tengine::Resource::VirtualServerType.find_or_create_by(:provider_id => provider.id,
+      :caption => "m1.small", :provided_id => "m1.small", :cpu_cores => 1, :memory_size => 17 * (10 ** 8))
+  end
+
+  def m1_large
+    Tengine::Resource::VirtualServerType.find_or_create_by(:provider_id => provider.id,
+      :caption => "m1.large", :provided_id => "m1.large", :cpu_cores => 4, :memory_size => 75 * (10 ** 8))
+  end
+
+  def m1_xlarge
+    Tengine::Resource::VirtualServerType.find_or_create_by(:provider_id => provider.id,
+      :caption => "m1.xlarge", :provided_id => "m1.xlarge", :cpu_cores => 8, :memory_size => 15 * (10 ** 9))
+  end
+
+  def t1_micro
+    Tengine::Resource::VirtualServerType.find_or_create_by(:provider_id => provider.id,
+      :caption => "t1.micro", :provided_id => "t1.micro", :cpu_cores => 2, :memory_size => 613 * (10 ** 6))
+  end
+
 
   def virtual_servers
     [

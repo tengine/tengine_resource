@@ -101,7 +101,8 @@ class << Net::SSH
       user_known_hosts_file
       verbose
     ].map(&:intern).inject(Hash.new) do |r, k|
-      r.update k => hash.delete(k)
+      r[k] = hash.delete(k) if hash.has_key? k
+      r
     end
 
     raise ArgumentError, "unknown optional argument(s): #{hash.keys.join(', ')}" unless hash.empty?

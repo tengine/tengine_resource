@@ -5,11 +5,11 @@
 
 Gem::Specification.new do |s|
   s.name = "tengine_resource"
-  s.version = "0.4.13"
+  s.version = "0.4.19"
 
   s.required_rubygems_version = Gem::Requirement.new(">= 0") if s.respond_to? :required_rubygems_version=
   s.authors = ["saishu", "w-irie", "taigou", "totty", "hiroshinakao", "g-morita", "guemon", "aoetk", "hattori-at-nt", "t-yamada", "y-karashima", "akm"]
-  s.date = "2011-11-25"
+  s.date = "2011-11-30"
   s.description = "tengine_resource provides physical/virtual server management"
   s.email = "tengine@nautilus-technologies.com"
   s.executables = ["tengine_resource_watchd"]
@@ -87,6 +87,26 @@ Gem::Specification.new do |s|
     "spec/tengine/resource/provider/wakame_spec.rb",
     "spec/tengine/resource/provider_spec.rb",
     "spec/tengine/resource/server_spec.rb",
+    "spec/tengine/resource/test_files/.gitignore",
+    "spec/tengine/resource/test_files/00_describe_host_nodes_0_physical_servers.json",
+    "spec/tengine/resource/test_files/01_describe_host_nodes_10_physical_servers.json",
+    "spec/tengine/resource/test_files/02_describe_host_nodes_60_physical_servers.json",
+    "spec/tengine/resource/test_files/10_describe_instances_0_virtual_servers.json",
+    "spec/tengine/resource/test_files/11_describe_instances_10_virtual_servers.json",
+    "spec/tengine/resource/test_files/12_describe_instances_after_run_instances.json",
+    "spec/tengine/resource/test_files/13_describe_instances_after_terminate_instances.json",
+    "spec/tengine/resource/test_files/14_describe_instances_after_run_1_instance.json",
+    "spec/tengine/resource/test_files/20_describe_images_0_virtual_server_images.json",
+    "spec/tengine/resource/test_files/21_describe_images_5_virtual_server_images.json",
+    "spec/tengine/resource/test_files/22_describe_images_60_virtual_server_images.json",
+    "spec/tengine/resource/test_files/30_describe_instance_specs_0_virtual_server_specs.json",
+    "spec/tengine/resource/test_files/31_describe_instance_specs_4_virtual_server_specs.json",
+    "spec/tengine/resource/test_files/40_run_instances_0_virtual_servers.json",
+    "spec/tengine/resource/test_files/41_run_instances_1_virtual_servers.json",
+    "spec/tengine/resource/test_files/42_run_instances_5_virtual_servers.json",
+    "spec/tengine/resource/test_files/43_run_instances_1_virtual_servers_without_aws_availability_zone.json",
+    "spec/tengine/resource/test_files/50_terminate_instances_0_virtual_servers.json",
+    "spec/tengine/resource/test_files/51_terminate_instances_3_virtual_servers.json",
     "spec/tengine/resource/virtual_server_image_spec.rb",
     "spec/tengine/resource/virtual_server_spec.rb",
     "spec/tengine/resource/virtual_server_type_spec.rb",

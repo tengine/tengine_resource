@@ -441,8 +441,11 @@ describe Tengine::Resource::Watcher do
             :provided_type_id => "is-demospec",
             :host_server => @physical_server_wakame,
             :status => "running",
-            :addresses => "nw-data=192.168.2.188",
-            :address_order => ["192.168.2.188"],
+            :addresses => {
+              "private_ip_address" => "192.168.2.188",
+              "nw-data" => "192.168.2.188",
+            },
+            :address_order => ["private_ip_address"],
             :properties => {
               :aws_kernel_id => "",
               :aws_launch_time => "2011-10-18T06:51:16Z",
@@ -538,6 +541,7 @@ describe Tengine::Resource::Watcher do
             new_virtual_server = (@provider_wakame.virtual_servers - [@virtual_server_wakame]).first
             new_virtual_server.host_server.provided_id.should == CREATE_WAKAME_INSTANCES[0][:aws_availability_zone]
             new_virtual_server.host_server.provided_id.should == "hp-demohost"
+            new_virtual_server.hostname_or_ipv4.should == "192.168.2.189"
             new_virtual_server.host_server.should == @physical_server_wakame
           }.should change(@provider_wakame.virtual_servers, :count).by(1)
         end

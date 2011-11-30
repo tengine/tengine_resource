@@ -21,8 +21,10 @@ class Tengine::Resource::Server
   field :properties     , :type => Hash
   map_yaml_accessor :properties
 
-  validates :name, :presence => true, :uniqueness => true, :format => BASE_NAME.options
-  index :name, :unique => true
+  validates :name, :presence => true, :format => BASE_NAME.options
+
+  validates :name, :uniqueness => {:scope => :provider_id}
+  index [[:name,  Mongo::ASCENDING], [:provider_id,  Mongo::ASCENDING], ], :unique => true
 
   has_many :guest_servers, :class_name => "Tengine::Resource::VirtualServer", :inverse_of => :host_server
 
