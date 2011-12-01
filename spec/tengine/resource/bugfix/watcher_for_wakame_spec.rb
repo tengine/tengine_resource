@@ -8,24 +8,31 @@ require 'controllers/controller'
 
 describe Tengine::Resource::Provider::Wakame do
 
-  before do
-    class Tengine::Resource::VirtualServer < Tengine::Resource::Server
-      def destroy
-        $stdout.puts "invoked"
-        super
-      end
+  before :all do
+    class Tengine::Resource::VirtualServerType
+      def destroy; $stdout.puts "invoked"; super; end
+    end
+    class Tengine::Resource::VirtualServerImage
+      def destroy; $stdout.puts "invoked"; super; end
+    end
+    class Tengine::Resource::PhysicalServer
+      def destroy; $stdout.puts "invoked"; super; end
+    end
+    class Tengine::Resource::VirtualServer
+      def destroy; $stdout.puts "invoked"; super; end
     end
   end
 
-  after do
-    Tengine::Resource::VirtualServer.class_eval { remove_method :destroy }
+  after :all do
+    Tengine::Resource::VirtualServerType.class_eval  { remove_method :destroy }
+    Tengine::Resource::VirtualServerImage.class_eval { remove_method :destroy }
+    Tengine::Resource::PhysicalServer.class_eval     { remove_method :destroy }
+    Tengine::Resource::VirtualServer.class_eval      { remove_method :destroy }
   end
 
   before do
     Tengine::Resource::Provider.delete_all
-    Tengine::Resource::PhysicalServer.delete_all
-    Tengine::Resource::VirtualServer.delete_all
-    @provider = Tengine::Resource::Provider::Wakame.create!({
+    @provider_wakame = Tengine::Resource::Provider::Wakame.create!({
         :name => "wakame-vdc",
         :description => "",
         :properties => {
@@ -42,7 +49,32 @@ describe Tengine::Resource::Provider::Wakame do
           :wakame_protocol => "http",
         },
       })
-    @physical_server_wakame = @provider.physical_servers.create!({
+    Tengine::Resource::VirtualServerType.delete_all
+    @virtual_server_type_wakame = @provider_wakame.virtual_server_types.create!({
+        :provided_id => "is-demospec",
+        :caption => "is-demospec",
+        :cpu_cores => 2,
+        :memory_size => 512,
+        :properties => {
+          :arch => "x86_64",
+          :hypervisor => "kvm",
+          :account_id => "a-shpoolxx",
+          :vifs => "--- \neth0: \n  :bandwidth: 100000\n  :index: 0\n",
+          :quota_weight => "1.0",
+          :drives => "--- \nephemeral1: \n  :type: :local\n  :size: 100\n  :index: 0\n",
+          :created_at => "2011-10-28T02:58:57Z",
+          :updated_at => "2011-10-28T02:58:57Z",
+        }
+      })
+    Tengine::Resource::VirtualServerImage.delete_all
+    @virtual_server_image_wakame = @provider_wakame.virtual_server_images.create!({
+        :name => "vimage",
+        :description => "",
+        :provided_id => "wmi-lucid6",
+        :provided_description => "ubuntu-10.04_with-metadata_kvm_i386.raw volume",
+      })
+    Tengine::Resource::PhysicalServer.delete_all
+    @physical_server_wakame = @provider_wakame.physical_servers.create!({
         :name => "demohost",
         :description => "",
         :provided_id => "hp-demohost",
@@ -60,7 +92,8 @@ describe Tengine::Resource::Provider::Wakame do
           :updated_at => "2011-10-18T03:53:24Z",
         }
       })
-    @provider.virtual_servers.create!({
+    Tengine::Resource::VirtualServer.delete_all
+    @provider_wakame.virtual_servers.create!({
         :name => "vhost",
         :description => "",
         :provided_id => "i-jria301q",
@@ -106,28 +139,92 @@ describe Tengine::Resource::Provider::Wakame do
           :aws_reason => ""
         }
       })
+
+    @tama_controller_factory = mock(::Tama::Controllers::ControllerFactory.allocate)
+    ::Tama::Controllers::ControllerFactory.
+      stub(:create_controller).
+      with("tama_account1", "10.10.10.10", 80, "https", "192.168.0.10", 8080, "http").
+      and_return(@tama_controller_factory)
   end
 
-  describe :sync_virtual_servers do
-    before do
-      @tama_controller_factory = mock(::Tama::Controllers::ControllerFactory.allocate)
-      ::Tama::Controllers::ControllerFactory.
-        stub(:create_controller).
-        with("tama_account1", "10.10.10.10", 80, "https", "192.168.0.10", 8080, "http").
-        and_return(@tama_controller_factory)
-    end
-
-    it "削除の通知が何度も行われてしまう" do
-      @tama_controller_factory.stub(:describe_instances).with([]).and_return([])
+  describe :sync_virtual_server_types do
+    it "削除の通知は一度しか行われない" do
+      @tama_controller_factory.stub(:describe_instance_specs).with([]).and_return([])
 
       # 一度も呼び出されない
-      @provider.should_not_receive(:dirrefential_update_virtual_server_hashs)
-      @provider.should_not_receive(:create_virtual_server_hashs)
+      @provider_wakame.should_not_receive(:dirrefential_update_virtual_server_type_hashs)
+      @provider_wakame.should_not_receive(:create_virtual_server_type_hashs)
       # 一度だけ呼び出される
       $stdout.should_receive(:puts).with("invoked").once
 
       3.times do
-        @provider.virtual_server_watch
+        @provider_wakame.virtual_server_type_watch
+      end
+    end
+  end
+
+  describe :sync_virtual_server_images do
+    # bug [大量にTengine::Resource::VirtualServer.destroyed.tengine_resource_watchdという種別名イベントが登録されつづけている]
+    it "削除の通知は一度しか行われない" do
+      @tama_controller_factory.stub(:describe_instances).with([]).and_return([])
+
+      # 一度も呼び出されない
+      @provider_wakame.should_not_receive(:dirrefential_update_virtual_server_hashs)
+      @provider_wakame.should_not_receive(:create_virtual_server_hashs)
+      # 一度だけ呼び出される
+      $stdout.should_receive(:puts).with("invoked").once
+
+      3.times do
+        @provider_wakame.virtual_server_watch
+      end
+    end
+  end
+
+  describe :sync_virtual_server_images do
+    it "削除の通知は一度しか行われない" do
+      @tama_controller_factory.stub(:describe_images).with([]).and_return([])
+
+      # 一度も呼び出されない
+      @provider_wakame.should_not_receive(:dirrefential_update_virtual_server_image_hashs)
+      @provider_wakame.should_not_receive(:create_virtual_server_image_hashs)
+      # 一度だけ呼び出される
+      $stdout.should_receive(:puts).with("invoked").once
+
+      3.times do
+        @provider_wakame.virtual_server_image_watch
+      end
+    end
+  end
+
+  describe :sync_virtual_servers do
+    # bug [大量にTengine::Resource::VirtualServer.destroyed.tengine_resource_watchdという種別名イベントが登録されつづけている]
+    it "削除の通知は一度しか行われない" do
+      @tama_controller_factory.stub(:describe_instances).with([]).and_return([])
+
+      # 一度も呼び出されない
+      @provider_wakame.should_not_receive(:dirrefential_update_virtual_server_hashs)
+      @provider_wakame.should_not_receive(:create_virtual_server_hashs)
+      # 一度だけ呼び出される
+      $stdout.should_receive(:puts).with("invoked").once
+
+      3.times do
+        @provider_wakame.virtual_server_watch
+      end
+    end
+  end
+
+  describe :sync_physical_servers do
+    it "削除の通知は一度しか行われない" do
+      @tama_controller_factory.stub(:describe_host_nodes).with([]).and_return([])
+
+      # 一度も呼び出されない
+      @provider_wakame.should_not_receive(:dirrefential_update_physical_server_hashs)
+      @provider_wakame.should_not_receive(:create_physical_server_hashs)
+      # 一度だけ呼び出される
+      $stdout.should_receive(:puts).with("invoked").once
+
+      3.times do
+        @provider_wakame.physical_server_watch
       end
     end
   end

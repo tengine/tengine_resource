@@ -104,6 +104,7 @@ class Tengine::Resource::Provider::Wakame < Tengine::Resource::Provider::Ec2
     destroy_server_types = []
 
     # 仮想イメージタイプの取得
+    self.reload
     old_server_types = self.virtual_server_types
     Tengine.logger.debug "#{log_prefix} virtual_server_types on provider (#{self.name})"
     Tengine.logger.debug "#{log_prefix} #{old_server_types.inspect}"
@@ -151,6 +152,7 @@ class Tengine::Resource::Provider::Wakame < Tengine::Resource::Provider::Ec2
     destroy_servers = []
 
     # 物理サーバの取得
+    self.reload
     old_servers = self.physical_servers
     Tengine.logger.debug "#{log_prefix} physical_server on provider (#{self.name})"
     Tengine.logger.debug "#{log_prefix} #{old_servers.inspect}"
@@ -239,6 +241,7 @@ class Tengine::Resource::Provider::Wakame < Tengine::Resource::Provider::Ec2
     destroy_server_images = []
 
     # 仮想サーバイメージの取得
+    self.reload
     old_images = self.virtual_server_images
     Tengine.logger.debug "#{log_prefix} virtual_server_images on provider (#{self.name})"
     Tengine.logger.debug "#{log_prefix} #{old_images.inspect}"
