@@ -203,6 +203,7 @@ class Tengine::Resource::Provider::Wakame < Tengine::Resource::Provider::Ec2
   def partion_instances(instances)
     log_prefix = "#{self.class.name}#virtual_server_watch (provider:#{self.name}):"
     create_instances, update_instances, destroy_servers = [], [], []
+    self.reload
     old_servers = self.virtual_servers
     Tengine.logger.debug "#{log_prefix} #{old_servers.inspect}"
     old_servers.each do |old_server|
