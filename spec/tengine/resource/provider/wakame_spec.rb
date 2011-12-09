@@ -58,27 +58,6 @@ describe Tengine::Resource::Provider::Wakame do
         invoke_ok.should be_false
       }.to raise_error
     end
-
-#     it "マジ接続" do
-#       Tengine::Resource::Provider::Wakame.create!(
-#         :name => 'Fusic',
-#         :connection_settings => {
-#           :account => 'a-shpoolxx',
-#           :ec2_host => '203.135.196.232',
-#           :ec2_port => '9005',
-#           :ec2_protocol => 'http',
-#           :wakame_host => '203.135.196.232',
-#           :wakame_port => '9001',
-#           :wakame_protocol => 'http'
-#         },
-#         :properties => {
-#           :key_name => 'ssh-hadoop01'
-#         })
-#       fusic = Tengine::Resource::Provider.first(:conditions => {:name => 'Fusic'})
-#       fusic.connect do |conn|
-#         pp conn.inspect
-#       end
-#     end
   end
 
   context "仮想マシンの起動" do
