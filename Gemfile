@@ -8,7 +8,7 @@ source "http://rubygems.org"
 #   gem "activesupport", ">= 2.3.5"
 
 gem "tengine_support", "~> 0.3.12"
-gem "tengine_core", "~> 0.4.0"
+gem "tengine_core", "~> 0.5.0"
 
 # http://rightaws.rubyforge.org/
 # http://github.com/rightscale/right_aws

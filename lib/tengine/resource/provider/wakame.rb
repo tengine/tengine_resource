@@ -53,7 +53,6 @@ class Tengine::Resource::Provider::Wakame < Tengine::Resource::Provider::Ec2
     connect do |conn|
       conn.terminate_instances(servers.map {|i| i.provided_id }).map do |hash|
         serv = self.virtual_servers.where(:provided_id => hash[:aws_instance_id]).first
-        serv.update_attributes(:status => "shutdown in progress") if serv # <- ?
         serv
       end
     end
@@ -550,39 +549,52 @@ class Tengine::Resource::Provider::Wakame < Tengine::Resource::Provider::Ec2
     hash_key_convert(result, option[:convert])
   end
 
+  def connect
+    connection = nil
+    retry_count = 1
+    begin
+      if self.connection_settings[:test] || self.connection_settings["test"]
+        # テスト用
+        connection = ::Tama::Controllers::ControllerFactory.create_controller(:test)
+        options = self.connection_settings[:options] || self.connection_settings["options"]
+        if options
+          options.symbolize_keys!
+          connection.describe_instances_file =
+            File.expand_path(options[:describe_instances_file]) if options[:describe_instances_file]
+          connection.describe_images_file =
+            File.expand_path(options[:describe_images_file]) if options[:describe_images_file]
+          connection.run_instances_file =
+            File.expand_path(options[:run_instances_file]) if options[:run_instances_file]
+          connection.terminate_instances_file =
+            File.expand_path(options[:terminate_instances_file]) if options[:terminate_instances_file]
+          connection.describe_host_nodes_file  =
+            File.expand_path(options[:describe_host_nodes_file]) if options[:describe_host_nodes_file]
+          connection.describe_instance_specs_file =
+            File.expand_path(options[:describe_instance_specs_file]) if options[:describe_instance_specs_file]
+        end
+      else
+        options = self.connection_settings.symbolize_keys
+        args = [:account, :ec2_host, :ec2_port, :ec2_protocol, :wakame_host, :wakame_port, :wakame_protocol].map{|key| options[key]}
+        connection = ::Tama::Controllers::ControllerFactory.create_controller(*args)
+      end
+      yield connection
+    rescue Exception => e
+      if retry_count > self.retry_count
+        Tengine.logger.error "#{e.class.name} #{e.message}"
+        raise e
+      else
+        Tengine.logger.warn "retry[#{retry_count}]: #{e.message}"
+        sleep self.retry_interval
+        retry_count += 1
+        retry
+      end
+    end
+  end
+
   private
 
   def address_order
     @@address_order ||= ['private_ip_address'.freeze].freeze
-  end
-
-  def connect
-    connection = nil
-    if self.connection_settings[:test] || self.connection_settings["test"]
-      connection = ::Tama::Controllers::ControllerFactory.create_controller(:test)
-
-      options = self.connection_settings[:options] || self.connection_settings["options"]
-      if options
-        options.symbolize_keys!
-        connection.describe_instances_file =
-          File.expand_path(options[:describe_instances_file]) if options[:describe_instances_file]
-        connection.describe_images_file =
-          File.expand_path(options[:describe_images_file]) if options[:describe_images_file]
-        connection.run_instances_file =
-          File.expand_path(options[:run_instances_file]) if options[:run_instances_file]
-        connection.terminate_instances_file =
-          File.expand_path(options[:terminate_instances_file]) if options[:terminate_instances_file]
-        connection.describe_host_nodes_file  =
-          File.expand_path(options[:describe_host_nodes_file]) if options[:describe_host_nodes_file]
-        connection.describe_instance_specs_file =
-          File.expand_path(options[:describe_instance_specs_file]) if options[:describe_instance_specs_file]
-      end
-    else
-      options = self.connection_settings.symbolize_keys
-      args = [:account, :ec2_host, :ec2_port, :ec2_protocol, :wakame_host, :wakame_port, :wakame_protocol].map{|key| options[key]}
-      connection = ::Tama::Controllers::ControllerFactory.create_controller(*args)
-    end
-    yield connection
   end
 
 end
