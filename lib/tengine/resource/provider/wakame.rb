@@ -31,7 +31,7 @@ class Tengine::Resource::Provider::Wakame < Tengine::Resource::Provider::Ec2
   # @param  [String]                                 description  what this virtual server is
   # @param  [Numeric]                                count        number of vortial servers to boot
   # @return [Array<Tengine::Resource::VirtualServer>]
-  def create_virtual_servers name, image, type, physical, description = "", count = 1
+  def create_virtual_servers(name, image, type, physical, description = "", count = 1, &block)
     return super(
       name,
       image,
@@ -44,7 +44,8 @@ class Tengine::Resource::Provider::Wakame < Tengine::Resource::Provider::Ec2
       self.properties['key_name'] || self.properties[:key_name],
       "",     # user data
       nil,    # kernel id
-      nil     # ramdisk id
+      nil,     # ramdisk id
+      &block
     )
   end
 
@@ -52,7 +53,6 @@ class Tengine::Resource::Provider::Wakame < Tengine::Resource::Provider::Ec2
     connect do |conn|
       conn.terminate_instances(servers.map {|i| i.provided_id }).map do |hash|
         serv = self.virtual_servers.where(:provided_id => hash[:aws_instance_id]).first
-        serv.update_attributes(:status => "shutdown in progress") if serv # <- ?
         serv
       end
     end
@@ -103,6 +103,7 @@ class Tengine::Resource::Provider::Wakame < Tengine::Resource::Provider::Ec2
     destroy_server_types = []
 
     # 仮想イメージタイプの取得
+    self.reload
     old_server_types = self.virtual_server_types
     Tengine.logger.debug "#{log_prefix} virtual_server_types on provider (#{self.name})"
     Tengine.logger.debug "#{log_prefix} #{old_server_types.inspect}"
@@ -150,6 +151,7 @@ class Tengine::Resource::Provider::Wakame < Tengine::Resource::Provider::Ec2
     destroy_servers = []
 
     # 物理サーバの取得
+    self.reload
     old_servers = self.physical_servers
     Tengine.logger.debug "#{log_prefix} physical_server on provider (#{self.name})"
     Tengine.logger.debug "#{log_prefix} #{old_servers.inspect}"
@@ -186,20 +188,29 @@ class Tengine::Resource::Provider::Wakame < Tengine::Resource::Provider::Ec2
     Tengine.logger.debug "#{log_prefix} describe_instances for api (wakame)"
     Tengine.logger.debug "#{log_prefix} #{instances.inspect}"
 
-    create_instances = []
-    update_instances = []
-    destroy_servers = []
-
-    # 仮想サーバの取得
-    old_servers = self.virtual_servers
     Tengine.logger.debug "#{log_prefix} virtual_servers on provider (#{self.name})"
-    Tengine.logger.debug "#{log_prefix} #{old_servers.inspect}"
+    create_instances, update_instances, destroy_servers = partion_instances(instances)
+    create_instances.each do |instance|
+      Tengine.logger.debug "#{log_prefix} new virtual_server % <create> (#{instance[:aws_instance_id]})"
+    end
 
+    self.differential_update_virtual_server_hashs(update_instances) unless update_instances.empty?
+    self.create_virtual_server_hashs(create_instances) unless create_instances.empty?
+    destroy_servers.each { |target| target.destroy }
+  end
+
+  private
+
+  def partion_instances(instances)
+    log_prefix = "#{self.class.name}#virtual_server_watch (provider:#{self.name}):"
+    create_instances, update_instances, destroy_servers = [], [], []
+    self.reload
+    old_servers = self.virtual_servers
+    Tengine.logger.debug "#{log_prefix} #{old_servers.inspect}"
     old_servers.each do |old_server|
       instance = instances.detect do |instance|
         (instance[:aws_instance_id] || instance["aws_instance_id"]) == old_server.provided_id
       end
-
       if instance
         Tengine.logger.debug "#{log_prefix} registed virtual_server % <update> (#{old_server.provided_id})"
         update_instances << instance
@@ -209,14 +220,11 @@ class Tengine::Resource::Provider::Wakame < Tengine::Resource::Provider::Ec2
       end
     end
     create_instances = instances - update_instances
-    create_instances.each do |instance|
-      Tengine.logger.debug "#{log_prefix} new virtual_server % <create> (#{instance[:aws_instance_id]})"
-    end
-
-    self.differential_update_virtual_server_hashs(update_instances) unless update_instances.empty?
-    self.create_virtual_server_hashs(create_instances) unless create_instances.empty?
-    destroy_servers.each { |target| target.destroy }
+    return create_instances, update_instances, destroy_servers
   end
+
+
+  public
 
   # 仮想サーバイメージの監視
   def virtual_server_image_watch
@@ -232,6 +240,7 @@ class Tengine::Resource::Provider::Wakame < Tengine::Resource::Provider::Ec2
     destroy_server_images = []
 
     # 仮想サーバイメージの取得
+    self.reload
     old_images = self.virtual_server_images
     Tengine.logger.debug "#{log_prefix} virtual_server_images on provider (#{self.name})"
     Tengine.logger.debug "#{log_prefix} #{old_images.inspect}"
@@ -404,6 +413,8 @@ class Tengine::Resource::Provider::Wakame < Tengine::Resource::Provider::Ec2
   end
 
   # virtual_server
+  PRIVATE_IP_ADDRESS = "private_ip_address".freeze
+
   def differential_update_virtual_server_hash(hash)
     properties = hash.dup
     properties.deep_symbolize_keys!
@@ -414,7 +425,7 @@ class Tengine::Resource::Provider::Wakame < Tengine::Resource::Provider::Ec2
     virtual_server.provided_type_id = properties.delete(:aws_instance_type)
     virtual_server.status = properties.delete(:aws_state)
     virtual_server.host_server = host_server
-    virtual_server.address_order = [properties.delete(:private_ip_address)]
+    virtual_server.addresses[PRIVATE_IP_ADDRESS] = properties.delete(:private_ip_address)
     properties.delete(:ip_address).split(",").map do |i|
       k, v = i.split("=")
       virtual_server.addresses[k] = v
@@ -445,7 +456,7 @@ class Tengine::Resource::Provider::Wakame < Tengine::Resource::Provider::Ec2
     properties = hash.dup
     properties.deep_symbolize_keys!
     host_server = self.physical_servers.where(:provided_id => properties[:aws_availability_zone]).first
-    addresses = {}
+    addresses = {PRIVATE_IP_ADDRESS => properties.delete(:private_ip_address)}
     properties.delete(:ip_address).split(",").map do |i|
       k, v = i.split("=")
       addresses[k] = v
@@ -459,15 +470,20 @@ class Tengine::Resource::Provider::Wakame < Tengine::Resource::Provider::Ec2
       :status => properties.delete(:aws_state),
       :host_server => host_server,
       :addresses => addresses,
-      :address_order => [properties.delete(:private_ip_address)],
+      :address_order => [PRIVATE_IP_ADDRESS],
       :properties => properties)
+  rescue Mongo::OperationFailure => e
+    raise e unless e.message =~ /E11000 duplicate key error/
+  rescue Mongoid::Errors::Validations => e
+    raise e unless e.document.errors[:provided_id].any?{|s| s =~ /taken/}
   end
 
   def create_virtual_server_hashs(hashs)
     created_ids = []
     hashs.each do |hash|
-      server = create_virtual_server_hash(hash)
-      created_ids << server.id
+      if server = create_virtual_server_hash(hash)
+        created_ids << server.id
+      end
     end
     created_ids
   end
@@ -533,39 +549,52 @@ class Tengine::Resource::Provider::Wakame < Tengine::Resource::Provider::Ec2
     hash_key_convert(result, option[:convert])
   end
 
+  def connect
+    connection = nil
+    retry_count = 1
+    begin
+      if self.connection_settings[:test] || self.connection_settings["test"]
+        # テスト用
+        connection = ::Tama::Controllers::ControllerFactory.create_controller(:test)
+        options = self.connection_settings[:options] || self.connection_settings["options"]
+        if options
+          options.symbolize_keys!
+          connection.describe_instances_file =
+            File.expand_path(options[:describe_instances_file]) if options[:describe_instances_file]
+          connection.describe_images_file =
+            File.expand_path(options[:describe_images_file]) if options[:describe_images_file]
+          connection.run_instances_file =
+            File.expand_path(options[:run_instances_file]) if options[:run_instances_file]
+          connection.terminate_instances_file =
+            File.expand_path(options[:terminate_instances_file]) if options[:terminate_instances_file]
+          connection.describe_host_nodes_file  =
+            File.expand_path(options[:describe_host_nodes_file]) if options[:describe_host_nodes_file]
+          connection.describe_instance_specs_file =
+            File.expand_path(options[:describe_instance_specs_file]) if options[:describe_instance_specs_file]
+        end
+      else
+        options = self.connection_settings.symbolize_keys
+        args = [:account, :ec2_host, :ec2_port, :ec2_protocol, :wakame_host, :wakame_port, :wakame_protocol].map{|key| options[key]}
+        connection = ::Tama::Controllers::ControllerFactory.create_controller(*args)
+      end
+      yield connection
+    rescue Exception => e
+      if retry_count > self.retry_count
+        Tengine.logger.error "#{e.class.name} #{e.message}"
+        raise e
+      else
+        Tengine.logger.warn "retry[#{retry_count}]: #{e.message}"
+        sleep self.retry_interval
+        retry_count += 1
+        retry
+      end
+    end
+  end
+
   private
 
   def address_order
     @@address_order ||= ['private_ip_address'.freeze].freeze
-  end
-
-  def connect
-    connection = nil
-    if self.connection_settings[:test] || self.connection_settings["test"]
-      connection = ::Tama::Controllers::ControllerFactory.create_controller(:test)
-
-      options = self.connection_settings[:options] || self.connection_settings["options"]
-      if options
-        options.symbolize_keys!
-        connection.describe_instances_file =
-          File.expand_path(options[:describe_instances_file]) if options[:describe_instances_file]
-        connection.describe_images_file =
-          File.expand_path(options[:describe_images_file]) if options[:describe_images_file]
-        connection.run_instances_file =
-          File.expand_path(options[:run_instances_file]) if options[:run_instances_file]
-        connection.terminate_instances_file =
-          File.expand_path(options[:terminate_instances_file]) if options[:terminate_instances_file]
-        connection.describe_host_nodes_file  =
-          File.expand_path(options[:describe_host_nodes_file]) if options[:describe_host_nodes_file]
-        connection.describe_instance_specs_file =
-          File.expand_path(options[:describe_instance_specs_file]) if options[:describe_instance_specs_file]
-      end
-    else
-      options = self.connection_settings.symbolize_keys
-      args = [:account, :ec2_host, :ec2_port, :ec2_protocol, :wakame_host, :wakame_port, :wakame_protocol].map{|key| options[key]}
-      connection = ::Tama::Controllers::ControllerFactory.create_controller(*args)
-    end
-    yield connection
   end
 
 end

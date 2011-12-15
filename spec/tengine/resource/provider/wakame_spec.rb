@@ -22,6 +22,117 @@ describe Tengine::Resource::Provider::Wakame do
     )
   }
 
+  context "API接続" do
+    it "コネクションが生成できる" do
+      expect {
+        invoke_ok = false
+        subject.connect do |conn|
+          invoke_ok = true
+        end
+        invoke_ok.should be_true
+      }.to_not raise_error
+    end
+
+    it "コネクションの接続でエラーが発生してもリトライできる" do
+      expect {
+        invoke_ok = false
+        subject.connect do |conn|
+          unless invoke_ok
+            invoke_ok = true
+            raise Errno::ETIMEDOUT
+          end
+        end
+        invoke_ok.should be_true
+      }.to_not raise_error
+    end
+
+    it "コネクションの接続でエラーが一定回数発生する場合にはエラーにする" do
+      expect {
+        invoke_ok = false
+        subject.connect_retry_count   = 3
+        subject.connect_retry_inteval = 1
+        subject.connect do |conn|
+          raise Errno::ETIMEDOUT
+          invoke_ok = true
+        end
+        invoke_ok.should be_false
+      }.to raise_error
+    end
+  end
+
+  # [bug] 仮想マシン停止命令発行後starting状態が表示される
+  context "仮想マシン停止後の起動" do
+    before do
+      c = mock(::Tama::Controllers::ControllerFactory.allocate)
+      ::Tama::Controllers::ControllerFactory.
+        stub(:create_controller).
+        with("a-shpoolxx", "10.10.10.10", 8000, "http", "192.168.2.22", 9001, "https").
+        and_return(c)
+      c.stub(:terminate_instances).
+        with(["i-f222222d"]).
+        and_return([{
+            :aws_shutdown_state      => nil,
+            :aws_instance_id         => "i-f222222d",
+            :aws_shutdown_state_code => nil,
+            :aws_prev_state          => nil,
+            :aws_prev_state_code     => nil,
+          }])
+      c.stub(:run_instances).
+        with("wmi-lucid5", 1, 1, [], "ssh-xxxxx", "", nil, "is-small", nil, nil, "foo-dc", nil).
+        and_return([{
+            :aws_image_id       => "wmi-lucid5",
+            :aws_reason         => "",
+            :aws_state_code     => "0",
+            :aws_owner          => "000000000888",
+            :aws_instance_id    => "i-abcdabcd",
+            :aws_reservation_id => "r-aabbccdd",
+            :aws_state          => "pending",
+            :dns_name           => "",
+            :ssh_key_name       => "ssh-xxxxxx",
+            :aws_groups         => [""],
+            :private_dns_name   => "",
+            :aws_instance_type  => "is-small",
+            :aws_launch_time    => "2008-1-1T00:00:00.000Z",
+            :aws_ramdisk_id     => "",
+            :aws_kernel_id      => "",
+            :ami_launch_index   => "0",
+            :aws_availability_zone => "",
+          }])
+      # キーを指定
+      subject.update_attributes(:properties => {
+        :key_name => "ssh-xxxxx"
+      })
+      Tengine::Resource::Server.delete_all
+      subject.virtual_servers.create(
+        :provided_id => 'i-f222222d',
+        :name => 'i-f222222d',
+        :status => 'running')
+    end
+
+    it "statusは変更しない" do
+      # 停止
+      va = subject.terminate_virtual_servers(subject.virtual_servers)
+      va.count.should == 1
+      v = va[0]
+      v.should_not be_nil
+      v.should be_valid
+      v.provided_id.should == 'i-f222222d'
+      v.status.should == 'running'
+
+      vi = subject.virtual_server_images.create(:provided_id => "wmi-lucid5")
+      vt = subject.virtual_server_types.create(:provided_id => "is-small")
+      ps = subject.physical_servers.create(:provided_id => "foo-dc")
+
+      # 起動
+      vs = subject.create_virtual_servers("i-abcdabcd", vi, vt, ps, "description", 1)
+      vs.count.should == 1
+      vserver = vs.first
+      vserver.should be_valid
+      vserver.provided_id.should == 'i-abcdabcd'
+      vserver.status.should == 'pending'
+    end
+  end
+
   context "仮想マシンの起動" do
     before do
       c = mock(::Tama::Controllers::ControllerFactory.allocate)

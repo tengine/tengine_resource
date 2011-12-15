@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 require 'spec_helper'
 
+require 'right_aws'
+
 describe Tengine::Resource::Provider::Ec2 do
   before do
     Tengine::Resource::Provider::Ec2.delete_all
