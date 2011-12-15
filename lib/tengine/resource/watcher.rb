@@ -82,6 +82,7 @@ class Tengine::Resource::Watcher
       sender.wait_for_connection do
         providers = Tengine::Resource::Provider.all
         providers.each do |provider|
+          provider.retry_on_error = true if provider.respond_to?(:retry_on_error=)
           # 仮想サーバタイプの監視
           provider.virtual_server_type_watch
           @periodic = EM.add_periodic_timer(provider.polling_interval) do

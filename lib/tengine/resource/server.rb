@@ -23,10 +23,12 @@ class Tengine::Resource::Server
 
   validates :name, :presence => true, :format => BASE_NAME.options
 
-  validates :name, :uniqueness => {:scope => :provider_id}
+  validates :name, :uniqueness => {:scope => :provider_id}, :if => :need_to_validate_name_uniqueness?
   index [[:name,  Mongo::ASCENDING], [:provider_id,  Mongo::ASCENDING], ], :unique => true
 
   has_many :guest_servers, :class_name => "Tengine::Resource::VirtualServer", :inverse_of => :host_server
+
+  def need_to_validate_name_uniqueness?; true; end
 
   class << self
     def find_or_create_by_name!(attrs = {}, &block)

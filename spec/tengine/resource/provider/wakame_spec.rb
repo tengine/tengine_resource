@@ -34,6 +34,7 @@ describe Tengine::Resource::Provider::Wakame do
     end
 
     it "コネクションの接続でエラーが発生してもリトライできる" do
+      subject.retry_on_error = true
       expect {
         invoke_ok = false
         subject.connect do |conn|
