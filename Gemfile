@@ -7,8 +7,8 @@ source "http://rubygems.org"
 # Example:
 #   gem "activesupport", ">= 2.3.5"
 
-gem "tengine_support", "~> 0.3.23.eventTNG"
-gem "tengine_core", "~> 0.4.10.eventTNG"
+gem "tengine_support", "~> 0.3.24"
+gem "tengine_core", "~> 0.5.4"
 
 # http://rightaws.rubyforge.org/
 # http://github.com/rightscale/right_aws
