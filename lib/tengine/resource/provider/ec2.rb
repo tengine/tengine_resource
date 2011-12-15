@@ -86,7 +86,7 @@ class Tengine::Resource::Provider::Ec2 < Tengine::Resource::Provider
   # @return [Array<Tengine::Resource::VirtualServer>]
   def create_virtual_servers name, image, type, physical, description, min_count, max_count, group_ids, key_name, user_data = "", kernel_id, ramdisk_id
     connect {|conn|
-      conn.run_instances(
+      results = conn.run_instances(
         image.provided_id,
         min_count,
         max_count,
@@ -99,23 +99,46 @@ class Tengine::Resource::Provider::Ec2 < Tengine::Resource::Provider
         ramdisk_id,
         physical,
         nil  # <- block_device_mappings
-      ).map.with_index {|hash, idx|
-        self.virtual_servers.create(
-          :name                 => sprintf("%s%03d", name, idx + 1), # 1 origin
-          :address_order        => address_order,
-          :description          => description,
-          :provided_id          => hash.delete(:aws_instance_id),
-          :provided_image_id    => hash.delete(:aws_image_id),
-          :provided_type_id     => hash.delete(:aws_type_id),
-          :status               => hash.delete(:aws_state),
-          :properties           => hash,
-          :addresses            => {
-#             :dns_name           => hash.delete(:dns_name),
-#             :ip_address         => hash.delete(:ip_address),
-#             :private_dns_name   => hash.delete(:private_dns_name),
-#             :private_ip_address => hash.delete(:private_ip_address),
-          }
-        )
+      )
+      yield if block_given? # テスト用のブロックの呼び出し
+      results.map.with_index {|hash, idx|
+        provided_id = hash.delete(:aws_instance_id)
+        if server = self.virtual_servers.find(:first, :conditions => {:provided_id => provided_id})
+          server
+        else
+          host_server_provided_id = hash[:aws_availability_zone]
+          host_server_provided_id = physical if host_server_provided_id.nil? || host_server_provided_id.blank?
+          # findではなくfirstで検索しているので、もしhost_server_provided_idで指定されるサーバが見つからなくても
+          # host_serverがnilとして扱われるが、仮想サーバ自身の登録は行われます
+          host_server = (host_server_provided_id && !host_server_provided_id.blank?) ?
+            Tengine::Resource::PhysicalServer.first(:conditions => {:provided_id => host_server_provided_id}) : nil
+          begin
+            self.virtual_servers.create!(
+              :name                 => sprintf("%s%03d", name, idx + 1), # 1 origin
+              :address_order        => address_order,
+              :description          => description,
+              :provided_id          => provided_id,
+              :provided_image_id    => hash.delete(:aws_image_id),
+              :provided_type_id     => hash.delete(:aws_type_id),
+              :host_server_id       => host_server ? host_server.id : nil,
+              :status               => hash.delete(:aws_state),
+              :properties           => hash,
+              :addresses            => {
+    #             :dns_name           => hash.delete(:dns_name),
+    #             :ip_address         => hash.delete(:ip_address),
+    #             :private_dns_name   => hash.delete(:private_dns_name),
+    #             :private_ip_address => hash.delete(:private_ip_address),
+              })
+          rescue Mongo::OperationFailure => e
+            raise e unless e.message =~ /E11000 duplicate key error/
+            self.virtual_servers.find(:first, :conditions => {:provided_id => provided_id}) or
+              raise "VirtualServer not found for #{provided_id}"
+          rescue Mongoid::Errors::Validations => e
+            raise e unless e.document.errors[:provided_id].any?{|s| s =~ /taken/}
+            self.virtual_servers.find(:first, :conditions => {:provided_id => provided_id}) or
+              raise "VirtualServer not found for #{provided_id}"
+          end
+        end
       }
     }
   end

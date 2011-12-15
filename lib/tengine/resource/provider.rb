@@ -10,9 +10,11 @@ class Tengine::Resource::Provider
   include Tengine::Core::Validation
   include Tengine::Core::FindByName
 
-  field :name, :type => String
-  field :description, :type => String
-  field :polling_interval, :type => Integer, :default => 10
+  field :name,             :type => String
+  field :description,      :type => String
+  field :polling_interval, :type => Integer, :default => 10   # プロバイダへの問い合わせ間隔
+  field :retry_interval,   :type => Integer, :default => 10   # プロバイダへの問い合わせリトライ間隔
+  field :retry_count,      :type => Integer, :default => 30   # プロバイダへの問い合わせリトライ回数
   field :properties,       :type => Hash,    :default => {}
 
   validates :name, :presence => true, :uniqueness => true, :format => BASE_NAME.options
