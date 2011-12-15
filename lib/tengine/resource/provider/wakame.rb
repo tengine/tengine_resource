@@ -4,6 +4,8 @@ require 'tengine/support/core_ext/hash/keys'
 
 class Tengine::Resource::Provider::Wakame < Tengine::Resource::Provider::Ec2
 
+  attr_accessor :retry_on_error
+
   # field :connection_settings, :type => Hash # 継承元のTengine::Resource::Provider::Ec2で定義されているので不要
 
   PHYSICAL_SERVER_STATES = [:online, :offline].freeze
@@ -549,10 +551,12 @@ class Tengine::Resource::Provider::Wakame < Tengine::Resource::Provider::Ec2
     hash_key_convert(result, option[:convert])
   end
 
-  def connect
+  def connect(&block)
+    send(retry_on_error ? :connect_with_retry : :connect_without_retry, &block)
+  end
+
+  def connect_without_retry
     connection = nil
-    retry_count = 1
-    begin
       if self.connection_settings[:test] || self.connection_settings["test"]
         # テスト用
         connection = ::Tama::Controllers::ControllerFactory.create_controller(:test)
@@ -577,7 +581,13 @@ class Tengine::Resource::Provider::Wakame < Tengine::Resource::Provider::Ec2
         args = [:account, :ec2_host, :ec2_port, :ec2_protocol, :wakame_host, :wakame_port, :wakame_protocol].map{|key| options[key]}
         connection = ::Tama::Controllers::ControllerFactory.create_controller(*args)
       end
-      yield connection
+    yield connection
+  end
+
+  def connect_with_retry(&block)
+    retry_count = 1
+    begin
+      connect_without_retry(&block)
     rescue Exception => e
       if retry_count > self.retry_count
         Tengine.logger.error "#{e.class.name} #{e.message}"
