@@ -63,4 +63,54 @@ describe Tengine::Resource::VirtualServer do
 
   end
 
+  describe :launch_mode? do
+    context "launch_countが設定されていたらtrue" do
+      subject{ Tengine::Resource::VirtualServer.new(:launch_count => '1') }
+      its(:launch_count){ should == 1}
+      its(:launch_mode?){ should == true}
+    end
+
+    context "launch_countがnilならばfalse" do
+      subject{ Tengine::Resource::VirtualServer.new(:launch_count => nil) }
+      its(:launch_count){ should == nil}
+      its(:launch_mode?){ should == false}
+    end
+  end
+
+  describe :launch_mode do
+    before do
+      I18n.locale = :ja
+    end
+
+    before "既に重複する名前のモデルが登録されている場合" do
+      Tengine::Resource::VirtualServer.tap do |c|
+        c.delete_all
+        c.create!(:name => "test003", :provided_id => "provided_id_003")
+        c.create!(:name => "test004", :provided_id => "provided_id_004")
+      end
+    end
+
+    it "testを2台起動しようとした場合" do
+      s = Tengine::Resource::VirtualServer.new(:name => "test", :launch_count => 2)
+      s.valid?
+      s.errors.full_messages.should == []
+      s.errors[:name].should == []
+    end
+
+    it "testを3台起動しようとした場合" do
+      s = Tengine::Resource::VirtualServer.new(:name => "test", :launch_count => 3)
+      s.valid?
+      s.errors[:name].should == ["に指定されたtest003は既に登録されています"]
+      s.errors.full_messages.should == ["Name に指定されたtest003は既に登録されています"]
+    end
+
+    it "testを4台起動しようとした場合" do
+      s = Tengine::Resource::VirtualServer.new(:name => "test", :launch_count => 4)
+      s.valid?
+      s.errors[:name].should == ["に指定されたtest003,test004は既に登録されています"]
+      s.errors.full_messages.should == ["Name に指定されたtest003,test004は既に登録されています"]
+    end
+  end
+
+
 end
