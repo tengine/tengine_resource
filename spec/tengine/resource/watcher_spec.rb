@@ -27,6 +27,19 @@ describe Tengine::Resource::Watcher do
     }
   end
 
+  after :all do
+    Mongoid.instance_eval do
+      observers.each do |i|
+        i.instance.send(:observed_classes).each do |j|
+          Mongoid::Callbacks::CALLBACKS.each do |k|
+            x, y = k.to_s.split '_', 2
+            j.send :reset_callbacks, y#, x
+          end
+        end
+      end
+    end
+  end
+
   describe :initialize do
     it "default" do
       Tengine::Core::MethodTraceable.stub(:disabled=)
