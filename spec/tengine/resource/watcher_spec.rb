@@ -27,6 +27,19 @@ describe Tengine::Resource::Watcher do
     }
   end
 
+  after :all do
+    Mongoid.instance_eval do
+      observers.each do |i|
+        i.instance.send(:observed_classes).each do |j|
+          Mongoid::Callbacks::CALLBACKS.each do |k|
+            x, y = k.to_s.split '_', 2
+            j.send :reset_callbacks, y#, x
+          end
+        end
+      end
+    end
+  end
+
   describe :initialize do
     it "default" do
       Tengine::Core::MethodTraceable.stub(:disabled=)
@@ -45,12 +58,6 @@ describe Tengine::Resource::Watcher do
       @watcher = Tengine::Resource::Watcher.new(%w[--log-common-level warn])
       EM.should_receive(:run).and_yield
 
-      # コネクションの mock を生成
-      mock_conn = mock(:connection)
-      AMQP.should_receive(:connect).with(an_instance_of(Hash)).and_return(mock_conn)
-      mock_conn.should_receive(:on_tcp_connection_loss)
-      mock_conn.should_receive(:after_recovery)
-      mock_conn.should_receive(:on_closed)
     end
 
     it "生成したmq_suiteが設定されている" do
@@ -83,12 +90,6 @@ describe Tengine::Resource::Watcher do
       EM.should_receive(:run).and_yield
 
       # コネクションの mock を生成
-      mock_conn = mock(:connection)
-      AMQP.should_receive(:connect).with(an_instance_of(Hash)).and_return(mock_conn)
-      mock_conn.should_receive(:on_tcp_connection_loss)
-      mock_conn.should_receive(:after_recovery)
-      mock_conn.should_receive(:on_closed)
-
       @mock_mq = Tengine::Mq::Suite.new(@mq_config)
       Tengine::Mq::Suite.should_receive(:new).
         with(@mq_config).and_return(@mock_mq)
