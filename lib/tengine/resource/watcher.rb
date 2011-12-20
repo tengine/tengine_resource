@@ -44,6 +44,15 @@ class Tengine::Resource::Watcher
     Tengine::Event.default_sender = @sender
   end
 
+  def send_last_event
+    sender.fire "finished.process.resourcew.tengine", :key => @uuid, :source_name => @pid, :sender_name => @pid, :occurred_at => Time.now, :level_key => :info, :keep_connection => true
+    sender.stop
+  end
+
+  def send_periodic_event
+    sender.fire "resourcew.heartbeat.tengine", :key => @uuid, :source_name => @pid, :sender_name => @pid, :occurred_at => Time.now, :level_key => :debug, :keep_connection => true, :retry_count => 0
+  end
+
   def run(__file__)
     case config[:action].to_sym
     when :start
@@ -92,6 +101,14 @@ class Tengine::Resource::Watcher
             provider.virtual_server_watch
             # 仮想サーバイメージの監視
             provider.virtual_server_image_watch
+          end
+        end
+        ##############
+        ## heartbeat
+        int = @config[:heartbeat][:rwd][:interval].to_i
+        if int and int > 0
+          @periodic = EM.add_periodic_timer int do
+            send_periodic_event
           end
         end
       end
