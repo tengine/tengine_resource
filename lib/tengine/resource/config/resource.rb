@@ -8,30 +8,11 @@ require 'active_support/memoizable'
 
 require 'tengine/support/yaml_with_erb'
 
-Tengine::Support::Config::Definition::Group.module_eval do
-  def symbolize_keys
-    to_hash
-  end
-end
-
 class Tengine::Resource::Config::Resource < Tengine::Support::Config::Definition::Suite
   # memoize については http://wota.jp/ac/?date=20081025#p11 などを参照してください
   extend ActiveSupport::Memoizable
 
   class << self
-    # この辺は以前のTengine::Core::Configとの互換のために用意してあります
-    def [](hash_or_suite)
-      case hash_or_suite
-      when Tengine::Resource::Config::Resource then hash_or_suite
-      when Hash then
-        result = Tengine::Resource::Config::Resource.new
-        result.load(hash_or_suite)
-        result
-      else
-        raise "unsupported class: #{hash_or_suite.class.inspect}"
-      end
-    end
-
     def default_hash
       new.to_hash
     end
@@ -78,13 +59,13 @@ class Tengine::Resource::Config::Resource < Tengine::Support::Config::Definition
 Usage: tengine_resource_watchd [-k action] [-f path_to_config]
          [-o mq_conn_host] [-p mq_conn_port] [-u mq_conn_user]
          [-s mq_conn_pass] [-e mq_exchange_name] [-q mq_queue_name]
-         [-G heartbeat_resourcew_interval]
 EOS
 
     field(:action, "start|stop|force-stop|status", :type => :string, :default => "start")
     load_config(:config, "path/to/config_file", :type => :string)
 
     add(:process, Tengine::Resource::Config::Resource::Process)
+    add(:watchd,  Tengine::Resource::Config::Resource::Watchd)
     field(:db, "settings to connect to db", :type => :hash, :default => {
         'host' => 'localhost',
         'port' => 27017,
@@ -123,7 +104,7 @@ EOS
       self.formatter = lambda{|level, t, prog, msg| "#{t.iso8601} STDERR #{@process_identifier} #{msg}\n"}
     }
 
-    group(:heartbeat) do
+    group(:heartbeat, :hidden => true) do
       add(:resourcew, Tengine::Core::Config::Core::Heartbeat)
     end
 
@@ -145,8 +126,6 @@ EOS
         [:event_queue,  :exchange  , :name] => :e,
         [:event_queue,  :queue     , :name] => :q,
 
-        [:heartbeat, :resourcew, :interval] => :G,
-
         [:verbose] => :V,
         [:version] => :v,
         [:help] => :h
@@ -159,6 +138,21 @@ EOS
     field :daemon,  "process works on background.", :type => :boolean, :default => false
     field :pid_dir, "path/to/dir for PID created.", :type => :directory, :default => "./tmp/watchd_pids"
   end
+
+  class Watchd
+    include Tengine::Support::Config::Definition
+
+#    field :heartbeat_period      , "the second of period which heartbeat event be fired. disable heartbeat if 0.", :type => :integer, :default => 0
+  end
+
+#   class AmqpConnection < Tengine::Support::Config::Amqp::Connection
+#     field :vhost, :default => '/'
+#     field :user , :default => 'guest'
+#     field :pass , :default => 'guest'
+#     field :logging, :type => :boolean, :default => false
+#     field :insist, :type => :boolean, :default => false
+#     field :auto_reconnect_delay, :type => :integer, :default => 1
+#   end
 
   class LoggerConfig < Tengine::Support::Config::Logger
     parameter :logger_name
@@ -178,6 +172,12 @@ EOS
     field :level,
       :default => proc{ log_common.level },
       :default_description => proc{"value of #{log_common.long_opt}-level"}
+  end
+
+  class Heartbeat
+    include Tengine::Support::Config::Definition
+    field :interval, "heartbeat interval seconds", :type => :integer, :default => 30
+    field :expire  , "heartbeat expire seconds"  , :type => :integer, :default => 120
   end
 
   def setup_loggers
