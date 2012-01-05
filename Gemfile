@@ -10,6 +10,8 @@ source "http://rubygems.org"
 gem "tengine_support", "~> 0.3.24"
 gem "tengine_core", "~> 0.5.4"
 
+gem "wakame-adapters-tengine", "~> 0.0.0"
+
 # http://rightaws.rubyforge.org/
 # http://github.com/rightscale/right_aws
 gem "right_aws", "~> 2.1.0"
@@ -27,6 +29,4 @@ group :development do
   # gem "rcov", ">= 0"
   gem "simplecov", "~> 0.5.3"
   gem "ZenTest", "~> 4.6.2"
-
-  gem "wakame-adapters-tengine", "~> 0.0.0"
 end
