@@ -18,4 +18,5 @@ class Tengine::Resource::VirtualServerType
 
   validates :provided_id, :presence => true, :uniqueness => {:scope => :provider_id}
   index [ [:provider_id, Mongo::ASCENDING] , [:provided_id, Mongo::ASCENDING] ], :unique => true
+  index :provided_id
 end
