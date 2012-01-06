@@ -17,8 +17,6 @@ class Tengine::Resource::VirtualServerImage
   validates :name, :presence => true, :uniqueness => true, :format => BASE_NAME.options
   index :name, :unique => true
 
-  index([ [:_id, Mongo::ASCENDING], [:enabled, Mongo::ASCENDING], [:version, Mongo::ASCENDING], ])
-
   index([ [:description, Mongo::ASCENDING], ])
   index([ [:description, Mongo::DESCENDING], ])
   index([ [:provided_description, Mongo::ASCENDING], ])
