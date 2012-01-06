@@ -26,6 +26,8 @@ class Tengine::Resource::Server
   validates :name, :uniqueness => {:scope => :provider_id}, :if => :need_to_validate_name_uniqueness?
   index [[:name,  Mongo::ASCENDING], [:provider_id,  Mongo::ASCENDING], ], :unique => true
 
+  index([ [:status,  Mongo::ASCENDING], [:_type,  Mongo::ASCENDING], ])
+
   has_many :guest_servers, :class_name => "Tengine::Resource::VirtualServer", :inverse_of => :host_server
 
   def need_to_validate_name_uniqueness?; true; end
