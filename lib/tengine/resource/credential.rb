@@ -36,6 +36,11 @@ class Tengine::Resource::Credential
 
   index :name, :unique => true
 
+  index([ [:_id, Mongo::ASCENDING], [:auth_type_cd, Mongo::ASCENDING], ])
+  index([ [:_id, Mongo::ASCENDING], [:auth_type_cd, Mongo::DESCENDING], ])
+  index([ [:_id, Mongo::ASCENDING], [:description, Mongo::ASCENDING], ])
+  index([ [:_id, Mongo::ASCENDING], [:description, Mongo::DESCENDING], ])
+
   before_validation :prepare_auth_values_default # auth_valuesの各値がnilならデフォルト値を設定します
   validate{|c| c.validate_auth_values}
 

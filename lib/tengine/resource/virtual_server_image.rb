@@ -17,6 +17,13 @@ class Tengine::Resource::VirtualServerImage
   validates :name, :presence => true, :uniqueness => true, :format => BASE_NAME.options
   index :name, :unique => true
 
+  index([ [:description, Mongo::ASCENDING], ])
+  index([ [:description, Mongo::DESCENDING], ])
+  index([ [:provided_description, Mongo::ASCENDING], ])
+  index([ [:provided_description, Mongo::DESCENDING], ])
+  index([ [:provided_id, Mongo::ASCENDING], ])
+  index([ [:provided_id, Mongo::DESCENDING], ])
+
   class << self
     def find_or_create_by_name!(attrs = {}, &block)
       result = self.first(:conditions => {:name => attrs[:name]})
