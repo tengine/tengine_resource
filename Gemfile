@@ -8,7 +8,7 @@ source "http://rubygems.org"
 #   gem "activesupport", ">= 2.3.5"
 
 gem "tengine_support", "~> 0.3.24"
-gem "tengine_core", "~> 0.5.4"
+gem "tengine_core", "~> 0.5.17.pre"
 
 gem "wakame-adapters-tengine", "~> 0.0.0"
 
