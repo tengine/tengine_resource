@@ -91,8 +91,10 @@ class Tengine::Resource::Watcher
             mutex.synchronize do
             # 物理サーバの監視
             provider.physical_server_watch
+            mutex.heartbeat
             # 仮想サーバの監視
             provider.virtual_server_watch
+            mutex.heartbeat
             # 仮想サーバイメージの監視
             provider.virtual_server_image_watch
             end
