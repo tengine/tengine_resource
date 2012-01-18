@@ -318,6 +318,18 @@ describe Tengine::Resource::Provider::Wakame do
       }
     end
 
+    it "https://www.pivotaltracker.com/story/show/23338711" do
+      subject.virtual_servers.find_by_name("virtual11").update_attributes(:status => :terminated)
+      subject.capacities['server1'].should == {
+        't1' => 6,
+        't2' => 3,
+        't3' => 3,
+        't4' => 1,
+        't5' => 1,
+        't6' => 1,
+      }
+    end
+
   end
 
 end
