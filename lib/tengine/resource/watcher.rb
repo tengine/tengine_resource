@@ -5,6 +5,7 @@ require 'eventmachine'
 require 'tengine/event'
 require 'tengine/mq'
 require 'tengine/resource/config'
+require 'tengine/core/mongoid_fix'
 
 class Tengine::Resource::Watcher
 
