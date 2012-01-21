@@ -701,6 +701,48 @@ describe Tengine::Resource::Watcher do
       end   # end to ec2
     end   # end to :virtual_server_image_watch
 
+    # polling_interval
+    describe :polling_interval do
+      it 'polling_intervalが0より大きい場合は、問い合わせを行う', :current => true do
+        @provider_wakame.polling_interval = 1
+        Tengine::Resource::Provider.should_receive(:all).and_return([@provider_wakame])
+
+        @watcher.sender.should_receive(:wait_for_connection).and_yield
+        @provider_wakame.should_receive(:virtual_server_type_watch)
+        EM.should_receive(:add_periodic_timer).with(@provider_wakame.polling_interval).and_yield
+        @provider_wakame.should_receive(:physical_server_watch)
+        @provider_wakame.should_receive(:virtual_server_watch)
+        @provider_wakame.should_receive(:virtual_server_image_watch)
+        @watcher.start
+      end
+
+      it 'polling_intervalが0の場合は、問い合わせを行わない', :current => true do
+        @provider_wakame.polling_interval = 0
+        Tengine::Resource::Provider.should_receive(:all).and_return([@provider_wakame])
+
+        @watcher.sender.should_receive(:wait_for_connection).and_yield
+        @provider_wakame.should_not_receive(:virtual_server_type_watch)
+        EM.should_not_receive(:add_periodic_timer).with(@provider_wakame.polling_interval).and_yield
+        @provider_wakame.should_not_receive(:physical_server_watch)
+        @provider_wakame.should_not_receive(:virtual_server_watch)
+        @provider_wakame.should_not_receive(:virtual_server_image_watch)
+        @watcher.start
+      end
+
+      it 'polling_intervalがマイナスの場合は、問い合わせを行わない', :current => true do
+        @provider_wakame.polling_interval = -1
+        Tengine::Resource::Provider.should_receive(:all).and_return([@provider_wakame])
+
+        @watcher.sender.should_receive(:wait_for_connection).and_yield
+        @provider_wakame.should_not_receive(:virtual_server_type_watch)
+        EM.should_not_receive(:add_periodic_timer).with(@provider_wakame.polling_interval).and_yield
+        @provider_wakame.should_not_receive(:physical_server_watch)
+        @provider_wakame.should_not_receive(:virtual_server_watch)
+        @provider_wakame.should_not_receive(:virtual_server_image_watch)
+        @watcher.start
+      end
+    end # end to :polling_interval
+
   end   # end to :start
 
   ORIGINAL_WAKAME_INSTANCE_SPECS = [{
