@@ -197,6 +197,8 @@ describe Tengine::Resource::Provider::Wakame do
       v = vs.first
       v.should be_valid
       v.name.should == "name001"
+      v.provided_type_id.should_not be_nil
+      v.provided_type_id.should_not be_empty
     end
 
     it "keyがない場合の起動" do
@@ -207,6 +209,8 @@ describe Tengine::Resource::Provider::Wakame do
       vs.count.should == 1
       v = vs.first
       v.name.should == "name001"
+      v.provided_type_id.should_not be_nil
+      v.provided_type_id.should_not be_empty
     end
   end
 
