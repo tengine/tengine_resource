@@ -72,7 +72,11 @@ class Tengine::Resource::Provider::Wakame < Tengine::Resource::Provider::Ec2
     end
     physical_servers.inject({}) do |result, physical_server|
       if physical_server.status == 'online'
-        active_guests = physical_server.guest_servers.reject {|i| i.status.to_s == "terminated" }
+        active_guests = physical_server.guest_servers.reject do |i|
+          i.status.to_s == "terminated" or
+            server_type_to_cpu[i.provided_type_id].nil? or
+            server_type_to_mem[i.provided_type_id].nil?
+        end
         cpu_free = physical_server.cpu_cores - active_guests.map{|s| server_type_to_cpu[s.provided_type_id]}.sum
         mem_free = physical_server.memory_size - active_guests.map{|s| server_type_to_mem[s.provided_type_id]}.sum
         result[physical_server.provided_id] = server_type_ids.inject({}) do |dest, server_type_id|

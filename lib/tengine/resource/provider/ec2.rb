@@ -119,7 +119,7 @@ class Tengine::Resource::Provider::Ec2 < Tengine::Resource::Provider
               :description          => description,
               :provided_id          => provided_id,
               :provided_image_id    => hash.delete(:aws_image_id),
-              :provided_type_id     => hash.delete(:aws_type_id),
+              :provided_type_id     => hash.delete(:aws_instance_type),
               :host_server_id       => host_server ? host_server.id : nil,
               :status               => hash.delete(:aws_state),
               :properties           => hash,
