@@ -5,11 +5,11 @@
 
 Gem::Specification.new do |s|
   s.name = "tengine_resource"
-  s.version = "0.5.11"
+  s.version = "0.5.12"
 
   s.required_rubygems_version = Gem::Requirement.new(">= 0") if s.respond_to? :required_rubygems_version=
   s.authors = ["saishu", "w-irie", "taigou", "totty", "hiroshinakao", "g-morita", "guemon", "aoetk", "hattori-at-nt", "t-yamada", "y-karashima", "akm"]
-  s.date = "2012-01-19"
+  s.date = "2012-01-26"
   s.description = "tengine_resource provides physical/virtual server management"
   s.email = "tengine@nautilus-technologies.com"
   s.executables = ["tengine_resource_watchd"]
@@ -128,7 +128,7 @@ Gem::Specification.new do |s|
 
     if Gem::Version.new(Gem::VERSION) >= Gem::Version.new('1.2.0') then
       s.add_runtime_dependency(%q<tengine_support>, ["~> 0.3.24"])
-      s.add_runtime_dependency(%q<tengine_core>, ["~> 0.5.20"])
+      s.add_runtime_dependency(%q<tengine_core>, ["~> 0.5.23"])
       s.add_runtime_dependency(%q<wakame-adapters-tengine>, ["~> 0.0.0"])
       s.add_runtime_dependency(%q<right_aws>, ["~> 2.1.0"])
       s.add_runtime_dependency(%q<net-ssh>, ["~> 2.2.1"])
@@ -141,7 +141,7 @@ Gem::Specification.new do |s|
       s.add_development_dependency(%q<ZenTest>, ["~> 4.6.2"])
     else
       s.add_dependency(%q<tengine_support>, ["~> 0.3.24"])
-      s.add_dependency(%q<tengine_core>, ["~> 0.5.20"])
+      s.add_dependency(%q<tengine_core>, ["~> 0.5.23"])
       s.add_dependency(%q<wakame-adapters-tengine>, ["~> 0.0.0"])
       s.add_dependency(%q<right_aws>, ["~> 2.1.0"])
       s.add_dependency(%q<net-ssh>, ["~> 2.2.1"])
@@ -155,7 +155,7 @@ Gem::Specification.new do |s|
     end
   else
     s.add_dependency(%q<tengine_support>, ["~> 0.3.24"])
-    s.add_dependency(%q<tengine_core>, ["~> 0.5.20"])
+    s.add_dependency(%q<tengine_core>, ["~> 0.5.23"])
     s.add_dependency(%q<wakame-adapters-tengine>, ["~> 0.0.0"])
     s.add_dependency(%q<right_aws>, ["~> 2.1.0"])
     s.add_dependency(%q<net-ssh>, ["~> 2.2.1"])

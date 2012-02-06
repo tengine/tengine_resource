@@ -88,6 +88,7 @@ describe Tengine::Resource::Watcher do
     before do
       @watcher = Tengine::Resource::Watcher.new(%w[--log-common-level warn])
       EM.should_receive(:run).and_yield
+      EM.stub(:schedule).and_yield
 
       # コネクションの mock を生成
       @mock_mq = Tengine::Mq::Suite.new(@mq_config)
