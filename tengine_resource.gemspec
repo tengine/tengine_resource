@@ -5,11 +5,11 @@
 
 Gem::Specification.new do |s|
   s.name = "tengine_resource"
-  s.version = "0.5.12"
+  s.version = "0.5.13"
 
   s.required_rubygems_version = Gem::Requirement.new(">= 0") if s.respond_to? :required_rubygems_version=
-  s.authors = ["saishu", "w-irie", "taigou", "totty", "hiroshinakao", "g-morita", "guemon", "aoetk", "hattori-at-nt", "t-yamada", "y-karashima", "akm"]
-  s.date = "2012-01-26"
+  s.authors = ["taigou", "totty", "g-morita", "shyouhei", "akm", "hiroshinakao"]
+  s.date = "2012-02-09"
   s.description = "tengine_resource provides physical/virtual server management"
   s.email = "tengine@nautilus-technologies.com"
   s.executables = ["tengine_resource_watchd"]
@@ -118,9 +118,9 @@ Gem::Specification.new do |s|
     "tmp/log/.gitignore"
   ]
   s.homepage = "http://github.com/tengine/tengine_resource"
-  s.licenses = ["MPL/LGPL"]
+  s.licenses = ["MPL2.0/LGPLv3"]
   s.require_paths = ["lib"]
-  s.rubygems_version = "1.8.15"
+  s.rubygems_version = "1.8.12"
   s.summary = "tengine_resource provides physical/virtual server management"
 
   if s.respond_to? :specification_version then
