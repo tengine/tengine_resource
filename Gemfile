@@ -5,7 +5,7 @@ source "http://rubygems.org"
 # Example:
 #   gem "activesupport", ">= 2.3.5"
 
-gem "tengine_support", "~> 0.3.24"
+gem "tengine_support", "~> 0.3.26"
 gem "tengine_core", "~> 0.5.23"
 
 gem "wakame-adapters-tengine", "~> 0.0.0"
