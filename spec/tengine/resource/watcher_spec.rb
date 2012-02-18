@@ -13,7 +13,8 @@ describe Tengine::Resource::Watcher do
       :connection => {
         :host => "localhost", :port => 5672, :vhost => "/",
         :user => "guest", :pass => "guest", :logging => false,
-        :insist => false, :auto_reconnect_delay => 1
+        :insist => false, :auto_reconnect_delay => 1,
+        :heartbeat_interval => 0,
       },
       :exchange => {
         :name => "tengine_event_exchange", :type => "direct", :durable => true

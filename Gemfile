@@ -1,13 +1,11 @@
 # -*- coding: utf-8 -*-
-# private gemserver
-source "http://bts.tenginefw.com/gemserver"
 source "http://rubygems.org"
 
 # Add dependencies required to use your gem here.
 # Example:
 #   gem "activesupport", ">= 2.3.5"
 
-gem "tengine_support", "~> 0.3.24"
+gem "tengine_support", "~> 0.3.26"
 gem "tengine_core", "~> 0.5.23"
 
 gem "wakame-adapters-tengine", "~> 0.0.0"
