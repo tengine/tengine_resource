@@ -532,8 +532,31 @@ class Tengine::Resource::Provider::Wakame < Tengine::Resource::Provider::Ec2
     result = connect do |conn|
       conn.describe_instances(uuids)
     end
-    hash_key_convert(result, option[:convert])
+    result = hash_key_convert(result, option[:convert])
+    result.each do |r|
+      replace_value_of_hash(r, :private_ip_address) do |v|
+        v.first if v.is_a?(Array)
+      end
+      replace_value_of_hash(r, :ip_address) do |v|
+        "nw-data\=#{$1}" if (v =~ /^nw\-data\=\[\"(.+)\"\]$/)
+      end
+    end
+    result
   end
+
+  private
+  def replace_value_of_hash(hash, key)
+    [key, key.to_s].each do |k|
+      if value = hash[k]
+        if result = yield(value)
+          hash[k] = result
+          return
+        end
+      end
+    end
+  end
+
+  public
 
   def describe_images_for_api(uuids = [], option = {})
     result = connect do |conn|
