@@ -5,11 +5,11 @@
 
 Gem::Specification.new do |s|
   s.name = "tengine_resource"
-  s.version = "0.5.13"
+  s.version = "0.5.14"
 
   s.required_rubygems_version = Gem::Requirement.new(">= 0") if s.respond_to? :required_rubygems_version=
   s.authors = ["taigou", "totty", "g-morita", "shyouhei", "akm", "hiroshinakao"]
-  s.date = "2012-02-09"
+  s.date = "2012-05-02"
   s.description = "tengine_resource provides physical/virtual server management"
   s.email = "tengine-info@groovenauts.jp"
   s.executables = ["tengine_resource_watchd"]
@@ -49,6 +49,7 @@ Gem::Specification.new do |s|
     "lib/tengine_resource.rb",
     "spec/fixtures/goku_at_ec2_ap_northeast.rb",
     "spec/mongoid.yml",
+    "spec/mongoid_en.yml",
     "spec/spec_helper.rb",
     "spec/support/ec2.rb",
     "spec/support/mongo_index_key_log.rb",
@@ -127,7 +128,7 @@ Gem::Specification.new do |s|
     s.specification_version = 3
 
     if Gem::Version.new(Gem::VERSION) >= Gem::Version.new('1.2.0') then
-      s.add_runtime_dependency(%q<tengine_support>, ["~> 0.3.24"])
+      s.add_runtime_dependency(%q<tengine_support>, ["~> 0.3.27"])
       s.add_runtime_dependency(%q<tengine_core>, ["~> 0.5.23"])
       s.add_runtime_dependency(%q<wakame-adapters-tengine>, ["~> 0.0.0"])
       s.add_runtime_dependency(%q<right_aws>, ["~> 2.1.0"])
@@ -135,12 +136,12 @@ Gem::Specification.new do |s|
       s.add_development_dependency(%q<rspec>, ["~> 2.6.0"])
       s.add_development_dependency(%q<factory_girl>, ["~> 2.1.2"])
       s.add_development_dependency(%q<yard>, ["~> 0.7.2"])
-      s.add_development_dependency(%q<bundler>, ["~> 1.0.18"])
+      s.add_development_dependency(%q<bundler>, ["~> 1.1.3"])
       s.add_development_dependency(%q<jeweler>, ["~> 1.6.4"])
       s.add_development_dependency(%q<simplecov>, ["~> 0.5.3"])
       s.add_development_dependency(%q<ZenTest>, ["~> 4.6.2"])
     else
-      s.add_dependency(%q<tengine_support>, ["~> 0.3.24"])
+      s.add_dependency(%q<tengine_support>, ["~> 0.3.27"])
       s.add_dependency(%q<tengine_core>, ["~> 0.5.23"])
       s.add_dependency(%q<wakame-adapters-tengine>, ["~> 0.0.0"])
       s.add_dependency(%q<right_aws>, ["~> 2.1.0"])
@@ -148,13 +149,13 @@ Gem::Specification.new do |s|
       s.add_dependency(%q<rspec>, ["~> 2.6.0"])
       s.add_dependency(%q<factory_girl>, ["~> 2.1.2"])
       s.add_dependency(%q<yard>, ["~> 0.7.2"])
-      s.add_dependency(%q<bundler>, ["~> 1.0.18"])
+      s.add_dependency(%q<bundler>, ["~> 1.1.3"])
       s.add_dependency(%q<jeweler>, ["~> 1.6.4"])
       s.add_dependency(%q<simplecov>, ["~> 0.5.3"])
       s.add_dependency(%q<ZenTest>, ["~> 4.6.2"])
     end
   else
-    s.add_dependency(%q<tengine_support>, ["~> 0.3.24"])
+    s.add_dependency(%q<tengine_support>, ["~> 0.3.27"])
     s.add_dependency(%q<tengine_core>, ["~> 0.5.23"])
     s.add_dependency(%q<wakame-adapters-tengine>, ["~> 0.0.0"])
     s.add_dependency(%q<right_aws>, ["~> 2.1.0"])
@@ -162,7 +163,7 @@ Gem::Specification.new do |s|
     s.add_dependency(%q<rspec>, ["~> 2.6.0"])
     s.add_dependency(%q<factory_girl>, ["~> 2.1.2"])
     s.add_dependency(%q<yard>, ["~> 0.7.2"])
-    s.add_dependency(%q<bundler>, ["~> 1.0.18"])
+    s.add_dependency(%q<bundler>, ["~> 1.1.3"])
     s.add_dependency(%q<jeweler>, ["~> 1.6.4"])
     s.add_dependency(%q<simplecov>, ["~> 0.5.3"])
     s.add_dependency(%q<ZenTest>, ["~> 4.6.2"])
