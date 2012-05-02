@@ -14,6 +14,9 @@ require 'mongoid'
 Mongoid.load!(File.expand_path('mongoid.yml', File.dirname(__FILE__)))
 Mongoid.database.connection.drop_database(Mongoid.database.name)
 
+I18n.backend = I18n::Backend::Simple.new
+I18n.backend.load_translations(File.expand_path('mongoid_en.yml', File.dirname(__FILE__)))
+
 # Requires supporting files with custom matchers and macros, etc,
 # in ./support/ and its subdirectories.
 Dir["#{File.dirname(__FILE__)}/support/**/*.rb"].each {|f| require f}
